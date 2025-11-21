@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block auth_content %}
+<div class="auth-container">
+    <div class="auth-box">
+        <div class="auth-header">
+            <div class="logo-container">
+                {% load static %}
+                <img src="{% static 'images/cookie-craze-logo.png' %}" 
+                     alt="Cookie Craze Logo" 
+                     class="logo-image"
+                     onerror="this.onerror=null; this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';">
+                
+                <div id="logo-fallback" class="logo-fallback" style="display: none;">
+                    <i class="fas fa-cookie-bite"></i>
+                </div>
+            </div>
+            <h1>{% block auth_title %}Cookie Craze System{% endblock %}</h1>
+        </div>
+        
+        <div class="auth-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        <i class="fas 
+                        {% if message.tags == 'success' %}fa-check-circle{% endif %}
+                        {% if message.tags == 'error' %}fa-exclamation-circle{% endif %}
+                        {% if message.tags == 'info' %}fa-info-circle{% endif %}
+                        "></i> {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% block auth_form %}{% endblock %}
+            
+            <div class="auth-links">
+                {% block auth_links %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

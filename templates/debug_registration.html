@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Registration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Debug Registration Test</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <label>Username: <input type="text" name="username" required></label>
+        </div>
+        <div>
+            <label>Email: <input type="email" name="email" required></label>
+        </div>
+        <div>
+            <label>Password: <input type="password" name="password" required></label>
+        </div>
+        <button type="submit">Test Registration</button>
+    </form>
+    <div id="results"></div>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const response = await fetch('', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            const resultsDiv = document.getElementById('results');
+            
+            if (data.status === 'success') {
+                resultsDiv.innerHTML = '<h2 class="success">✓ Registration Successful!</h2>';
+                data.results.forEach(result => {
+                    resultsDiv.innerHTML += `<p>${result}</p>`;
+                });
+            } else {
+                resultsDiv.innerHTML = `<h2 class="error">✗ Registration Failed</h2>`;
+                resultsDiv.innerHTML += `<p><strong>Error:</strong> ${data.error}</p>`;
+                if (data.results) {
+                    data.results.forEach(result => {
+                        resultsDiv.innerHTML += `<p>${result}</p>`;
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

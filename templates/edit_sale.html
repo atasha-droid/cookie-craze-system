@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content">
+    <div class="unified-page-header">
+        <div>
+            <h1 class="unified-h1">Edit Sale</h1>
+            <p class="text-muted">Sale #{{ sale.id }} • {{ sale.date_time|date:"M d, Y H:i" }}</p>
+        </div>
+    </div>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="unified-alert {% if message.tags == 'success' %}unified-alert-success{% elif message.tags == 'error' %}unified-alert-error{% else %}unified-alert{% endif %}">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="unified-card">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="unified-form-group">
+                        <label class="unified-form-label" for="payment_method">
+                            <i class="fas fa-money-bill-wave me-2"></i>Payment Method
+                        </label>
+                        <select name="payment_method" id="payment_method" class="unified-form-control" required>
+                            <option value="CASH" {% if sale.payment_method == 'CASH' %}selected{% endif %}>Cash</option>
+                            <option value="GCASH" {% if sale.payment_method == 'GCASH' %}selected{% endif %}>GCash</option>
+                            <option value="CARD" {% if sale.payment_method == 'CARD' %}selected{% endif %}>Credit/Debit Card</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="unified-form-group">
+                        <label class="unified-form-label" for="total_amount">
+                            <i class="fas fa-dollar-sign me-2"></i>Total Amount
+                        </label>
+                        <input type="number" name="total_amount" id="total_amount" step="0.01" 
+                               value="{{ sale.total_amount }}" class="unified-form-control" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-top">
+                <h2 class="unified-h2">Sale Items</h2>
+                <div class="unified-table-container">
+                    <table class="unified-table">
+                        <thead>
+                            <tr>
+                                <th>Cookie</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in sale.items.all %}
+                            <tr>
+                                <td class="fw-semibold">{{ item.cookie.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td class="text-success">₱{{ item.price }}</td>
+                                <td class="fw-semibold text-primary">₱{{ item.total_price }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr style="background: var(--bg-tertiary);">
+                                <td colspan="3" class="text-end fw-semibold">Grand Total:</td>
+                                <td class="fw-bold text-primary">₱{{ sale.total_amount }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Item quantities and prices cannot be modified. Create a new sale for changes.
+                    </small>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-3 justify-content-end mt-4 pt-4 border-top">
+                <a href="{% url 'sales_report' %}" class="unified-btn unified-btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="unified-btn unified-btn-primary">
+                    <i class="fas fa-save"></i> Update Sale
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add unified-form-control class to form inputs
+    const formInputs = document.querySelectorAll('input, select');
+    formInputs.forEach(input => {
+        if (!input.classList.contains('unified-form-control')) {
+            input.classList.add('unified-form-control');
+        }
+    });
+});
+</script>
+{% endblock %}

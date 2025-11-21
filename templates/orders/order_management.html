@@ -1,0 +1,775 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order Management - Cookie Craze{% endblock %}
+
+{% block content %}
+<div class="content staff-page">
+  <div class="unified-page-header">
+    <div>
+      <h1 class="unified-h1 mb-1">Order Management</h1>
+      <p class="text-muted mb-1" style="font-size: var(--text-sm);">Manage current orders and view your completed orders</p>
+    </div>
+  </div>
+
+  <div class="unified-card mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <h2 class="unified-h2 mb-0">
+        <i class="fas fa-clock me-2"></i>
+        {% if filter_values.is_admin %}All Orders{% else %}Today's Orders{% endif %}
+      </h2>
+      <form method="get" class="d-flex align-items-end gap-2 flex-wrap">
+        <div>
+          <label class="unified-form-label">Search</label>
+          <input type="text" name="search" value="{{ filter_values.search }}" class="unified-form-control" placeholder="Order ID, Customer, Staff, or GCash Ref">
+        </div>
+        <div>
+          <label class="unified-form-label">Status</label>
+          <select name="status" class="unified-form-control">
+            <option value="">All</option>
+            <option value="pending" {% if filter_values.status == "pending" %}selected{% endif %}>Pending</option>
+            <option value="preparing" {% if filter_values.status == "preparing" %}selected{% endif %}>Preparing</option>
+            <option value="ready" {% if filter_values.status == "ready" %}selected{% endif %}>Ready</option>
+            <option value="completed" {% if filter_values.status == "completed" %}selected{% endif %}>Completed</option>
+            <option value="voided" {% if filter_values.status == "voided" %}selected{% endif %}>Voided</option>
+            <option value="cancelled" {% if filter_values.status == "cancelled" %}selected{% endif %}>Cancelled</option>
+          </select>
+        </div>
+        <div>
+          <label class="unified-form-label">Payment</label>
+          <select name="payment" class="unified-form-control">
+            <option value="">All</option>
+            <option value="cash" {% if filter_values.payment == "cash" %}selected{% endif %}>Cash</option>
+            <option value="gcash" {% if filter_values.payment == "gcash" %}selected{% endif %}>GCash</option>
+          </select>
+        </div>
+        {% if filter_values.is_admin %}
+        <div>
+          <label class="unified-form-label">Staff</label>
+          <select name="staff_id" class="unified-form-control">
+            <option value="">All</option>
+            {% for s in all_staff %}
+              <option value="{{ s.user.id }}" {% if filter_values.staff_id == s.user.id|stringformat:'s' %}selected{% endif %}>{{ s.display_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="unified-form-label">Branch</label>
+          <select name="branch_id" class="unified-form-control">
+            <option value="">All</option>
+            {% for b in all_branches %}
+              <option value="{{ b.id }}" {% if filter_values.branch_id == b.id|stringformat:'s' %}selected{% endif %}>{{ b.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="unified-form-label">Category</label>
+          <select name="category_id" class="unified-form-control">
+            <option value="">All</option>
+            {% for c in all_categories %}
+              <option value="{{ c.id }}" {% if filter_values.category_id == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="unified-form-label">From</label>
+          <input type="date" name="start_date" value="{{ filter_values.start_date }}" class="unified-form-control">
+        </div>
+        <div>
+          <label class="unified-form-label">To</label>
+          <input type="date" name="end_date" value="{{ filter_values.end_date }}" class="unified-form-control">
+        </div>
+        {% endif %}
+        <button type="submit" class="unified-btn unified-btn-primary" style="margin-top: 1.6rem;">
+          <i class="fas fa-filter me-2"></i>Apply
+        </button>
+      </form>
+    </div>
+    <div class="unified-table-container">
+      <table class="unified-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            {% if filter_values.is_admin %}<th>Staff</th>{% endif %}
+            <th>{% if filter_values.is_admin %}Created{% else %}Time{% endif %}</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Payment</th>
+            <th>Status</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if orders_today %}
+            {% for order in orders_today %}
+              <tr>
+                <td class="fw-semibold">#{{ order.order_id }}</td>
+                <td>{{ order.customer_name|default:"Walk-in" }}</td>
+                {% if filter_values.is_admin %}
+                  <td>{{ order.staff.username|default:"-" }}</td>
+                  <td>{{ order.created_at|date:"Y-m-d H:i" }}</td>
+                {% else %}
+                  <td>{{ order.created_at|date:"h:i A" }}</td>
+                {% endif %}
+                <td>
+                  {% for item in order.items.all %}
+                    {{ item.cookie.name }} x{{ item.quantity }}{% if not forloop.last %}, {% endif %}
+                  {% empty %}
+                    —
+                  {% endfor %}
+                </td>
+                <td class="fw-bold text-success">₱{{ order.total_amount|floatformat:2 }}</td>
+                <td><span class="badge bg-secondary text-capitalize">{{ order.payment_method }}</span></td>
+                <td>
+                  {% if order.status == 'pending' %}
+                  <span class="badge bg-warning text-dark">Pending</span>
+                  {% elif order.status == 'preparing' %}
+                  <span class="badge bg-info">Preparing</span>
+                  {% elif order.status == 'ready' %}
+                  <span class="badge bg-primary">Ready</span>
+                  {% elif order.status == 'completed' %}
+                  <span class="badge bg-success">Completed</span>
+                  {% elif order.status == 'voided' %}
+                  <span class="badge bg-danger">Voided</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  <div class="d-flex gap-1 justify-content-center flex-wrap">
+                    {% if filter_values.is_admin %}
+                      <a href="{% url 'admin_order_detail' order.id %}" class="unified-btn unified-btn-sm unified-btn-secondary" title="View Details">
+                        <i class="fas fa-eye"></i>
+                      </a>
+                    {% else %}
+                      <button class="unified-btn unified-btn-sm unified-btn-secondary" title="View Details" data-bs-toggle="modal" data-bs-target="#orderDetailsModal-{{ order.id }}">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                    {% endif %}
+                    {% if order.status == 'completed' %}
+                      <a href="{% url 'staff_order_receipt' order.id %}" class="unified-btn unified-btn-sm unified-btn-outline" title="Print Receipt" data-no-loading>
+                        <i class="fas fa-print"></i>
+                      </a>
+                    {% elif order.payment_method == 'gcash' and not order.is_paid %}
+                      <button class="unified-btn unified-btn-sm unified-btn-outline" title="Receipt disabled until verified" disabled>
+                        <i class="fas fa-print"></i>
+                      </button>
+                    {% endif %}
+                    {% if order.payment_method == 'gcash' and order.gcash_screenshot %}
+                      <a class="unified-btn unified-btn-sm unified-btn-outline" href="{{ order.gcash_screenshot.url }}" title="View GCash Receipt" target="_blank" data-no-loading>
+                        <i class="fas fa-image"></i>
+                      </a>
+                    {% endif %}
+                    {% if order.payment_method == 'gcash' and not order.is_paid %}
+                      <button
+                        class="unified-btn unified-btn-sm unified-btn-primary"
+                        title="Verify GCash"
+                        data-order-id="{{ order.id }}"
+                        data-order-code="{{ order.order_id }}"
+                        data-order-total="{{ order.total_amount|floatformat:2 }}"
+                        data-gcash-screenshot-url="{% if order.gcash_screenshot %}{{ order.gcash_screenshot.url }}{% endif %}"
+                        onclick="openVerifyGcashModal(this)"
+                      >
+                         <i class="fas fa-check-circle"></i>
+                      </button>
+                    {% endif %}
+                    {% if order.status == 'pending' %}
+                      <button class="unified-btn unified-btn-sm unified-btn-outline" data-order-id="{{ order.id }}" data-status="preparing" title="Mark Preparing" onclick="updateOrderStatus({{ order.id }}, 'preparing')">
+                        <i class="fas fa-utensils"></i>
+                      </button>
+                      <button class="unified-btn unified-btn-sm unified-btn-outline" data-order-id="{{ order.id }}" data-status="ready" title="Mark Ready" onclick="updateOrderStatus({{ order.id }}, 'ready')">
+                        <i class="fas fa-bell"></i>
+                      </button>
+                      <button class="unified-btn unified-btn-sm unified-btn-success" data-order-id="{{ order.id }}" data-status="completed" title="Complete" onclick="updateOrderStatus({{ order.id }}, 'completed')">
+                        <i class="fas fa-check"></i>
+                      </button>
+                    {% elif order.status == 'preparing' %}
+                      <button class="unified-btn unified-btn-sm unified-btn-outline" data-order-id="{{ order.id }}" data-status="ready" title="Mark Ready" onclick="updateOrderStatus({{ order.id }}, 'ready')">
+                        <i class="fas fa-bell"></i>
+                      </button>
+                      <button class="unified-btn unified-btn-sm unified-btn-success" data-order-id="{{ order.id }}" data-status="completed" title="Complete" onclick="updateOrderStatus({{ order.id }}, 'completed')">
+                        <i class="fas fa-check"></i>
+                      </button>
+                    {% elif order.status == 'ready' %}
+                      <button class="unified-btn unified-btn-sm unified-btn-success" data-order-id="{{ order.id }}" data-status="completed" title="Complete" onclick="updateOrderStatus({{ order.id }}, 'completed')">
+                        <i class="fas fa-check"></i>
+                      </button>
+                    {% endif %}
+                    {% if order.status != 'voided' and order.status != 'cancelled' %}
+                      <button type="button" class="unified-btn unified-btn-sm unified-btn-warning void-order-btn" data-order-id="{{ order.id }}" title="Cancel / Void Order">
+                        <i class="fas fa-ban"></i>
+                      </button>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="8" class="text-center py-4 text-muted">No orders today</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="unified-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="unified-h2 mb-0"><i class="fas fa-history me-2"></i> Order History (Staff)</h2>
+    </div>
+    <div class="unified-table-container">
+      <table class="unified-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Completed At</th>
+            <th>Payment</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if staff_completed_orders %}
+            {% for order in staff_completed_orders %}
+              <tr>
+                <td class="fw-semibold">#{{ order.order_id }}</td>
+                <td>{{ order.customer_name|default:"Walk-in" }}</td>
+                <td class="fw-bold text-success">₱{{ order.total_amount|floatformat:2 }}</td>
+                <td>{{ order.completed_at|date:"M d, H:i" }}</td>
+                <td><span class="badge bg-secondary text-capitalize">{{ order.payment_method }}</span></td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="5" class="text-center py-4 text-muted">No completed orders yet</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% comment %} Per-order Details Modals {% endcomment %}
+{% if orders_today and not filter_values.is_admin %}
+  {% for order in orders_today %}
+  <div class="modal fade" id="orderDetailsModal-{{ order.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Order {{ order.order_id }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2 text-muted" style="font-size: var(--text-sm);">
+            <div><strong>Customer:</strong> {{ order.customer_name|default:'Walk-in' }}</div>
+            <div><strong>Time:</strong> {{ order.created_at|date:'M d, Y h:i A' }}</div>
+            <div><strong>Payment:</strong> {{ order.payment_method|title }} {% if order.is_paid %}<span class="badge bg-success ms-1">Paid</span>{% else %}<span class="badge bg-warning text-dark ms-1">Unpaid</span>{% endif %}</div>
+            <div><strong>Status:</strong> {{ order.status|title }}</div>
+          </div>
+          <div class="unified-table-container">
+            <table class="unified-table">
+              <thead><tr><th>Item</th><th class="text-center">Qty</th><th class="text-end">Price</th><th class="text-end">Total</th></tr></thead>
+              <tbody>
+                {% for item in order.items.all %}
+                <tr>
+                  <td>{{ item.cookie.name }}</td>
+                  <td class="text-center">{{ item.quantity }}</td>
+                  <td class="text-end">₱{{ item.price|floatformat:2 }}</td>
+                  <td class="text-end">₱{{ item.total_price|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="d-flex justify-content-end mt-2" style="gap:.75rem">
+            <div><strong>Subtotal:</strong> ₱{{ order.total_amount|floatformat:2 }}</div>
+            <div><strong>Total:</strong> ₱{{ order.total_amount|floatformat:2 }}</div>
+          </div>
+          <div class="mt-3">
+            {% if not order.is_paid %}
+              {% if order.payment_method == 'cash' %}
+                <div class="unified-card-sm">
+                  <div class="d-flex align-items-end gap-2">
+                    <div style="flex:1">
+                      <label class="unified-form-label">Amount Received (₱)</label>
+                      <input type="number" step="0.01" min="0" id="cash-amount-{{ order.id }}" class="unified-form-control" value="{{ order.total_amount }}">
+                    </div>
+                    <button class="unified-btn unified-btn-primary" onclick="confirmCash({{ order.id }})">Confirm Cash</button>
+                  </div>
+                  <small class="text-muted">Confirms full payment and completes the order.</small>
+                </div>
+              {% else %}
+                <button
+                  class="unified-btn unified-btn-primary"
+                  data-order-id="{{ order.id }}"
+                  data-order-code="{{ order.order_id }}"
+                  data-order-total="{{ order.total_amount|floatformat:2 }}"
+                  data-gcash-screenshot-url="{% if order.gcash_screenshot %}{{ order.gcash_screenshot.url }}{% endif %}"
+                  onclick="openVerifyGcashModal(this)"
+                >
+                  <i class="fas fa-check-circle me-1"></i> Verify GCash
+                </button>
+              {% endif %}
+            {% else %}
+              <a href="{% url 'staff_order_receipt' order.id %}" class="unified-btn unified-btn-outline" data-no-loading><i class="fas fa-print me-1"></i> Print Receipt</a>
+            {% endif %}
+            {% if order.payment_method == 'gcash' and order.gcash_screenshot %}
+              <div class="mt-3">
+                <label class="unified-form-label" style="font-size: var(--text-sm);">GCash Receipt</label>
+                <a href="{{ order.gcash_screenshot.url }}" target="_blank" data-no-loading style="display:inline-block;">
+                  <img src="{{ order.gcash_screenshot.url }}" alt="GCash Receipt" style="max-width: 220px; border-radius: 0.5rem; border: 1px solid var(--border);">
+                </a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="unified-btn unified-btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+{% endif %}
+
+<!-- Verify GCash Modal -->
+<div class="modal fade" id="verifyGcashModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Verify GCash Payment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3 text-muted" style="font-size: var(--text-sm);">
+          <div><strong>Order:</strong> <span id="gcash-modal-order-id"></span></div>
+          <div><strong>Total:</strong> ₱<span id="gcash-modal-total"></span></div>
+        </div>
+        <div class="mb-3" id="gcash-screenshot-container" style="display:none;">
+          <label class="unified-form-label">Uploaded GCash Screenshot</label>
+          <div>
+            <a id="gcash-screenshot-link" href="#" target="_blank" style="display:inline-block; margin-top:4px;">
+              <img id="gcash-screenshot-thumb" src="#" alt="GCash Screenshot" style="max-width: 100%; max-height: 200px; border-radius: 4px; border: 1px solid var(--border);">
+            </a>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="unified-form-label">GCash Reference Number</label>
+          <input type="text" class="unified-form-control" id="gcash-reference" placeholder="Enter reference number">
+        </div>
+        <div class="mb-3">
+          <label class="unified-form-label">Amount Received (₱)</label>
+          <input type="number" step="0.01" min="0" class="unified-form-control" id="gcash-amount" placeholder="Exact total amount">
+        </div>
+        <div class="unified-alert" id="gcash-error" style="display:none"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="unified-btn unified-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="unified-btn unified-btn-primary" id="gcash-verify-btn" onclick="submitVerifyGcash()">Verify & Complete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Void Order Modal -->
+<div class="modal fade" id="voidOrderModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Void Order Confirmation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="void-order-details" class="mb-3" style="font-size: var(--text-sm);"></div>
+        <input type="hidden" id="void-requires-admin" value="1">
+        <div class="unified-alert unified-alert-error" id="void-order-error" style="display:none"></div>
+        <form id="void-order-form" onsubmit="return false;">
+          <div class="unified-form-group mb-2" id="void-admin-credentials">
+            <label class="unified-form-label" for="void-admin-username">Admin Username</label>
+            <input type="text" id="void-admin-username" class="unified-form-control" autocomplete="username" placeholder="Enter admin username">
+          </div>
+          <div class="unified-form-group mb-2" id="void-admin-password-group">
+            <label class="unified-form-label" for="void-admin-password">Admin Password</label>
+            <input type="password" id="void-admin-password" class="unified-form-control" autocomplete="current-password" placeholder="Enter admin password">
+          </div>
+          <div class="unified-form-group mb-2">
+            <label class="unified-form-label" for="void-reason-select">Reason for Void</label>
+            <select id="void-reason-select" class="unified-form-control">
+              <option value="">Select a reason</option>
+              <option value="Customer changed mind">Customer changed mind</option>
+              <option value="Wrong items sold">Wrong items sold</option>
+              <option value="Payment issue">Payment issue</option>
+              <option value="System error">System error</option>
+              <option value="other">Other reason</option>
+            </select>
+          </div>
+          <div class="unified-form-group mb-2" id="void-reason-other-group" style="display:none;">
+            <label class="unified-form-label" for="void-reason-other">Please specify</label>
+            <textarea id="void-reason-other" class="unified-form-control" rows="2" placeholder="Enter specific reason..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="unified-btn unified-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="unified-btn unified-btn-warning" id="void-order-confirm-btn">
+          <i class="fas fa-ban me-1"></i> Confirm Void
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let verifyOrderId = null;
+let verifyModal = null;
+function openVerifyGcashModal(triggerOrOrderId, humanId, total, screenshotUrl){
+  let trigger = triggerOrOrderId;
+  let derivedOrderId = triggerOrOrderId;
+
+  if (trigger && trigger.dataset) {
+    const dataset = trigger.dataset;
+    derivedOrderId = dataset.orderId || dataset.order;
+    humanId = dataset.orderCode || dataset.orderId || humanId;
+    total = dataset.orderTotal || dataset.orderAmount || total;
+    screenshotUrl = dataset.gcashScreenshotUrl || screenshotUrl;
+  }
+
+  verifyOrderId = derivedOrderId;
+
+  const orderCodeEl = document.getElementById('gcash-modal-order-id');
+  const orderTotalEl = document.getElementById('gcash-modal-total');
+
+  if (orderCodeEl) {
+    orderCodeEl.textContent = humanId || derivedOrderId || '';
+  }
+
+  const numericTotal = Number(total || 0);
+  if (orderTotalEl) {
+    orderTotalEl.textContent = numericTotal ? numericTotal.toFixed(2) : '0.00';
+  }
+  document.getElementById('gcash-reference').value = '';
+  document.getElementById('gcash-amount').value = numericTotal ? numericTotal.toFixed(2) : '';
+  document.getElementById('gcash-error').style.display = 'none';
+
+  const screenshotContainer = document.getElementById('gcash-screenshot-container');
+  const screenshotLink = document.getElementById('gcash-screenshot-link');
+  const screenshotThumb = document.getElementById('gcash-screenshot-thumb');
+
+  if (!screenshotUrl) {
+    const btn = document.querySelector(`button[data-order-id="${derivedOrderId}"][data-gcash-screenshot-url]`);
+    if (btn) {
+      screenshotUrl = btn.getAttribute('data-gcash-screenshot-url') || '';
+    }
+  }
+
+  if (screenshotContainer && screenshotLink && screenshotThumb) {
+    if (screenshotUrl) {
+      screenshotContainer.style.display = 'block';
+      screenshotLink.href = screenshotUrl;
+      screenshotThumb.src = screenshotUrl;
+    } else {
+      screenshotContainer.style.display = 'none';
+      screenshotLink.removeAttribute('href');
+      screenshotThumb.removeAttribute('src');
+    }
+  }
+  if (!verifyModal) {
+    verifyModal = new bootstrap.Modal(document.getElementById('verifyGcashModal'));
+  }
+  verifyModal.show();
+}
+
+function submitVerifyGcash(){
+  if(!verifyOrderId) return;
+  const ref = document.getElementById('gcash-reference').value.trim();
+  const amt = document.getElementById('gcash-amount').value.trim();
+  const errorBox = document.getElementById('gcash-error');
+  if(!ref || !amt){
+    errorBox.textContent = 'Reference and amount are required.';
+    errorBox.className = 'unified-alert unified-alert-error';
+    errorBox.style.display = 'block';
+    return;
+  }
+  const csrftoken = getCookie('csrftoken');
+  const btn = document.getElementById('gcash-verify-btn');
+  const original = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.style.pointerEvents='none';
+  if (window.showPageLoading) window.showPageLoading('Verifying payment...');
+  fetch(`/app/orders/${verifyOrderId}/verify-gcash/`,{
+    method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':csrftoken,'X-Requested-With':'XMLHttpRequest'},
+    body: `gcash_reference=${encodeURIComponent(ref)}&gcash_amount=${encodeURIComponent(amt)}`
+  }).then(r=>r.json()).then(data=>{
+    if(data.success){
+      window.location.reload();
+    } else {
+      errorBox.textContent = data.error || 'Verification failed.';
+      errorBox.className = 'unified-alert unified-alert-error';
+      errorBox.style.display = 'block';
+      btn.innerHTML = original; btn.style.pointerEvents='auto';
+      if (window.hidePageLoading) window.hidePageLoading();
+    }
+  }).catch(()=>{
+    errorBox.textContent = 'Network error.';
+    errorBox.className = 'unified-alert unified-alert-error';
+    errorBox.style.display = 'block';
+    btn.innerHTML = original; btn.style.pointerEvents='auto';
+    if (window.hidePageLoading) window.hidePageLoading();
+  });
+}
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+function confirmCash(orderId){
+  const input = document.getElementById(`cash-amount-${orderId}`);
+  if (!input) {
+    alert('Unable to locate cash amount input.');
+    return;
+  }
+
+  const amount = input.value ? Number(input.value) : NaN;
+  if (!Number.isFinite(amount) || amount <= 0) {
+    alert('Please enter a valid cash amount received.');
+    return;
+  }
+
+  if (window.showPageLoading) {
+    window.showPageLoading('Confirming payment...');
+  }
+
+  const csrftoken = getCookie('csrftoken');
+  fetch(`/app/orders/${orderId}/confirm-cash/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': csrftoken,
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: `amount=${encodeURIComponent(amount.toFixed(2))}`
+  }).then(r => r.json()).then(data => {
+    if (data.success) {
+      window.location.reload();
+    } else {
+      if (window.hidePageLoading) window.hidePageLoading();
+      alert(data.error || 'Unable to confirm cash payment.');
+    }
+  }).catch(() => {
+    if (window.hidePageLoading) window.hidePageLoading();
+    alert('Network error while confirming payment.');
+  });
+}
+
+function updateOrderStatus(orderId, newStatus) {
+  const csrftoken = getCookie('csrftoken');
+  const btn = document.querySelector(`[data-order-id="${orderId}"][data-status="${newStatus}"]`);
+  if (!btn) return;
+  const original = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  btn.style.pointerEvents = 'none';
+  if (window.showPageLoading) window.showPageLoading('Updating order...');
+  fetch(`/app/orders/${orderId}/update-status/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRFToken': csrftoken
+    },
+    body: `status=${newStatus}`
+  }).then(r => r.json()).then(data => {
+    if (data.success) {
+      window.location.reload();
+    } else {
+      btn.innerHTML = original;
+      btn.style.pointerEvents = 'auto';
+      alert(data.error || 'Failed to update status');
+      if (window.hidePageLoading) window.hidePageLoading();
+    }
+  }).catch(() => {
+    btn.innerHTML = original;
+    btn.style.pointerEvents = 'auto';
+    alert('Network error');
+    if (window.hidePageLoading) window.hidePageLoading();
+  });
+}
+
+let currentVoidOrderId = null;
+let voidOrderModalInstance = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+  const voidButtons = document.querySelectorAll('.void-order-btn');
+  const reasonSelect = document.getElementById('void-reason-select');
+  const reasonOtherGroup = document.getElementById('void-reason-other-group');
+  const confirmBtn = document.getElementById('void-order-confirm-btn');
+
+  if (reasonSelect && reasonOtherGroup) {
+    reasonSelect.addEventListener('change', function() {
+      reasonOtherGroup.style.display = this.value === 'other' ? 'block' : 'none';
+    });
+  }
+
+  voidButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      const orderId = this.getAttribute('data-order-id');
+      currentVoidOrderId = orderId;
+      loadVoidOrderDetails(orderId);
+    });
+  });
+
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', submitVoidOrder);
+  }
+});
+
+function loadVoidOrderDetails(orderId) {
+  const detailsDiv = document.getElementById('void-order-details');
+  const errorBox = document.getElementById('void-order-error');
+  const requiresAdminInput = document.getElementById('void-requires-admin');
+  const adminUsernameInput = document.getElementById('void-admin-username');
+  const adminPasswordInput = document.getElementById('void-admin-password');
+
+  if (!detailsDiv) return;
+  errorBox.style.display = 'none';
+  detailsDiv.innerHTML = `
+    <div class="text-center py-3">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2 mb-0">Loading order details...</p>
+    </div>
+  `;
+
+  fetch(`/app/orders/${orderId}/void/`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        errorBox.textContent = data.error;
+        errorBox.style.display = 'block';
+        return;
+      }
+
+      const requiresAdmin = !data.can_void_directly;
+      requiresAdminInput.value = requiresAdmin ? '1' : '0';
+
+      if (!requiresAdmin) {
+        // Current user (e.g., admin) can void directly; admin fields optional
+        if (adminUsernameInput) adminUsernameInput.value = '';
+        if (adminPasswordInput) adminPasswordInput.value = '';
+      }
+
+      detailsDiv.innerHTML = `
+        <div class="unified-alert unified-alert-warning mb-2">
+          You are about to void this order. This will restore inventory and mark the order as voided.
+        </div>
+        <div class="mb-2">
+          <strong>Order ID:</strong> ${data.order_display_id}<br>
+          <strong>Amount:</strong> ₱${data.total_amount}<br>
+          <strong>Date:</strong> ${data.created_at}<br>
+          <strong>Payment:</strong> ${data.payment_method}<br>
+          <strong>Customer:</strong> ${data.customer}
+        </div>
+        ${requiresAdmin ? `
+          <div class="unified-alert unified-alert-info mb-2">
+            Admin approval is required. Please enter valid admin credentials to continue.
+          </div>
+        ` : `
+          <div class="unified-alert unified-alert-success mb-2">
+            You have permission to void this order directly.
+          </div>
+        `}
+      `;
+
+      if (!voidOrderModalInstance) {
+        voidOrderModalInstance = new bootstrap.Modal(document.getElementById('voidOrderModal'));
+      }
+      voidOrderModalInstance.show();
+    })
+    .catch(() => {
+      errorBox.textContent = 'Failed to load order details.';
+      errorBox.style.display = 'block';
+    });
+}
+
+function submitVoidOrder() {
+  if (!currentVoidOrderId) return;
+
+  const requiresAdmin = document.getElementById('void-requires-admin').value === '1';
+  const username = document.getElementById('void-admin-username').value.trim();
+  const password = document.getElementById('void-admin-password').value.trim();
+  const reasonSelect = document.getElementById('void-reason-select');
+  const otherReasonInput = document.getElementById('void-reason-other');
+  const errorBox = document.getElementById('void-order-error');
+
+  let reason = reasonSelect ? reasonSelect.value : '';
+  if (reason === 'other') {
+    reason = 'Other: ' + (otherReasonInput ? otherReasonInput.value.trim() : '');
+  }
+
+  if (!reason || reason === 'other') {
+    errorBox.textContent = 'Please select a reason for voiding this order.';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  if (requiresAdmin && (!username || !password)) {
+    errorBox.textContent = 'Admin username and password are required.';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  errorBox.style.display = 'none';
+
+  const params = new URLSearchParams();
+  if (username) params.append('admin_username', username);
+  if (password) params.append('admin_password', password);
+  params.append('void_reason', reason);
+
+  const csrftoken = getCookie('csrftoken');
+  const btn = document.getElementById('void-order-confirm-btn');
+  const original = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  btn.style.pointerEvents = 'none';
+  if (window.showPageLoading) window.showPageLoading('Voiding order...');
+
+  fetch(`/app/orders/${currentVoidOrderId}/void/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRFToken': csrftoken
+    },
+    body: params.toString()
+  }).then(r => r.json()).then(data => {
+    if (data.success) {
+      if (voidOrderModalInstance) {
+        voidOrderModalInstance.hide();
+      }
+      window.location.reload();
+    } else {
+      errorBox.textContent = data.error || 'Failed to void order.';
+      errorBox.style.display = 'block';
+      btn.innerHTML = original;
+      btn.style.pointerEvents = 'auto';
+      if (window.hidePageLoading) window.hidePageLoading();
+    }
+  }).catch(() => {
+    errorBox.textContent = 'Network error while voiding order.';
+    errorBox.style.display = 'block';
+    btn.innerHTML = original;
+    btn.style.pointerEvents = 'auto';
+    if (window.hidePageLoading) window.hidePageLoading();
+  });
+}
+</script>
+{% endblock %}

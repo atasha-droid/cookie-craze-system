@@ -1,0 +1,562 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cash Reconciliation - Cookie Craze{% endblock %}
+
+
+{% block content %}
+<div class="content staff-page">
+    <div id="pageLoadingOverlay" class="page-loading-overlay" style="display: none;">
+        <div class="page-loading-spinner">
+            <i class="fas fa-spinner fa-spin me-2"></i>
+            Loading...
+        </div>
+    </div>
+
+    <div class="unified-page-header">
+        <h1 class="unified-h1">Cash Reconciliation</h1>
+        <p class="text-muted" style="font-size: var(--text-sm);">
+            Automated cash tracking for {{ today|date:"F j, Y" }}
+            {% if manual_override %}<span class="badge bg-warning ms-2">Manual Override</span>{% endif %}
+        </p>
+    </div>
+
+    <!-- Data Summary -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="unified-card text-center h-100">
+                <div class="card-icon {% if has_opening_float %}success{% else %}warning{% endif %}">
+                    <i class="fas fa-cash-register"></i>
+                </div>
+                <h3 class="card-value">₱{{ starting_cash|floatformat:2 }}</h3>
+                <p class="card-label">Starting Cash</p>
+                <small class="text-muted">
+                    {% if has_opening_float %}Opening float recorded{% else %}No opening float set{% endif %}
+                </small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="unified-card text-center h-100">
+                <div class="card-icon info">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+                <h3 class="card-value">₱{{ change_used|floatformat:2 }}</h3>
+                <p class="card-label">Change Used</p>
+                <small class="text-muted">Additional change + adjustments</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="unified-card text-center h-100">
+                <div class="card-icon primary">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <h3 class="card-value">₱{{ cash_sales|floatformat:2 }}</h3>
+                <p class="card-label">Cash Sales</p>
+                <small class="text-muted">{{ cash_orders_count }} completed orders</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="unified-card text-center h-100">
+                <div class="card-icon {% if has_closing_balance %}success{% else %}secondary{% endif %}">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h3 class="card-value">₱{{ amount_returned|floatformat:2 }}</h3>
+                <p class="card-label">Amount Returned</p>
+                <small class="text-muted">
+                    {% if has_closing_balance %}Closing balance set{% else %}Not recorded yet{% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Override Toggle -->
+    <div class="unified-card mb-4">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="manualOverrideToggle" 
+                   {% if manual_override %}checked{% endif %}>
+            <label class="form-check-label fw-semibold" for="manualOverrideToggle">
+                Use Manual Override
+            </label>
+            <small class="text-muted d-block">Toggle to enter manual values instead of auto-calculated data</small>
+        </div>
+    </div>
+
+    <!-- Reconciliation Form -->
+    <div class="unified-card mb-4">
+        <form method="post" class="row g-3" id="reconForm">
+            {% csrf_token %}
+            <input type="hidden" name="manual_override" id="manualOverrideInput" value="{{ manual_override|yesno:'true,false' }}">
+            
+            <!-- Manual Override Fields (initially hidden) -->
+            <div id="manualFields" style="display: {% if manual_override %}block{% else %}none{% endif %};">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="unified-form-label">Starting Cash Fund</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₱</span>
+                            <input type="number" step="0.01" min="0" name="starting_cash" 
+                                   class="unified-form-control" placeholder="0.00" 
+                                   value="{{ starting_cash|floatformat:2 }}">
+                        </div>
+                        <small class="text-muted">Beginning-of-shift drawer fund</small>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="unified-form-label">Change Used</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₱</span>
+                            <input type="number" step="0.01" min="0" name="change_used" 
+                                   class="unified-form-control" placeholder="0.00" 
+                                   value="{{ change_used|floatformat:2 }}">
+                        </div>
+                        <small class="text-muted">Change taken out during shift</small>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="unified-form-label">Cash Sales Collected</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₱</span>
+                            <input type="number" step="0.01" min="0" name="cash_sales" 
+                                   class="unified-form-control" placeholder="0.00" 
+                                   value="{{ cash_sales|floatformat:2 }}">
+                        </div>
+                        <small class="text-muted">Total cash from sales this shift</small>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="unified-form-label">Amount Returned (End)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₱</span>
+                            <input type="number" step="0.01" min="0" name="amount_returned" 
+                                   class="unified-form-control" placeholder="0.00" 
+                                   value="{{ amount_returned|floatformat:2 }}">
+                        </div>
+                        <small class="text-muted">Cash returned at end of shift</small>
+                    </div>
+                </div>
+                <hr>
+            </div>
+
+            <!-- Closing Balance Input (always visible) -->
+            <div class="col-md-6">
+                <label class="unified-form-label">Set Closing Balance</label>
+                <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input type="number" step="0.01" min="0" name="closing_amount" 
+                           class="unified-form-control" placeholder="Enter amount returned..."
+                           value="{{ amount_returned|floatformat:2 }}">
+                </div>
+                <small class="text-muted">Enter the actual cash amount being returned</small>
+            </div>
+
+            <div class="col-12 text-end">
+                <button type="submit" class="unified-btn unified-btn-primary">
+                    <i class="fas fa-calculator me-2"></i>
+                    {% if manual_override %}Compute with Manual Values{% else %}Update Reconciliation{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results -->
+    {% if expected_return is not None %}
+    <div class="unified-card mb-4">
+        <h2 class="unified-h2 mb-4">Reconciliation Results</h2>
+        <div class="row g-4">
+            <!-- Expected Return -->
+            <div class="col-md-3">
+                <div class="recon-card recon-card-primary">
+                    <div class="recon-icon">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <div class="recon-content">
+                        <div class="recon-label">Expected Return</div>
+                        <div class="recon-value">₱{{ expected_return|floatformat:2 }}</div>
+                        <div class="recon-formula">Starting + Sales − Change</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actual Returned -->
+            <div class="col-md-3">
+                <div class="recon-card recon-card-secondary">
+                    <div class="recon-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="recon-content">
+                        <div class="recon-label">Actual Returned</div>
+                        <div class="recon-value">₱{{ amount_returned|floatformat:2 }}</div>
+                        <div class="recon-formula">Closing balance</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Variance -->
+            <div class="col-md-3">
+                <div class="recon-card {% if variance > 0 %}recon-card-warning{% elif variance < 0 %}recon-card-danger{% else %}recon-card-success{% endif %}">
+                    <div class="recon-icon">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                    <div class="recon-content">
+                        <div class="recon-label">Variance</div>
+                        <div class="recon-value {% if variance > 0 %}text-warning{% elif variance < 0 %}text-danger{% else %}text-success{% endif %}">
+                            ₱{{ variance|floatformat:2 }}
+                        </div>
+                        <div class="recon-formula">Actual − Expected</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Outcome -->
+            <div class="col-md-3">
+                <div class="recon-card {% if shortage > 0 %}recon-card-danger{% elif overage > 0 %}recon-card-warning{% else %}recon-card-success{% endif %}">
+                    <div class="recon-icon">
+                        {% if shortage > 0 %}
+                            <i class="fas fa-exclamation-triangle"></i>
+                        {% elif overage > 0 %}
+                            <i class="fas fa-info-circle"></i>
+                        {% else %}
+                            <i class="fas fa-check-circle"></i>
+                        {% endif %}
+                    </div>
+                    <div class="recon-content">
+                        <div class="recon-label">Outcome</div>
+                        {% if shortage > 0 %}
+                            <div class="recon-value text-danger">Shortage: ₱{{ shortage|floatformat:2 }}</div>
+                        {% elif overage > 0 %}
+                            <div class="recon-value text-warning">Overage: ₱{{ overage|floatformat:2 }}</div>
+                        {% else %}
+                            <div class="recon-value text-success">Balanced</div>
+                        {% endif %}
+                        <div class="recon-formula">
+                            {% if shortage > 0 %}Cash missing{% elif overage > 0 %}Extra cash{% else %}Perfect match{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+   <!-- Enhanced Cash Transactions Tracking -->
+<div class="unified-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="unified-h3 mb-0">Today's Cash Transactions</h3>
+        <div class="text-muted">
+            <small>{{ cash_transactions|length }} transactions today</small>
+        </div>
+    </div>
+    
+    <!-- Transaction Summary -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2">
+            <div class="transaction-summary-card">
+                <div class="summary-label">Cash Sales</div>
+                <div class="summary-value text-primary">₱{{ cash_sales|floatformat:2 }}</div>
+                <div class="summary-count">{{ cash_orders_count }} orders</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="transaction-summary-card">
+                <div class="summary-label">Cash Received</div>
+                <div class="summary-value text-success">₱{{ total_cash_received|floatformat:2 }}</div>
+                <div class="summary-count">From customers</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="transaction-summary-card">
+                <div class="summary-label">Change Given</div>
+                <div class="summary-value text-info">₱{{ total_change_given|floatformat:2 }}</div>
+                <div class="summary-count">To customers</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="transaction-summary-card">
+                <div class="summary-label">Change Used</div>
+                <div class="summary-value text-warning">₱{{ change_used|floatformat:2 }}</div>
+                <div class="summary-count">From drawer</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="transaction-summary-card">
+                <div class="summary-label">Starting Cash</div>
+                <div class="summary-value text-secondary">₱{{ starting_cash|floatformat:2 }}</div>
+                <div class="summary-count">Opening float</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="transaction-summary-card">
+                <div class="summary-label">Closing Balance</div>
+                <div class="summary-value {% if has_closing_balance %}text-success{% else %}text-muted{% endif %}">
+                    ₱{{ amount_returned|floatformat:2 }}
+                </div>
+                <div class="summary-count">{% if has_closing_balance %}Recorded{% else %}Pending{% endif %}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Transactions Table -->
+    <div class="unified-table-container">
+        <table class="unified-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th class="text-end">Amount</th>
+                    <th>Details</th>
+                    <th>Staff</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in cash_transactions %}
+                <tr class="transaction-row {% if transaction.type == 'opening_float' %}table-success{% elif transaction.type == 'closing_balance' %}table-primary{% endif %}">
+                    <td>
+                        <small class="text-muted">{{ transaction.time|time:"H:i" }}</small>
+                    </td>
+                    <td>
+                        <span class="badge 
+                            {% if transaction.type == 'opening_float' %}bg-success
+                            {% elif transaction.type == 'closing_balance' %}bg-primary
+                            {% elif transaction.type == 'cash_sale' %}bg-info
+                            {% elif transaction.type == 'additional_change' %}bg-warning
+                            {% elif transaction.type == 'adjustment' %}bg-secondary
+                            {% else %}bg-light text-dark{% endif %}">
+                            {% if transaction.type == 'opening_float' %}Opening
+                            {% elif transaction.type == 'closing_balance' %}Closing
+                            {% elif transaction.type == 'cash_sale' %}Sale
+                            {% elif transaction.type == 'additional_change' %}Change
+                            {% elif transaction.type == 'adjustment' %}Adjust
+                            {% else %}{{ transaction.type }}{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="fw-semibold">{{ transaction.description }}</div>
+                        {% if transaction.order_id %}
+                        <small class="text-muted">Order: {{ transaction.order_id }}</small>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <span class="fw-bold 
+                            {% if transaction.type == 'opening_float' %}text-success
+                            {% elif transaction.type == 'closing_balance' %}text-primary
+                            {% elif transaction.type == 'cash_sale' %}text-info
+                            {% else %}text-dark{% endif %}">
+                            ₱{{ transaction.amount|floatformat:2 }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if transaction.cash_received %}
+                        <small class="text-muted">
+                            Received: ₱{{ transaction.cash_received|floatformat:2 }}<br>
+                            Change: ₱{{ transaction.change_given|floatformat:2 }}
+                        </small>
+                        {% elif transaction.adjustment_type %}
+                        <small class="text-muted">{{ transaction.get_adjustment_type_display|default:transaction.adjustment_type }}</small>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <small class="text-muted">{{ transaction.staff.username|default:"System" }}</small>
+                    </td>
+                    <td>
+                        <small class="text-muted">{{ transaction.notes|default:"—" }}</small>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                        <i class="fas fa-coins fa-2x mb-3 opacity-50"></i>
+                        <p>No cash transactions recorded today</p>
+                        <small class="text-muted">Cash transactions will appear here as they occur</small>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="table-active">
+                    <td colspan="3" class="fw-bold text-end">Totals:</td>
+                    <td class="text-end fw-bold">
+                        <div>Sales: ₱{{ cash_sales|floatformat:2 }}</div>
+                        <div>Float: ₱{{ starting_cash|floatformat:2 }}</div>
+                    </td>
+                    <td colspan="3" class="text-muted">
+                        <small>Last updated: {% now "H:i:s" %}</small>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<style>
+.staff-page { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+.staff-page .unified-page-header { margin-bottom: 1rem; }
+.staff-page .unified-card { padding: 1.25rem; margin-bottom: 1rem; }
+.staff-page .unified-form-control { border-radius: 8px; }
+.staff-page .unified-btn { padding: .55rem .9rem; border-radius: 8px; font-weight: 600; }
+
+/* Reconciliation Cards */
+.recon-card {
+    display: flex;
+    align-items: center;
+    padding: 1.25rem;
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+}
+
+.recon-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.recon-card-primary { border-left: 4px solid var(--primary); }
+.recon-card-secondary { border-left: 4px solid var(--secondary); }
+.recon-card-success { border-left: 4px solid var(--success); }
+.recon-card-warning { border-left: 4px solid var(--warning); }
+.recon-card-danger { border-left: 4px solid var(--danger); }
+
+.recon-icon {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    opacity: 0.8;
+}
+
+.recon-content {
+    flex: 1;
+}
+
+.recon-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.recon-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.recon-formula {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    opacity: 0.8;
+}
+
+.page-loading-overlay { 
+    position: fixed; 
+    inset:0; 
+    background: rgba(0,0,0,0.35); 
+    display:none; 
+    align-items:center; 
+    justify-content:center; 
+    z-index:9999; 
+}
+
+.page-loading-spinner { 
+    background: var(--bg-primary); 
+    color: var(--text-primary); 
+    padding: 12px 16px; 
+    border-radius: 10px; 
+    box-shadow: var(--shadow-md); 
+    font-weight: 600; 
+}
+
+@media print { 
+    .unified-btn, form { display:none!important; } 
+    .unified-card { border:1px solid #000!important; box-shadow:none!important; page-break-inside:avoid; } 
+}
+
+/* Enhanced Transaction Styles */
+.transaction-summary-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.transaction-summary-card:hover {
+    background: var(--bg-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.summary-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.summary-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.summary-count {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    opacity: 0.8;
+}
+
+.transaction-row {
+    transition: background-color 0.2s ease;
+}
+
+.transaction-row:hover {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* Color coding for transaction types */
+.table-success {
+    background-color: rgba(25, 135, 84, 0.05) !important;
+}
+
+.table-primary {
+    background-color: rgba(13, 110, 253, 0.05) !important;
+}
+
+.table-info {
+    background-color: rgba(13, 202, 240, 0.05) !important;
+}
+
+.table-warning {
+    background-color: rgba(255, 193, 7, 0.05) !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const manualToggle = document.getElementById('manualOverrideToggle');
+    const manualInput = document.getElementById('manualOverrideInput');
+    const manualFields = document.getElementById('manualFields');
+    
+    if (manualToggle) {
+        manualToggle.addEventListener('change', function() {
+            const isManual = this.checked;
+            manualInput.value = isManual ? 'true' : 'false';
+            manualFields.style.display = isManual ? 'block' : 'none';
+        });
+    }
+    
+    // Loading overlay
+    const overlay = document.getElementById('pageLoadingOverlay');
+    if (overlay) {
+        const show = () => overlay.style.display = 'flex';
+        document.addEventListener('submit', function(e){ 
+            const f = e.target; 
+            if(f && !f.hasAttribute('data-no-loading')) show(); 
+        });
+        window.addEventListener('pageshow', function(){ 
+            overlay.style.display = 'none'; 
+        });
+    }
+});
+</script>
+{% endblock %}

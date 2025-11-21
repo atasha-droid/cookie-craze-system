@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Search Debugging</h1>
+
+<div class="debug-info">
+    <h2>Debug Information</h2>
+    <p><strong>Q object imported:</strong> {{ q_imported }}</p>
+    <p><strong>Current query:</strong> "{{ query }}"</p>
+    <p><strong>Results found:</strong> {{ result_count }}</p>
+    <p><strong>Test query:</strong> "{{ test_query }}"</p>
+    <p><strong>Test results count:</strong> {{ test_results_count }}</p>
+</div>
+
+<h2>Test Search Form</h2>
+<form method="GET" action="{% url 'debug_search' %}">
+    <div class="search-input-group">
+        <input type="text" name="q" placeholder="Search cookies..." value="{{ query }}" class="search-input">
+        <button type="submit" class="search-btn">
+            <i class="fas fa-search"></i> Search
+        </button>
+    </div>
+</form>
+
+<h2>Results</h2>
+{% if cookies %}
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Flavor</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cookie in cookies %}
+        <tr>
+            <td>{{ cookie.name }}</td>
+            <td>{{ cookie.flavor }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No cookies found.</p>
+{% endif %}
+{% endblock %}

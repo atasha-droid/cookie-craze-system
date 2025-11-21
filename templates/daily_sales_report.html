@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Daily Sales Report - Cookie Craze{% endblock %}
+
+{% block content %}
+<div class="content staff-page">
+    <div id="pageLoadingOverlay" class="page-loading-overlay" style="display: none;">
+        <div class="page-loading-spinner">
+            <i class="fas fa-spinner fa-spin me-2"></i>
+            Loading...
+        </div>
+    </div>
+
+    <div class="unified-page-header">
+        <h1 class="unified-h1">Daily Sales Report</h1>
+        <div class="text-muted" style="font-size: var(--text-sm);">
+            <i class="fas fa-clipboard-list me-1"></i> Submit your daily sales summary
+        </div>
+    </div>
+
+    {% if has_submitted_today %}
+    <div class="unified-alert unified-alert-warning">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Notice:</strong> You have already submitted your daily sales report for today. 
+        You can only submit one report per day.
+    </div>
+    {% endif %}
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="unified-alert {% if message.tags == 'error' %}unified-alert-error{% else %}unified-alert-success{% endif %}">
+                <i class="fas fa-{% if message.tags == 'error' %}exclamation-triangle{% else %}check-circle{% endif %} me-2"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Today's Sales Summary -->
+    <div class="unified-card mb-4">
+        <h2 class="unified-h2">Today's Sales Summary</h2>
+        
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="unified-card-sm text-center">
+                    <div class="unified-stat-number">{{ today_sales.count }}</div>
+                    <div class="unified-stat-label">Transactions</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="unified-card-sm text-center">
+                    <div class="unified-stat-number">{{ total_items_today }}</div>
+                    <div class="unified-stat-label">Items Sold</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="unified-card-sm text-center">
+                    <div class="unified-stat-number">₱{{ total_sales_today|floatformat:2 }}</div>
+                    <div class="unified-stat-label">Total Revenue</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Breakdown -->
+        {% if sales_summary %}
+        <div class="unified-table-container">
+            <table class="unified-table">
+                <thead>
+                    <tr>
+                        <th>Cookie</th>
+                        <th>Price</th>
+                        <th>Quantity Sold</th>
+                        <th>Total Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in sales_summary %}
+                    <tr>
+                        <td class="fw-semibold">{{ item.cookie__name }}</td>
+                        <td>₱{{ item.cookie__price }}</td>
+                        <td>{{ item.total_quantity }}</td>
+                        <td class="fw-semibold text-success">
+                            ₱{% widthratio item.total_quantity 1 item.cookie__price %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-shopping-cart text-muted mb-3" style="font-size: 2rem;"></i>
+            <h5 class="text-muted">No sales recorded today</h5>
+            <p class="text-muted" style="font-size: var(--text-sm);">
+                Make some sales first, then come back to submit your daily report.
+            </p>
+            <a href="{% url 'record_sale' %}" class="unified-btn unified-btn-primary">
+                <i class="fas fa-cash-register me-2"></i> Record a Sale
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Daily Report Submission -->
+    {% if sales_summary and not has_submitted_today %}
+    <div class="unified-card">
+        <form method="post" id="daily-sales-form">
+            {% csrf_token %}
+            
+            <!-- Report Date and Payment Method -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="unified-form-group">
+                        <label class="unified-form-label" for="sales_date">
+                            <i class="fas fa-calendar me-2"></i> Report Date
+                        </label>
+                        <input type="date" name="sales_date" id="sales_date" 
+                               value="{{ today|date:'Y-m-d' }}" class="unified-form-control" readonly>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="unified-form-group">
+                        <label class="unified-form-label" for="payment_method">
+                            <i class="fas fa-credit-card me-2"></i> Primary Payment Method
+                        </label>
+                        <select name="payment_method" id="payment_method" class="unified-form-control">
+                            <option value="cash">Cash</option>
+                            <option value="card">Credit/Debit Card</option>
+                            <option value="gcash">GCash</option>
+                            <option value="maya">Maya</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                        </select>
+                        <small class="text-muted">Select the primary payment method used today</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Final Summary -->
+            <div class="unified-form-group">
+                <div class="unified-card-sm bg-light text-center">
+                    <h3 class="unified-h3">Daily Report Summary</h3>
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="unified-stat-number">{{ today_sales.count }}</div>
+                            <div class="unified-stat-label">Transactions</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="unified-stat-number">{{ sales_summary|length }}</div>
+                            <div class="unified-stat-label">Cookie Types</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="unified-stat-number">₱{{ total_sales_today|floatformat:2 }}</div>
+                            <div class="unified-stat-label">Total Amount</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-3 justify-content-end mt-4 pt-4 border-top">
+                <a href="{% url 'dashboard' %}" class="unified-btn unified-btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+                </a>
+                <button type="submit" class="unified-btn unified-btn-primary" id="submit-btn">
+                    <i class="fas fa-paper-plane me-2"></i> Submit Daily Report
+                </button>
+            </div>
+        </form>
+    </div>
+    {% elif not sales_summary and not has_submitted_today %}
+    <div class="unified-card text-center">
+        <i class="fas fa-clipboard-check text-muted mb-3" style="font-size: 3rem;"></i>
+        <h3 class="text-muted">No Sales to Report</h3>
+        <p class="text-muted mb-4">You need to make some sales before you can submit a daily report.</p>
+        <a href="{% url 'record_sale' %}" class="unified-btn unified-btn-primary">
+            <i class="fas fa-cash-register me-2"></i> Record Your First Sale
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+/* Staff page professional typography and spacing (scoped) */
+.staff-page {
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+.staff-page .unified-h1 { font-weight: 700; letter-spacing: .2px; }
+.staff-page .unified-h2 { font-weight: 650; letter-spacing: .15px; }
+.staff-page .unified-page-header { margin-bottom: 1rem; }
+.staff-page .unified-card { padding: 1rem 1.25rem; }
+.staff-page .unified-btn { padding: .55rem .9rem; border-radius: 8px; font-weight: 600; }
+.staff-page .unified-form-control { border-radius: 8px; }
+.staff-page .unified-table th, .staff-page .unified-table td { padding: .7rem .8rem; }
+
+/* Loading overlay */
+.page-loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: none; align-items: center; justify-content: center; z-index: 9999; }
+.page-loading-spinner { background: var(--bg-primary); color: var(--text-primary); padding: 12px 16px; border-radius: 10px; box-shadow: var(--shadow-md); font-weight: 600; letter-spacing: .2px; }
+
+.bg-light {
+    background: var(--bg-tertiary) !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('daily-sales-form');
+    const submitBtn = document.getElementById('submit-btn');
+    
+    if (form && submitBtn) {
+        form.addEventListener('submit', function(e) {
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Submitting...';
+        });
+    }
+});
+
+// Lightweight navigation loading overlay for staff pages
+(function() {
+    const overlay = document.getElementById('pageLoadingOverlay');
+    if (!overlay) return;
+    function showOverlay() { overlay.style.display = 'flex'; }
+    function shouldHandleLink(a) {
+        if (!a) return false;
+        if (a.hasAttribute('data-no-loading')) return false;
+        const href = a.getAttribute('href') || '';
+        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return false;
+        return a.target !== '_blank';
+    }
+    document.addEventListener('click', function(e) {
+        const a = e.target.closest('a');
+        if (shouldHandleLink(a)) {
+            showOverlay();
+        }
+    });
+    // Show overlay on form submits
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        if (form && !form.hasAttribute('data-no-loading')) {
+            showOverlay();
+        }
+    });
+    // Hide overlay if navigation is aborted and page persists
+    window.addEventListener('pageshow', function() { overlay.style.display = 'none'; });
+})();
+</script>
+{% endblock %}

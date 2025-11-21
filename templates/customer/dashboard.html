@@ -1,0 +1,961 @@
+{% extends 'customer/base_customer.html' %}
+{% load static %}
+
+{% block title %}Customer Dashboard - Cookie Craze{% endblock %}
+
+{% block extra_head %}
+    <style>
+        :root {
+            --primary: #8B4513;
+            --primary-light: #A0522D;
+            --primary-dark: #654321;
+            --accent: #D2691E;
+            --accent-light: #F5DEB3;
+            --success: #28a745;
+            --warning: #ecc94b;
+            --danger: #e53e3e;
+            --info: #3182ce;
+            
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f8f9fa;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --border: #e2e8f0;
+            
+            /* Improved spacing scale */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.5rem;
+            --space-6: 2rem;
+            --space-7: 2.5rem;
+            --space-8: 3rem;
+            
+            --radius: 0.375rem;
+            --radius-lg: 0.5rem;
+            --radius-xl: 0.75rem;
+            
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            
+            --text-xs: 0.75rem;
+            --text-sm: 0.875rem;
+            --text-base: 1rem;
+            --text-lg: 1.125rem;
+            --text-xl: 1.25rem;
+            --text-2xl: 1.5rem;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f1419;
+            --bg-secondary: #1a202c;
+            --bg-tertiary: #2d3748;
+            --text-primary: #f7fafc;
+            --text-secondary: #e2e8f0;
+            --text-muted: #a0aec0;
+            --border: #4a5568;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            line-height: 1.5;
+        }
+
+        /* Dashboard Layout */
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            transition: all 0.3s ease;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: var(--space-5);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius);
+        }
+
+        .sidebar-brand {
+            font-family: 'Poppins', sans-serif;
+            font-size: var(--text-lg);
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .sidebar-nav {
+            padding: var(--space-4) 0;
+        }
+
+        .nav-section {
+            margin-bottom: var(--space-5);
+        }
+
+        .nav-title {
+            font-size: var(--text-xs);
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0 var(--space-5) var(--space-2);
+            margin-bottom: var(--space-2);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-5);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-left-color: var(--primary);
+        }
+
+        .nav-item.active {
+            background: var(--bg-tertiary);
+            color: var(--primary);
+            border-left-color: var(--primary);
+            font-weight: 500;
+        }
+
+        .nav-icon {
+            width: 20px;
+            text-align: center;
+            font-size: var(--text-base);
+        }
+
+        .nav-text {
+            font-size: var(--text-sm);
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .dashboard-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: var(--space-4) var(--space-5);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: var(--text-lg);
+            cursor: pointer;
+            padding: var(--space-2);
+            border-radius: var(--radius);
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .page-title {
+            font-size: var(--text-xl);
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: var(--text-sm);
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-size: var(--text-sm);
+            font-weight: 600;
+            color: var(--text-primary);
+            display: block;
+        }
+
+        .user-role {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            display: block;
+        }
+
+        /* Buttons */
+        .unified-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            padding: var(--space-3) var(--space-4);
+            border: none;
+            border-radius: var(--radius);
+            font-family: inherit;
+            font-size: var(--text-sm);
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            line-height: 1;
+        }
+
+        .unified-btn-primary {
+            background: var(--primary);
+            color: white;
+            border: 1px solid var(--primary-dark);
+        }
+
+        .unified-btn-primary:hover:not(:disabled) {
+            background: var(--primary-light);
+        }
+
+        .unified-btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .unified-btn-secondary:hover:not(:disabled) {
+            background: var(--bg-secondary);
+            border-color: var(--primary);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: var(--space-3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary);
+        }
+
+        /* Main Content Area */
+        .dashboard-main {
+            flex: 1;
+            padding: var(--space-5);
+            background: var(--bg-primary);
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            transform: rotate(30deg);
+        }
+
+        .welcome-title {
+            font-size: var(--text-2xl);
+            font-weight: 700;
+            margin-bottom: var(--space-2);
+        }
+
+        .welcome-subtitle {
+            font-size: var(--text-base);
+            opacity: 0.9;
+            margin-bottom: var(--space-4);
+        }
+
+        .customer-id-badge {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.35);
+            color: #fff;
+            display: inline-block;
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius);
+            font-weight: 600;
+            margin-bottom: var(--space-4);
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+            margin-top: var(--space-4);
+        }
+
+        /* Active Order Card */
+        .active-order-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-6);
+            box-shadow: var(--shadow);
+        }
+
+        .active-order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-4);
+        }
+
+        .active-order-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--space-3);
+            font-size: var(--text-sm);
+        }
+
+        .active-order-meta span {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin: 0 auto var(--space-3);
+            color: var(--primary);
+        }
+
+        .stat-number {
+            font-size: var(--text-2xl);
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .stat-label {
+            font-size: var(--text-sm);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Recent Orders */
+        .recent-orders {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-5);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-5);
+        }
+
+        .section-title {
+            font-size: var(--text-lg);
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .orders-table th {
+            background: var(--bg-tertiary);
+            padding: var(--space-3) var(--space-4);
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border);
+            font-size: var(--text-sm);
+        }
+
+        .orders-table td {
+            padding: var(--space-3) var(--space-4);
+            border-bottom: 1px solid var(--border);
+            font-size: var(--text-sm);
+        }
+
+        .orders-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .orders-table tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .order-id {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .amount {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius);
+            font-size: var(--text-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status-preparing {
+            background: #cce7ff;
+            color: #004085;
+            border: 1px solid #b3d7ff;
+        }
+
+        .status-ready {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-7);
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            color: var(--border);
+            margin-bottom: var(--space-4);
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            margin-bottom: var(--space-2);
+            color: var(--text-secondary);
+            font-size: var(--text-lg);
+        }
+
+        .empty-state p {
+            margin-bottom: var(--space-4);
+            font-size: var(--text-base);
+        }
+
+        /* Announcements */
+        .announcements {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-top: var(--space-5);
+        }
+
+        .announcement-item {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-3);
+            padding: var(--space-3) 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .announcement-item:first-child {
+            border-top: none;
+        }
+
+        .announcement-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-tertiary);
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .announcement-content {
+            flex: 1;
+        }
+
+        .announcement-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .announcement-text {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .sidebar-toggle {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-main {
+                padding: var(--space-4);
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .active-order-header {
+                flex-direction: column;
+                gap: var(--space-3);
+            }
+            
+            .active-order-meta {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .orders-table {
+                font-size: var(--text-xs);
+            }
+            
+            .orders-table th,
+            .orders-table td {
+                padding: var(--space-2);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 100%;
+            }
+            
+            .dashboard-main {
+                padding: var(--space-3);
+            }
+            
+            .welcome-section {
+                padding: var(--space-4);
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--space-3);
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block nav_dashboard_active %}active{% endblock %}
+
+{% block header %}
+    <div class="header-content">
+        <div class="header-left">
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1 class="page-title">Dashboard</h1>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+            <div class="user-menu">
+                <div class="user-avatar">
+                    {{ customer.name|first|upper }}
+                </div>
+                <div class="user-info">
+                    <span class="user-name">{{ customer.name }}</span>
+                    <span class="user-role">Customer</span>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="dashboard-content">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <h2 class="welcome-title">Welcome back, {{ customer.name }}! 👋</h2>
+            <p class="welcome-subtitle">Ready to satisfy your cookie cravings?</p>
+            <div class="customer-id-badge">
+                Customer ID: <span style="font-family: 'Courier New', monospace; letter-spacing: 0.5px;">{{ request.user.profile.customer_id }}</span>
+            </div>
+
+            <div class="quick-actions">
+                <a href="{% url 'place_order' %}" class="unified-btn" style="background: white; color: var(--primary);">
+                    <i class="fas fa-cookie-bite me-2"></i>Place Order
+                </a>
+                <a href="{% url 'customer_cart' %}" class="unified-btn unified-btn-secondary">
+                    <i class="fas fa-shopping-cart me-2"></i>My Cart
+                </a>
+                <a href="{% url 'order_status' %}" class="unified-btn unified-btn-secondary">
+                    <i class="fas fa-truck me-2"></i>Order Status
+                </a>
+                <a href="{% url 'loyalty_rewards' %}" class="unified-btn unified-btn-secondary">
+                    <i class="fas fa-gift me-2"></i>Loyalty Points
+                </a>
+            </div>
+        </div>
+
+        <!-- Active Order Widget -->
+        {% if active_order %}
+        <div class="active-order-card">
+            <div class="active-order-header">
+                <div>
+                    <h3 class="section-title" style="margin-bottom: var(--space-1);">Active Order</h3>
+                    <div class="active-order-meta">
+                        <span>Order ID: <span class="order-id">{{ active_order.display_id }}</span></span>
+                        <span>Placed: {{ active_order.created_at|date:"M d, H:i" }}</span>
+                    </div>
+                </div>
+                <a href="{% url 'order_status' %}" class="unified-btn unified-btn-secondary">
+                    <i class="fas fa-truck me-2"></i>Track Order
+                </a>
+            </div>
+            <div class="active-order-meta">
+                <span><strong>Status:</strong>
+                    <span class="status-badge status-{{ active_order.status }}">
+                        {{ active_order.get_status_display }}
+                    </span>
+                </span>
+                <span><strong>Items:</strong> {{ active_order.items.count }} item{{ active_order.items.count|pluralize }}</span>
+                <span><strong>Total:</strong> ₱{{ active_order.total_amount }}</span>
+                <span><strong>Payment:</strong> {{ active_order.payment_method|title }}</span>
+            </div>
+        </div>
+        {% else %}
+        <div class="recent-orders" style="margin-bottom: var(--space-5);">
+            <div class="empty-state" style="padding: var(--space-6) var(--space-4);">
+                <div class="empty-icon">
+                    <i class="fas fa-cookie-bite"></i>
+                </div>
+                <h3>You have no active orders</h3>
+                <p>Start your order now and we'll bake something fresh for you.</p>
+                <a href="{% url 'place_order' %}" class="unified-btn unified-btn-primary">
+                    <i class="fas fa-plus me-2"></i>Place an Order
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="stat-number">{{ total_orders }}</div>
+                <div class="stat-label">Total Orders Placed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="stat-number">₱{{ total_spent }}</div>
+                <div class="stat-label">Total Amount Spent</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <div class="stat-number">{{ customer.loyalty_points }}</div>
+                <div class="stat-label">Loyalty Points Earned</div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="recent-orders">
+            <div class="section-header">
+                <h3 class="section-title">Recent Orders</h3>
+                <a href="{% url 'order_history' %}" class="unified-btn unified-btn-secondary">
+                    View All
+                </a>
+            </div>
+            {% if recent_orders %}
+            <div class="table-container">
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <td>
+                                <span class="order-id">{{ order.hex_id }}</span>
+                            </td>
+                            <td>{{ order.created_at|date:"M d" }}</td>
+                            <td>{{ order.items.count }} items</td>
+                            <td class="amount">₱{{ order.total_amount }}</td>
+                            <td>
+                                <span class="status-badge status-{{ order.status }}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <h3>No orders yet</h3>
+                <p>Start your cookie journey by placing your first order!</p>
+                <a href="{% url 'place_order' %}" class="unified-btn unified-btn-primary">
+                    <i class="fas fa-plus me-2"></i>Place Your First Order
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+            body.setAttribute('data-theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            body.setAttribute('data-theme', 'light');
+            themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+        
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            themeToggle.innerHTML = newTheme === 'dark' 
+                ? '<i class="fas fa-sun"></i>' 
+                : '<i class="fas fa-moon"></i>';
+        });
+
+        // Sidebar Toggle
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.querySelector('.sidebar');
+        
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 1024) {
+                if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                    sidebar.classList.remove('active');
+                }
+            }
+        });
+
+        // Auto-hide messages after 5 seconds
+        setTimeout(() => {
+            const messages = document.querySelectorAll('.alert');
+            messages.forEach(message => {
+                const fade = new bootstrap.Alert(message);
+                fade.close();
+            });
+        }, 5000);
+
+        // Auto-start guided tour moved to conditional block below
+    </script>
+    {% if show_ftue %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function(){
+            if(window.CustomerTour && typeof window.CustomerTour.showWelcome === 'function'){
+                window.CustomerTour.showWelcome();
+            }
+        });
+    </script>
+    {% endif %}
+{% endblock %}

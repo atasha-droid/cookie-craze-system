@@ -1,0 +1,1255 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Cookie Craze - Customer{% endblock %}</title>
+    <link rel="icon" href="{% static 'images/cookie-craze-logo.png' %}" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #8B4513;
+            --primary-light: #A0522D;
+            --primary-dark: #654321;
+            --accent: #D2691E;
+            --success: #28a745;
+            --warning: #ecc94b;
+            --danger: #e53e3e;
+            --info: #3182ce;
+            --success-soft: #d4edda;
+            --warning-soft: #fff3cd;
+            
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f8f9fa;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f1419;
+            --bg-secondary: #1a202c;
+            --bg-tertiary: #2d3748;
+            --text-primary: #f7fafc;
+            --text-secondary: #e2e8f0;
+            --text-muted: #a0aec0;
+            --border: #4a5568;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --success-soft: rgba(40, 167, 69, 0.18);
+            --warning-soft: rgba(236, 201, 75, 0.18);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 0.375rem;
+        }
+
+        .sidebar-brand {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0 1.5rem 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            font-size: 0.875rem;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-left-color: var(--primary);
+        }
+
+        .nav-item.active {
+            background: var(--bg-tertiary);
+            color: var(--primary);
+            border-left-color: var(--primary);
+            font-weight: 500;
+        }
+
+        .nav-icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-text {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .dashboard-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary);
+            color: var(--text-primary);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: block;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .dashboard-main {
+            flex: 1;
+            padding: 1.5rem;
+            background: var(--bg-primary);
+        }
+
+        /* Common utility classes for theme support */
+        .card, .stat-card, .order-card, .cookie-card, .profile-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-primary, .unified-btn-primary {
+            background: var(--primary);
+            color: white;
+            border: 1px solid var(--primary-dark);
+        }
+
+        .btn-primary:hover, .unified-btn-primary:hover {
+            background: var(--primary-light);
+        }
+
+        .btn-secondary, .unified-btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover, .unified-btn-secondary:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary);
+        }
+
+        .form-control, .form-select, input, textarea, select {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        /* Make disabled inputs readable on dark backgrounds */
+        .form-control:disabled, input:disabled, textarea:disabled, select:disabled {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            -webkit-text-fill-color: var(--text-primary);
+            opacity: 1; /* prevent dimming text */
+        }
+
+        /* Make readonly inputs readable too */
+        .form-control[readonly], input[readonly], textarea[readonly], select[readonly] {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            -webkit-text-fill-color: var(--text-primary);
+            opacity: 1;
+        }
+
+        .form-control:focus, .form-select:focus, input:focus, textarea:focus, select:focus {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
+        }
+
+        .table, .unified-table {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .tour-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 4000; display: none;
+        }
+        .tour-spotlight {
+            position: fixed; border: 2px solid var(--primary); border-radius: 10px; box-shadow: 0 0 0 9999px rgba(0,0,0,.55); transition: all .2s ease; z-index: 4001; pointer-events: none; display: none;
+        }
+        .tour-tooltip {
+            position: fixed; max-width: 320px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 12px; padding: 14px; box-shadow: var(--shadow-md); z-index: 4002; display: none;
+        }
+        .tour-actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 10px; }
+        .tour-btn { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-primary); cursor: pointer; }
+        .tour-btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+        .tip-pop { position: fixed; max-width: 280px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-primary); border-radius: 10px; padding: 10px; box-shadow: var(--shadow-md); z-index: 4002; display:none; }
+
+        .table thead, .unified-table thead {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .table tbody tr, .unified-table tbody tr {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table tbody tr:hover, .unified-table tbody tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .alert {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .badge {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-primary);
+        }
+
+        p, span, div {
+            color: inherit;
+        }
+
+        a {
+            color: var(--primary);
+        }
+
+        a:hover {
+            color: var(--primary-light);
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                z-index: 1001;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .sidebar-toggle {
+                display: block !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-main {
+                padding: 1rem;
+                width: 100%;
+            }
+            
+            .dashboard-header {
+                padding: 0.75rem 1rem;
+            }
+            
+            .header-content {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            
+            .header-left {
+                gap: 0.5rem;
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .page-title {
+                font-size: 1.1rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .header-right {
+                width: 100%;
+                justify-content: flex-end;
+                gap: 0.5rem;
+            }
+            
+            .user-menu {
+                gap: 0.5rem;
+            }
+            
+            .user-info {
+                display: none;
+            }
+            
+            .sidebar-nav {
+                padding: 0.75rem;
+            }
+            
+            .nav-item {
+                padding: 0.75rem 1rem;
+                font-size: 0.95rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 100%;
+            }
+            
+            .dashboard-main {
+                padding: 0.75rem;
+                width: 100%;
+            }
+            
+            .dashboard-header {
+                padding: 0.5rem 0.75rem;
+            }
+            
+            .header-left {
+                gap: 0.35rem;
+            }
+            
+            .sidebar-toggle {
+                padding: 0.35rem;
+                font-size: 1rem;
+            }
+            
+            .page-title {
+                font-size: 1rem;
+            }
+            
+            .header-right {
+                gap: 0.35rem;
+            }
+            
+            .theme-toggle {
+                width: 36px;
+                height: 36px;
+                padding: 0.35rem;
+            }
+            
+            .user-avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 0.75rem;
+            }
+            
+            .sidebar-header {
+                padding: 1rem;
+            }
+            
+            .sidebar-brand {
+                font-size: 1rem;
+            }
+            
+            .nav-item {
+                padding: 0.65rem 0.75rem;
+                font-size: 0.9rem;
+            }
+            
+            .nav-icon {
+                width: 20px;
+                height: 20px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Target iPhone 8 size and similar (375x667) */
+        @media (max-width: 420px) {
+            .dashboard-main { padding: 0.75rem; }
+            .page-title { font-size: 1rem; }
+            .header-right { gap: 0.35rem; }
+            .theme-toggle { width: 36px; height: 36px; padding: 0.35rem; }
+            .user-avatar { width: 30px; height: 30px; font-size: 0.7rem; }
+            .sidebar-header { padding: 0.9rem; }
+            .sidebar-brand { font-size: 0.95rem; }
+            .nav-item { padding: 0.6rem 0.75rem; font-size: 0.9rem; }
+            .nav-icon { width: 18px; height: 18px; font-size: 0.85rem; }
+
+            /* Forms */
+            .form-control, .form-select, input, textarea, select {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.95rem;
+                border-radius: 10px;
+            }
+            label, .form-label { font-size: 0.9rem; }
+
+            /* Buttons */
+            .btn, .unified-btn, .unified-btn-primary, .unified-btn-secondary {
+                padding: 0.6rem 0.9rem;
+                font-size: 0.92rem;
+                border-radius: 10px;
+            }
+
+            /* Tables */
+            .table th, .table td, .unified-table th, .unified-table td { padding: 0.5rem; }
+            .unified-table th { font-size: 0.9rem; }
+            .unified-table td { font-size: 0.9rem; }
+
+            /* Cards and common blocks */
+            .card, .stat-card, .order-card, .cookie-card, .profile-card { padding: 0.9rem; }
+            .section-title, h2, h3 { font-size: 1.1rem; }
+
+            /* Grids default to one column */
+            .stats-grid, .profile-stats, .grid, .grid-2 { grid-template-columns: 1fr !important; gap: 0.75rem; }
+
+            /* Reduce gaps in generic containers */
+            .dashboard-content { gap: 0.75rem; }
+        }
+
+        /* Fixed Logout Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 3000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow-md);
+            max-width: 400px;
+            width: 90%;
+            overflow: hidden;
+            animation: modalSlideIn 0.3s ease-out;
+            border: 1px solid var(--border);
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-secondary);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-header .close {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: var(--text-muted);
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .modal-header .close:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+        }
+
+        .modal-body p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            background: var(--bg-secondary);
+        }
+
+        /* Fixed Logout Loading Overlay */
+        .logout-loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3500;
+            backdrop-filter: blur(4px);
+        }
+
+        .logout-loading-overlay.show {
+            display: flex;
+        }
+
+        .logout-spinner-container {
+            background: var(--bg-secondary);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            min-width: 250px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .logout-spinner {
+            width: 3rem;
+            height: 3rem;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .logout-text {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .logout-subtext {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Unified Button Styles */
+        .unified-btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .unified-btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .unified-btn-secondary:hover {
+            background: var(--bg-primary);
+            transform: translateY(-1px);
+        }
+
+        .unified-btn-danger {
+            background: var(--danger);
+            color: white;
+            border: 1px solid var(--danger);
+        }
+
+        .unified-btn-danger:hover {
+            background: #c53030;
+            border-color: #c53030;
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 1rem;
+            }
+
+            .modal-footer {
+                flex-direction: column;
+            }
+
+            .unified-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body data-theme="light">
+    {% csrf_token %}
+    <input type="hidden" id="csrf_token" value="{{ csrf_token }}">
+
+    <!-- Global Loading Overlay for all customer pages -->
+    <div id="customer-loading-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 2000;">
+        <div style="background: var(--bg-secondary); border-radius: 0.75rem; padding: 1.75rem 2.25rem; box-shadow: var(--shadow-md); display: flex; flex-direction: column; align-items: center; gap: 0.75rem; min-width: 240px; max-width: 320px; text-align: center;">
+            <div class="spinner-border text-warning" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
+            <div style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">Loading, please wait...</div>
+        </div>
+    </div>
+
+    <!-- Fixed Full Page Loading Overlay for Logout -->
+    <div class="logout-loading-overlay" id="logoutLoadingOverlay">
+        <div class="logout-spinner-container">
+            <div class="logout-spinner"></div>
+            <div class="logout-text">Logging out...</div>
+            <div class="logout-subtext">Please wait while we secure your session</div>
+        </div>
+    </div>
+
+    <!-- Fixed Logout Confirmation Modal -->
+    <div id="logoutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Logout</h3>
+                <span class="close" id="closeLogoutModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to logout from Cookie Craze System?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelLogout" class="unified-btn unified-btn-secondary">Cancel</button>
+                <button id="confirmLogout" class="unified-btn unified-btn-danger">
+                    <i class="fas fa-sign-out-alt me-2"></i> Yes, Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="{% static 'images/cookie-craze-logo.png' %}" alt="Cookie Craze" class="sidebar-logo">
+                <div class="sidebar-brand">Cookie Craze</div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-title">Main Menu</div>
+                    <a href="{% url 'customer_dashboard' %}" class="nav-item {% block nav_dashboard_active %}{% endblock %}">
+                        <div class="nav-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="nav-text">Dashboard</div>
+                    </a>
+                    <a href="{% url 'place_order' %}" class="nav-item {% block nav_place_order_active %}{% endblock %}">
+                        <div class="nav-icon">
+                            <i class="fas fa-cookie-bite"></i>
+                        </div>
+                        <div class="nav-text">Place Order</div>
+                    </a>
+                    <a href="{% url 'customer_cart' %}" class="nav-item {% block nav_cart_active %}{% endblock %}">
+                        <div class="nav-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="nav-text">My Cart</div>
+                    </a>
+                    <a href="{% url 'order_status' %}" class="nav-item {% block nav_order_status_active %}{% endblock %}">
+                        <div class="nav-icon">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="nav-text">Order Status</div>
+                    </a>
+                    <a href="{% url 'order_history' %}" class="nav-item {% block nav_my_orders_active %}{% endblock %}">
+                        <div class="nav-icon">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <div class="nav-text">My Orders</div>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-title">Account</div>
+                    <a href="{% url 'customer_profile' %}" class="nav-item {% block nav_profile_active %}{% endblock %}">
+                        <div class="nav-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="nav-text">My Profile</div>
+                    </a>
+                    <a href="{% url 'loyalty_rewards' %}" class="nav-item {% block nav_loyalty_active %}{% endblock %}">
+                        <div class="nav-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="nav-text">Loyalty Points</div>
+                    </a>
+                    <a href="{% url 'customer_notifications' %}" class="nav-item {% block nav_notifications_active %}{% endblock %}">
+                        <div class="nav-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div class="nav-text">Notifications</div>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-title">System</div>
+                    <a href="{% url 'logout' %}" class="nav-item" onclick="return showLogoutModal(event)">
+                        <div class="nav-icon">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </div>
+                        <div class="nav-text">Logout</div>
+                    </a>
+                    <a href="{% url 'customer_help' %}" class="nav-item {% block nav_help_active %}{% endblock %}">
+                        <div class="nav-icon">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <div class="nav-text">Help &amp; Support</div>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="dashboard-header">
+                {% block header %}{% endblock %}
+            </header>
+
+            <main class="dashboard-main">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="dashboard-content">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const overlay = document.getElementById('customer-loading-overlay');
+            if (!overlay) return;
+
+            function showLoader() {
+                overlay.style.display = 'flex';
+            }
+
+            function hideLoader() {
+                overlay.style.display = 'none';
+            }
+
+            // Hide loader once page is fully loaded
+            if (document.readyState === 'complete') {
+                hideLoader();
+            } else {
+                window.addEventListener('load', hideLoader);
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const main = document.querySelector('.dashboard-main') || document.body;
+
+                // Intercept link clicks (navigation)
+                main.addEventListener('click', function(e) {
+                    const link = e.target.closest('a');
+                    if (!link) return;
+
+                    const href = link.getAttribute('href') || '';
+                    const target = link.getAttribute('target');
+
+                    // Skip in-page anchors, JS links, new tabs, and explicitly opted-out links
+                    if (
+                        href.startsWith('#') ||
+                        href.startsWith('javascript:') ||
+                        target === '_blank' ||
+                        link.dataset.noLoading !== undefined
+                    ) {
+                        return;
+                    }
+
+                    // Show loader for regular navigations within the app
+                    showLoader();
+                });
+
+                // Intercept form submissions
+                main.addEventListener('submit', function(e) {
+                    const form = e.target;
+                    if (!form || form.dataset.noLoading !== undefined) return;
+                    showLoader();
+                });
+
+                // Also handle global beforeunload (e.g., browser navigation)
+                window.addEventListener('beforeunload', function() {
+                    showLoader();
+                });
+            });
+        })();
+
+        // Global sidebar toggle for all customer pages
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.querySelector('.sidebar');
+            const toggles = document.querySelectorAll('#sidebarToggle, .sidebar-toggle');
+            toggles.forEach(btn => {
+                btn.addEventListener('click', function(e){
+                    e.preventDefault();
+                    if (!sidebar) return;
+                    const isActive = sidebar.classList.toggle('active');
+                    try { this.setAttribute('aria-expanded', isActive ? 'true' : 'false'); } catch(_){}
+                });
+            });
+
+            // Close sidebar when clicking outside on small screens
+            document.addEventListener('click', function(e){
+                if (window.innerWidth <= 1024 && sidebar && sidebar.classList.contains('active')) {
+                    const isInsideSidebar = sidebar.contains(e.target);
+                    const isToggle = Array.from(toggles).some(t => t.contains(e.target));
+                    if (!isInsideSidebar && !isToggle) {
+                        sidebar.classList.remove('active');
+                    }
+                }
+            });
+        });
+
+        // Delegated handler (backup) in case toggle is rendered later or replaced
+        document.addEventListener('click', function(e){
+            const toggleBtn = e.target.closest('#sidebarToggle, .sidebar-toggle');
+            if (!toggleBtn) return;
+            const sidebar = document.querySelector('.sidebar');
+            if (!sidebar) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const isActive = sidebar.classList.toggle('active');
+            try { toggleBtn.setAttribute('aria-expanded', isActive ? 'true' : 'false'); } catch(_){}
+        });
+
+        // Capturing-phase handler to guarantee toggle even if other scripts stop propagation
+        document.addEventListener('click', function(e){
+            const toggleBtn = e.target.closest('#sidebarToggle, .sidebar-toggle');
+            if (!toggleBtn) return;
+            const sidebar = document.querySelector('.sidebar');
+            if (!sidebar) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const isActive = sidebar.classList.toggle('active');
+            try { toggleBtn.setAttribute('aria-expanded', isActive ? 'true' : 'false'); } catch(_){}}
+        , true);
+
+        // Guided Tour
+        (function(){
+            let steps = [];
+            let index = 0;
+            let overlay, spotlight, tooltip, titleEl, textEl, progressEl, btnPrev, btnNext, btnSkip;
+            let welcomeOverlay, welcomeBox;
+
+            function ensureElements(){
+                overlay = document.getElementById('tourOverlay');
+                spotlight = document.getElementById('tourSpotlight');
+                tooltip = document.getElementById('tourTooltip');
+                if(!overlay){ overlay = document.createElement('div'); overlay.id='tourOverlay'; overlay.className='tour-overlay'; document.body.appendChild(overlay);}    
+                if(!spotlight){ spotlight = document.createElement('div'); spotlight.id='tourSpotlight'; spotlight.className='tour-spotlight'; document.body.appendChild(spotlight);} 
+                if(!tooltip){
+                    tooltip = document.createElement('div');
+                    tooltip.id='tourTooltip';
+                    tooltip.className='tour-tooltip';
+                    tooltip.innerHTML = '<div id="tourTitle" style="font-weight:700;margin-bottom:6px"></div><div id="tourText" style="font-size:.95rem;color:var(--text-secondary)"></div><div class="tour-actions"><button id="tourPrev" class="tour-btn">Back</button><div style="flex:1;text-align:center;font-size:.85rem;color:var(--text-muted)" id="tourProgress"></div><button id="tourSkip" class="tour-btn">Skip</button><button id="tourNext" class="tour-btn tour-btn-primary">Next</button></div>';
+                    document.body.appendChild(tooltip);
+                }
+                titleEl = document.getElementById('tourTitle');
+                textEl = document.getElementById('tourText');
+                progressEl = document.getElementById('tourProgress');
+                btnPrev = document.getElementById('tourPrev');
+                btnNext = document.getElementById('tourNext');
+                btnSkip = document.getElementById('tourSkip');
+                btnPrev.onclick = prev; btnNext.onclick = next; btnSkip.onclick = stop;
+                overlay.onclick = stop;
+            }
+
+            function placeFor(target){
+                const r = target.getBoundingClientRect();
+                spotlight.style.display = 'block';
+                spotlight.style.left = (r.left - 8) + 'px';
+                spotlight.style.top = (r.top - 8) + 'px';
+                spotlight.style.width = (r.width + 16) + 'px';
+                spotlight.style.height = (r.height + 16) + 'px';
+
+                const ttW = Math.min(320, Math.max(240, r.width));
+                tooltip.style.display = 'block';
+                tooltip.style.width = ttW + 'px';
+                let top = r.bottom + 12;
+                if (top + 160 > window.innerHeight) top = r.top - 12 - 160;
+                let left = r.left;
+                if (left + ttW > window.innerWidth - 12) left = window.innerWidth - ttW - 12;
+                if (left < 12) left = 12;
+                tooltip.style.top = Math.max(12, top) + 'px';
+                tooltip.style.left = left + 'px';
+                target.scrollIntoView({block:'center', behavior:'smooth'});
+            }
+
+            function findEl(sel){
+                if(typeof sel === 'function') return sel();
+                return document.querySelector(sel);
+            }
+
+            function show(){
+                ensureElements();
+                if(!steps.length){ stop(); return; }
+                const s = steps[index];
+                const el = findEl(s.selector);
+                if(!el){ next(); return; }
+                overlay.style.display = 'block';
+                titleEl.textContent = s.title || 'Step ' + (index+1);
+                textEl.textContent = s.text || '';
+                progressEl.textContent = (index+1) + ' / ' + steps.length;
+                btnPrev.style.visibility = index === 0 ? 'hidden' : 'visible';
+                btnNext.textContent = index === steps.length-1 ? 'Finish' : 'Next';
+                placeFor(el);
+            }
+
+            function next(){
+                if(index < steps.length-1){ index++; show(); }
+                else { complete(); }
+            }
+
+            function prev(){ if(index>0){ index--; show(); } }
+
+            function stop(){
+                if(overlay) overlay.style.display='none';
+                if(spotlight) spotlight.style.display='none';
+                if(tooltip) tooltip.style.display='none';
+            }
+
+            function getCookie(name){
+                const v = ('; '+document.cookie).split('; '+name+'=');
+                if(v.length === 2) return v.pop().split(';').shift();
+            }
+            function complete(){
+                stop();
+                try{
+                    const csrf = (document.querySelector('[name=csrfmiddlewaretoken]')||{}).value || getCookie('csrftoken') || '';
+                    fetch('/app/customer/ftue/complete/', {method:'POST', headers:{'X-CSRFToken': csrf}});
+                }catch(_){}
+            }
+
+            function start(customSteps){
+                steps = customSteps && customSteps.length ? customSteps : [
+                    { selector: '#sidebarToggle', title: 'Menu', text: 'Open the menu on mobile to navigate.' },
+                    { selector: '.sidebar .nav-item[href*="customer/place-order"] , a[href*="customer/place-order"]', title: 'Place Order', text: 'Browse cookies and add to cart.' },
+                    { selector: '.sidebar .nav-item[href*="customer/cart"] , a[href*="customer/cart"]', title: 'My Cart', text: 'Review quantities and checkout.' },
+                    { selector: '.sidebar .nav-item[href*="customer/order-status"] , a[href*="customer/order-status"]', title: 'Order Status', text: 'Track your orders in real time.' },
+                    { selector: 'a[href*="checkout"], .btn-checkout, [data-checkout] , .checkout-button', title: 'Checkout', text: 'Proceed to payment and finalize your order.' },
+                    { selector: '.sidebar .nav-item[href*="customer/profile"] , a[href*="customer/profile"]', title: 'Profile', text: 'Update your info or delete your account anytime.' }
+                ];
+                index = 0; show();
+            }
+
+
+            // One-time context tip near an element
+            function showTipOnce(selector, storageKey, text){
+                if(localStorage.getItem(storageKey)==='1') return;
+                const el = (typeof selector==='function')? selector(): document.querySelector(selector);
+                if(!el) return;
+                const tip = document.createElement('div');
+                tip.className='tip-pop'; tip.textContent=text;
+                document.body.appendChild(tip);
+                const r = el.getBoundingClientRect();
+                const w = Math.min(280, Math.max(200, r.width));
+                tip.style.display='block'; tip.style.width = w+'px';
+                let top = r.bottom + 8; if(top+120>window.innerHeight) top = r.top - 8 - 120;
+                let left = r.left; if(left+w>window.innerWidth-8) left = window.innerWidth - w - 8; if(left<8) left = 8;
+                tip.style.top = Math.max(8, top)+'px'; tip.style.left = left+'px';
+                setTimeout(()=>{ tip.style.display='none'; tip.remove(); }, 5000);
+                localStorage.setItem(storageKey,'1');
+            }
+
+            document.addEventListener('DOMContentLoaded', function(){
+                if(location.pathname.indexOf('/app/customer/dashboard') !== -1){
+                    setTimeout(function(){
+                        try { showTipOnce('a[href*="customer/cart"], .nav a[href*="cart"], .quick-actions a[href*="cart"]', 'tip_cart_highlighted', 'Review items in your cart here.'); } catch(_){}
+                    }, 200);
+                }
+            });
+
+            document.addEventListener('DOMContentLoaded', function(){
+                if(location.pathname.indexOf('/app/customer/cart') !== -1){
+                    try { showTipOnce('.cart-items, .cart-container, .cart-list, .order-summary', 'tip_cart_manage', 'Manage quantities or remove items here.'); } catch(_){}
+                }
+            });
+        })();
+
+        // Fixed logout modal functionality
+        function showLogoutModal(event) {
+            event.preventDefault();
+            const modal = document.getElementById('logoutModal');
+            const logoutLoadingOverlay = document.getElementById('logoutLoadingOverlay');
+            
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.classList.add('show');
+                
+                const closeBtn = modal.querySelector('#closeLogoutModal');
+                const cancelBtn = modal.querySelector('#cancelLogout');
+                const confirmBtn = modal.querySelector('#confirmLogout');
+                
+                const closeModal = () => {
+                    modal.style.display = 'none';
+                    modal.classList.remove('show');
+                };
+                
+                if (closeBtn) closeBtn.onclick = closeModal;
+                if (cancelBtn) cancelBtn.onclick = closeModal;
+                
+                modal.onclick = (e) => {
+                    if (e.target === modal) closeModal();
+                };
+                
+                if (confirmBtn) {
+                    confirmBtn.onclick = function(e) {
+                        e.preventDefault();
+                        closeModal();
+                        if (logoutLoadingOverlay) {
+                            logoutLoadingOverlay.style.display = 'flex';
+                            logoutLoadingOverlay.classList.add('show');
+                        }
+                        setTimeout(function(){
+                            window.location.href = "{% url 'logout' %}";
+                        }, 500);
+                    };
+                }
+            }
+            
+            return false;
+        }
+
+        // Attach logout modal to all logout buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutButtons = document.querySelectorAll('[onclick*="showLogoutModal"]');
+            logoutButtons.forEach(button => {
+                button.addEventListener('click', showLogoutModal);
+            });
+            
+            // Auto-hide success alerts after 3 seconds
+            const alerts = document.querySelectorAll('.alert-success');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.3s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(() => {
+                        alert.style.display = 'none';
+                    }, 300);
+                }, 3000);
+            });
+        });
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

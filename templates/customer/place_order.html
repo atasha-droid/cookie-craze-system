@@ -1,0 +1,928 @@
+{% extends 'customer/base_customer.html' %}
+{% load static %}
+
+{% block title %}Place Order - Cookie Craze{% endblock %}
+
+{% block extra_head %}
+<style>
+    .order-layout {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    @media (max-width: 992px) {
+        .order-layout {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .order-layout {
+            gap: 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .order-layout {
+            gap: 0.75rem;
+        }
+    }
+
+    .product-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+    }
+
+    .product-search {
+        flex: 1;
+        max-width: 320px;
+    }
+
+    .category-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .category-pill {
+        border-radius: 999px;
+        padding: 0.25rem 0.75rem;
+        border: 1px solid var(--border);
+        background: var(--bg-secondary);
+        font-size: 0.75rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+        transition: all 0.2s ease;
+    }
+
+    .category-pill.active,
+    .category-pill:hover {
+        background: var(--primary);
+        border-color: var(--primary-dark);
+        color: #fff;
+    }
+
+    .cookie-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .order-layout {
+            gap: 1.5rem;
+        }
+        
+        .product-toolbar {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .product-search {
+            max-width: 100%;
+        }
+        
+        .category-filters {
+            width: 100%;
+        }
+        
+        .cookie-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.75rem;
+        }
+        
+        .cookie-card {
+            padding: 0.75rem;
+        }
+        
+        .cookie-image {
+            height: 120px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .cookie-name {
+            font-size: 0.8rem;
+        }
+        
+        .cookie-price {
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .product-toolbar {
+            gap: 0.5rem;
+        }
+        
+        .category-filters {
+            gap: 0.35rem;
+        }
+        
+        .category-pill {
+            padding: 0.2rem 0.5rem;
+            font-size: 0.7rem;
+        }
+        
+        .cookie-grid {
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 0.5rem;
+        }
+        
+        .cookie-card {
+            padding: 0.5rem;
+        }
+        
+        .cookie-image {
+            height: 100px;
+            margin-bottom: 0.35rem;
+        }
+        
+        .cookie-name {
+            font-size: 0.75rem;
+        }
+        
+        .stock-badge {
+            font-size: 0.65rem;
+            margin-bottom: 0.35rem;
+        }
+    }
+
+    .cookie-card {
+        position: relative;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        transition: all 0.3s;
+    }
+
+    .cookie-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .cookie-card.in-cart {
+        border-color: var(--primary);
+        box-shadow: var(--shadow-md);
+        background: rgba(139, 69, 19, 0.08);
+    }
+
+    .in-cart-badge {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        background: var(--primary);
+        color: #fff;
+        font-size: 0.65rem;
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        border-radius: 999px;
+    }
+
+    .cookie-image {
+        width: 100%;
+        height: 150px;
+        background: var(--bg-tertiary);
+        border-radius: 0.375rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .cookie-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 0.375rem;
+    }
+
+    .cookie-name {
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .cookie-price {
+        font-weight: 700;
+        color: var(--primary);
+        margin: 0.5rem 0;
+    }
+
+    .stock-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .stock-available {
+        background: rgba(40, 167, 69, 0.15);
+        color: #28a745;
+    }
+
+    .stock-low {
+        background: rgba(236, 201, 75, 0.15);
+        color: #d4a500;
+    }
+
+    .stock-out {
+        background: rgba(229, 62, 62, 0.15);
+        color: #e53e3e;
+    }
+
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    .quantity-btn {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--border);
+        background: var(--bg-tertiary);
+        border-radius: 0.25rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-primary);
+    }
+
+    .quantity-btn:hover {
+        background: var(--bg-secondary);
+        border-color: var(--primary);
+    }
+
+    .quantity-input {
+        width: 50px;
+        text-align: center;
+        border: 1px solid var(--border);
+        border-radius: 0.25rem;
+        padding: 0.25rem;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    .order-summary {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        position: sticky;
+        top: 1rem;
+        height: fit-content;
+    }
+
+    .summary-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--primary);
+    }
+
+    .order-items {
+        margin-bottom: 1rem;
+    }
+
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .order-total {
+        border-top: 2px solid var(--border);
+        padding-top: 1rem;
+        margin-top: 1rem;
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+        font-size: 1.125rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block nav_place_order_active %}active{% endblock %}
+
+{% block header %}
+<div class="header-content">
+    <div class="header-left">
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h1 class="page-title">Place Order</h1>
+    </div>
+    
+    <div class="header-right">
+        <button class="theme-toggle" id="themeToggle">
+            <i class="fas fa-moon"></i>
+        </button>
+        
+        <div class="user-menu">
+            <div class="user-avatar">
+                {{ customer.name|first|upper }}
+            </div>
+            <div class="user-info">
+                <span class="user-name">{{ customer.name }}</span>
+                <span class="user-role">Customer</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="order-layout">
+    <div>
+        <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem;">Available Cookies</h2>
+
+        <div class="product-toolbar">
+            <div class="product-search">
+                <input type="text" id="cookieSearch" class="form-control" placeholder="Search cookies by name...">
+            </div>
+            <div class="category-filters">
+                <button type="button" class="category-pill active" data-category="all">All</button>
+                {% for category in categories %}
+                <button type="button" class="category-pill" data-category="{{ category.name|lower }}">
+                    {{ category.name }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+        
+        {% if available_cookies %}
+        <div class="cookie-grid">
+            {% for cookie in available_cookies %}
+            <div class="cookie-card" 
+                 data-cookie-id="{{ cookie.id }}"
+                 data-cookie-name="{{ cookie.name|lower }}"
+                 data-cookie-display-name="{{ cookie.name|escape }}"
+                 data-cookie-price="{{ cookie.price }}"
+                 data-cookie-category="{% if cookie.category %}{{ cookie.category.name|lower }}{% else %}other{% endif %}">
+                <div class="cookie-image">
+                    {% if cookie.image %}
+                        <img src="{{ cookie.image.url }}" alt="{{ cookie.name }}" class="cookie-img">
+                    {% else %}
+                        <i class="fas fa-cookie-bite" style="font-size: 2rem; color: #8B4513;"></i>
+                    {% endif %}
+                </div>
+                <div class="cookie-name">{{ cookie.name }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">{{ cookie.get_category_display }}</div>
+                <div class="cookie-price">₱{{ cookie.price }}</div>
+                <div class="stock-badge {% if cookie.stock_quantity > 10 %}stock-available{% elif cookie.stock_quantity > 0 %}stock-low{% else %}stock-out{% endif %}">
+                    {% if cookie.stock_quantity > 0 %}
+                        {{ cookie.stock_quantity }} in stock
+                    {% else %}
+                        Out of stock
+                    {% endif %}
+                </div>
+                
+                <div class="quantity-controls">
+                    <button class="quantity-btn" onclick="updateQuantity({{ cookie.id }}, -1)" {% if cookie.stock_quantity == 0 %}disabled{% endif %}>
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <input type="number" 
+                           id="quantity-{{ cookie.id }}" 
+                           class="quantity-input" 
+                           value="0" 
+                           min="0" 
+                           max="{{ cookie.stock_quantity }}"
+                           onchange="validateQuantity({{ cookie.id }}, {{ cookie.stock_quantity }})"
+                           {% if cookie.stock_quantity == 0 %}disabled{% endif %}>
+                    <button class="quantity-btn" onclick="updateQuantity({{ cookie.id }}, 1)" {% if cookie.stock_quantity == 0 %}disabled{% endif %}>
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addToCart({{ cookie.id }})" style="flex: 1; margin-left: 0.5rem;" {% if cookie.stock_quantity == 0 %}disabled{% endif %}>
+                        <i class="fas fa-shopping-cart me-1"></i>Add to Cart
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-cookie-bite" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+            <h3>No cookies available</h3>
+            <p>All cookies are currently out of stock.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="order-summary">
+        <h3 class="summary-title">Order Summary</h3>
+        
+        <div class="order-items" id="orderItems">
+            <div class="empty-state">
+                <i class="fas fa-shopping-cart" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                <p>No items selected</p>
+            </div>
+        </div>
+
+        <div class="order-total">
+            <span>Total:</span>
+            <span id="totalAmount">₱0.00</span>
+        </div>
+
+        <div style="margin-top: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Payment Method</label>
+            <select class="form-select" id="paymentMethod">
+                <option value="">Select payment method</option>
+                <option value="cash">Cash</option>
+                <option value="gcash">GCash</option>
+            </select>
+        </div>
+
+        <div id="gcashDetails" style="margin-top: 1rem; display: none;">
+            <div class="alert alert-info mb-2" style="font-size: 0.85rem;">
+                <strong>GCash Payment Instructions</strong><br>
+                Account Name: <strong>Cookie Craze</strong><br>
+                GCash Number: <strong>09614930977</strong><br>
+                <span>Send exact amount only.</span>
+            </div>
+            <div class="mb-2" style="font-size: 0.85rem;">
+                Please send your payment via GCash first, then upload a clear screenshot of the GCash receipt before placing your order.
+            </div>
+            <div class="mb-2">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Upload GCash Payment Screenshot</label>
+                <input type="file" id="gcashProof" class="form-control" accept="image/*">
+            </div>
+        </div>
+
+        <div style="margin-top: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Order Notes</label>
+            <textarea class="form-control" id="orderNotes" rows="3" placeholder="Special instructions..."></textarea>
+        </div>
+
+        <button type="button" class="btn btn-primary w-100 mt-3" id="submitOrder" disabled>
+            <i class="fas fa-check-circle me-2"></i>Place Order
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Get CSRF token
+    function getCsrfToken() {
+        const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+    const csrfToken = getCsrfToken();
+
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+    
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        body.setAttribute('data-theme', 'dark');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    }
+    
+    themeToggle.addEventListener('click', function() {
+        const currentTheme = body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        themeToggle.innerHTML = newTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    });
+
+    // Sidebar toggle
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    
+    sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('active');
+    });
+
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 1024) {
+            if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                sidebar.classList.remove('active');
+            }
+        }
+    });
+
+    // Order management - client-side cart for Place Order page
+    let cartItems = {};      // { cookieId: quantity }
+    let cartDetails = [];    // [{ id, name, price, quantity, subtotal }]
+    let totalAmount = 0;
+
+    // NEW: Load cart from session on page load
+    async function loadSessionCart() {
+        try {
+            const response = await fetch("{% url 'cart_state' %}", {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                cartItems = data.cart || {};
+                cartDetails = data.items || [];
+                totalAmount = parseFloat(data.total_amount || '0');
+                renderOrderSummary();
+                updateCookieCardStates();
+            }
+        } catch (error) {
+            console.error('Error loading cart:', error);
+        }
+    }
+
+    function updateQuantity(cookieId, change) {
+        const input = document.getElementById(`quantity-${cookieId}`);
+        const currentValue = parseInt(input.value) || 0;
+        const newValue = Math.max(0, currentValue + change);
+        
+        input.value = newValue;
+        validateQuantity(cookieId, parseInt(input.max));
+        
+        // Update order summary in real-time
+        updateOrderSummaryPreview(cookieId, newValue);
+    }
+
+    function validateQuantity(cookieId, maxStock) {
+        const input = document.getElementById(`quantity-${cookieId}`);
+        let value = parseInt(input.value, 10);
+
+        if (isNaN(value) || value < 0) {
+            value = 0;
+        }
+
+        if (!isNaN(maxStock) && value > maxStock) {
+            value = maxStock;
+            alert(`Only ${maxStock} items available in stock.`);
+        }
+
+        input.value = value;
+        
+        // Update order summary preview
+        updateOrderSummaryPreview(cookieId, value);
+    }
+
+    function formatCurrency(value) {
+        const amount = parseFloat(value || 0);
+        return `₱${amount.toFixed(2)}`;
+    }
+
+    function updateCookieCardStates() {
+        document.querySelectorAll('.cookie-card').forEach(card => {
+            const cookieId = card.getAttribute('data-cookie-id');
+            const quantity = parseInt(cartItems[cookieId] || 0, 10);
+            card.classList.toggle('in-cart', quantity > 0);
+
+            let badge = card.querySelector('.in-cart-badge');
+            if (quantity > 0) {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'in-cart-badge';
+                    card.appendChild(badge);
+                }
+                badge.textContent = `In cart: ${quantity}`;
+            } else if (badge) {
+                badge.remove();
+            }
+        });
+    }
+
+    function renderOrderSummary() {
+        const orderItemsContainer = document.getElementById('orderItems');
+        const totalAmountElement = document.getElementById('totalAmount');
+        const submitButton = document.getElementById('submitOrder');
+
+        if (!orderItemsContainer || !totalAmountElement || !submitButton) {
+            return;
+        }
+
+        orderItemsContainer.innerHTML = '';
+
+        if (!cartDetails.length) {
+            orderItemsContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-shopping-cart" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                    <p>No items selected</p>
+                </div>
+            `;
+            totalAmountElement.textContent = '₱0.00';
+            submitButton.disabled = true;
+            updateCookieCardStates();
+            return;
+        }
+
+        cartDetails.forEach(item => {
+            const itemTotal = parseFloat(item.subtotal || 0);
+            const itemElement = document.createElement('div');
+            itemElement.className = 'order-item';
+            itemElement.innerHTML = `
+                <div>
+                    <div style="font-weight: 600; font-size: 0.875rem;">${item.name}</div>
+                    <div style="font-size: 0.75rem; color: #718096;">₱${parseFloat(item.price).toFixed(2)} × ${item.quantity}</div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.25rem;">
+                    <div style="font-weight: 600; color: #8B4513;">${formatCurrency(itemTotal)}</div>
+                    <button type="button" class="btn btn-link p-0 cart-preview-remove" data-cookie-id="${item.id}" style="font-size: 0.75rem;">Remove</button>
+                </div>
+            `;
+
+            orderItemsContainer.appendChild(itemElement);
+        });
+
+        totalAmountElement.textContent = formatCurrency(totalAmount);
+        submitButton.disabled = false;
+        updateCookieCardStates();
+    }
+
+    function recalculateCartFromState() {
+        cartDetails = [];
+        totalAmount = 0;
+
+        const cards = document.querySelectorAll('.cookie-card');
+        const itemsMap = cartItems || {};
+
+        cards.forEach(card => {
+            const id = card.getAttribute('data-cookie-id');
+            const quantity = parseInt(itemsMap[id] || 0, 10);
+            if (quantity > 0) {
+                const name = card.getAttribute('data-cookie-display-name') || card.getAttribute('data-cookie-name') || '';
+                const priceStr = card.getAttribute('data-cookie-price') || '0';
+                const price = parseFloat(priceStr);
+                const subtotal = price * quantity;
+
+                totalAmount += subtotal;
+                cartDetails.push({
+                    id,
+                    name,
+                    price,
+                    quantity,
+                    subtotal
+                });
+            }
+        });
+
+        renderOrderSummary();
+    }
+
+    // NEW: Update order summary preview without adding to cart
+    function updateOrderSummaryPreview(cookieId, quantity) {
+        const card = document.querySelector(`[data-cookie-id="${cookieId}"]`);
+        if (!card) return;
+
+        const name = card.getAttribute('data-cookie-display-name') || card.getAttribute('data-cookie-name') || '';
+        const priceStr = card.getAttribute('data-cookie-price') || '0';
+        const price = parseFloat(priceStr);
+
+        // Find or create item in preview
+        let item = cartDetails.find(item => item.id == cookieId);
+        
+        if (quantity > 0) {
+            const subtotal = price * quantity;
+            if (item) {
+                // Update existing item
+                item.quantity = quantity;
+                item.subtotal = subtotal;
+            } else {
+                // Add new item to preview
+                cartDetails.push({
+                    id: cookieId,
+                    name,
+                    price,
+                    quantity,
+                    subtotal
+                });
+            }
+        } else {
+            // Remove item if quantity is 0
+            if (item) {
+                cartDetails = cartDetails.filter(i => i.id != cookieId);
+            }
+        }
+
+        // Recalculate total
+        totalAmount = cartDetails.reduce((sum, item) => sum + item.subtotal, 0);
+        
+        // Re-render the summary
+        renderOrderSummary();
+    }
+
+    // NEW: Function to sync with session cart
+    async function syncCartItem(cookieId, quantity) {
+        if (!csrfToken) {
+            alert('Unable to update cart. Please refresh the page.');
+            return;
+        }
+
+        try {
+            const response = await fetch("{% url 'update_cart_item' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ cookie_id: cookieId, quantity })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                cartItems = data.cart || {};
+                cartDetails = data.items || [];
+                totalAmount = parseFloat(data.total_amount || '0');
+                renderOrderSummary();
+                updateCookieCardStates();
+            } else {
+                alert(data.error || 'Unable to update cart.');
+            }
+        } catch (error) {
+            console.error('Error updating cart:', error);
+            alert('Unable to update cart. Please try again.');
+        }
+    }
+
+    // Handle remove buttons in order summary
+    document.addEventListener('click', function(event) {
+        const removeBtn = event.target.closest('.cart-preview-remove');
+        if (removeBtn) {
+            const cookieId = removeBtn.getAttribute('data-cookie-id');
+            syncCartItem(cookieId, 0);
+        }
+    });
+
+    function addToCart(cookieId) {
+        const quantity = parseInt(document.getElementById(`quantity-${cookieId}`).value) || 0;
+        
+        if (quantity <= 0) {
+            alert('Please select a quantity');
+            return;
+        }
+        
+        const input = document.getElementById(`quantity-${cookieId}`);
+        const maxStock = parseInt(input.getAttribute('max'), 10) || quantity;
+        const currentQty = parseInt(cartItems[cookieId] || 0, 10) || 0;
+        const desiredQuantity = currentQty + quantity;
+
+        if (desiredQuantity > maxStock) {
+            alert(`Only ${maxStock} items available in stock.`);
+            return;
+        }
+
+        // Sync with session cart (adds to actual cart)
+        syncCartItem(cookieId, desiredQuantity);
+        
+        // Reset the input field
+        input.value = 0;
+        
+        // Update the preview to match the actual cart
+        updateOrderSummaryPreview(cookieId, 0);
+    }
+
+    // Product filtering (search + category)
+    const cookieCards = document.querySelectorAll('.cookie-card');
+    const searchInput = document.getElementById('cookieSearch');
+    const categoryPills = document.querySelectorAll('.category-pill');
+    let activeCategory = 'all';
+
+    function filterProducts() {
+        const query = (searchInput?.value || '').toLowerCase().trim();
+
+        cookieCards.forEach(card => {
+            const name = card.getAttribute('data-cookie-name') || '';
+            const category = card.getAttribute('data-cookie-category') || '';
+
+            const matchesSearch = !query || name.includes(query);
+            const matchesCategory = activeCategory === 'all' || category === activeCategory;
+
+            if (matchesSearch && matchesCategory) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', filterProducts);
+    }
+
+    if (categoryPills.length) {
+        categoryPills.forEach(pill => {
+            pill.addEventListener('click', function() {
+                categoryPills.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                activeCategory = this.getAttribute('data-category');
+                filterProducts();
+            });
+        });
+    }
+
+    // Note: Remove button handling is done via event delegation above
+
+    const paymentMethodSelect = document.getElementById('paymentMethod');
+    const gcashDetails = document.getElementById('gcashDetails');
+    const gcashProofInput = document.getElementById('gcashProof');
+
+    if (paymentMethodSelect && gcashDetails) {
+        paymentMethodSelect.addEventListener('change', function() {
+            if (this.value === 'gcash') {
+                gcashDetails.style.display = 'block';
+            } else {
+                gcashDetails.style.display = 'none';
+                if (gcashProofInput) {
+                    gcashProofInput.value = '';
+                }
+            }
+        });
+    }
+
+    // FIXED: Submit order function
+    document.getElementById('submitOrder').addEventListener('click', async function() {
+        const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : '';
+        const orderNotes = document.getElementById('orderNotes').value;
+        
+        if (!paymentMethod) {
+            alert('Please select a payment method');
+            return;
+        }
+        
+        if (!cartItems || Object.keys(cartItems).length === 0) {
+            alert('Please add items to your order');
+            return;
+        }
+
+        if (paymentMethod === 'gcash') {
+            if (!gcashProofInput || !gcashProofInput.files || !gcashProofInput.files[0]) {
+                alert('Please upload your GCash payment screenshot before placing the order.');
+                return;
+            }
+        }
+
+        const submitButton = document.getElementById('submitOrder');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Placing Order...';
+
+        try {
+            const formData = new FormData();
+            formData.append('payment_method', paymentMethod);
+            formData.append('notes', orderNotes);
+            formData.append('total_amount', totalAmount.toFixed(2));
+            
+            // The cart items are already in the session, so we don't need to send them
+            // The backend will read from request.session['cart']
+            
+            if (paymentMethod === 'gcash' && gcashProofInput && gcashProofInput.files[0]) {
+                formData.append('gcash_screenshot', gcashProofInput.files[0]);
+            }
+
+            const response = await fetch('{% url "place_order" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                window.location.href = data.redirect_url || (`/app/customer/order-confirmation/${data.order_id}/`);
+            } else {
+                alert(data.error || 'Failed to place order. Please try again.');
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-check-circle me-2"></i>Place Order';
+            }
+        } catch (err) {
+            console.error('Order error:', err);
+            alert('An error occurred while placing your order. Please try again.');
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-check-circle me-2"></i>Place Order';
+        }
+    });
+
+    // Initialize: Load cart from session on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSessionCart();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content">
+    <!-- Header -->
+    <div class="unified-page-header">
+        <div>
+            <h1 class="unified-h1">Category Management</h1>
+            <p class="text-muted" style="font-size: var(--text-sm);">
+                Manage cookie categories and organization
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'add_category' %}" class="unified-btn unified-btn-primary" data-no-loading>
+                <i class="fas fa-plus-circle me-2"></i>
+                Add Category
+            </a>
+            <a href="{% url 'inventory' %}" class="unified-btn unified-btn-secondary" data-no-loading>
+                <i class="fas fa-arrow-left me-2"></i>
+                Back to Inventory
+            </a>
+        </div>
+    </div>
+
+    <!-- Categories Grid -->
+    <div class="row g-4">
+        {% for category in categories %}
+        <div class="col-md-6 col-lg-4">
+            <div class="unified-card h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center">
+                        <div class="category-icon me-3" style="color: {{ category.color }}; font-size: 1.5rem;">
+                            <i class="{{ category.icon }}"></i>
+                        </div>
+                        <div>
+                            <h4 class="unified-h4 mb-1">{{ category.name }}</h4>
+                            {% if category.description %}
+                            <p class="text-muted mb-0" style="font-size: var(--text-sm);">
+                                {{ category.description }}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <span class="badge {% if category.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                        {% if category.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+
+                <div class="category-stats mb-3">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="stat-number text-primary">{{ category.cookies.count }}</div>
+                            <div class="stat-label text-muted" style="font-size: var(--text-xs);">Total Cookies</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-number text-success">{{ category.active_cookies }}</div>
+                            <div class="stat-label text-muted" style="font-size: var(--text-xs);">Active</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="category-actions d-flex gap-2">
+                    <a href="{% url 'update_category' category.pk %}" class="unified-btn unified-btn-sm unified-btn-secondary flex-fill">
+                        <i class="fas fa-edit me-1"></i>
+                        Edit
+                    </a>
+                    <a href="{% url 'inventory' %}?category={{ category.id }}" class="unified-btn unified-btn-sm unified-btn-primary flex-fill">
+                        <i class="fas fa-eye me-1"></i>
+                        View Cookies
+                    </a>
+                    <!-- DELETE BUTTON -->
+                    {% if user.is_superuser or user.groups.all.0.name == 'Administrator' %}
+                    <a href="{% url 'delete_category' category.pk %}" 
+                       class="unified-btn unified-btn-sm unified-btn-danger {% if category.cookies.count > 0 %}disabled{% endif %}" 
+                       {% if category.cookies.count > 0 %}title="Cannot delete - category has {{ category.cookies.count }} cookie(s)"{% else %}title="Delete Category"{% endif %}>
+                        <i class="fas fa-trash me-1"></i>
+                        Delete
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="unified-card text-center py-5">
+                <i class="fas fa-folder-open text-muted mb-3" style="font-size: 3rem;"></i>
+                <h3 class="text-muted mb-3">No Categories Found</h3>
+                <p class="text-muted mb-4">Get started by creating your first category to organize your cookies.</p>
+                <a href="{% url 'add_category' %}" class="unified-btn unified-btn-primary" data-no-loading>
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Add Your First Category
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.category-icon {
+    transition: transform 0.2s ease;
+}
+
+.unified-card:hover .category-icon {
+    transform: scale(1.1);
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.category-stats {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 0;
+}
+
+/* Style for disabled delete button */
+.unified-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+</style>
+{% endblock %}

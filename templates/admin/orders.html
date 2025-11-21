@@ -1,0 +1,809 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="content">
+    <h1 class="unified-h1">Customer Orders</h1>
+
+    <!-- Date Info -->
+    <div class="unified-card">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="unified-h2 mb-1">Today's Orders</h2>
+                <p class="text-muted mb-0">{{ today|date:"F d, Y" }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button onclick="refreshOrders()" class="unified-btn unified-btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <a href="{% url 'admin_dashboard' %}" class="unified-btn unified-btn-primary">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Statistics -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="unified-card text-center">
+                <h3 class="unified-h3">Total</h3>
+                <div class="unified-stat-number">{{ order_stats.total_today }}</div>
+                <div class="unified-stat-label">Orders</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="unified-card text-center">
+                <h3 class="unified-h3">Pending</h3>
+                <div class="unified-stat-number text-warning">{{ order_stats.pending }}</div>
+                <div class="unified-stat-label">Awaiting</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="unified-card text-center">
+                <h3 class="unified-h3">Completed</h3>
+                <div class="unified-stat-number text-primary">{{ order_stats.completed }}</div>
+                <div class="unified-stat-label">Finished</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="unified-card text-center">
+                <h3 class="unified-h3">Revenue</h3>
+                <div class="unified-stat-number text-success">
+                    ₱{{ total_revenue|default:0 }}
+                </div>
+                <div class="unified-stat-label">Today</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders List -->
+   <!-- In your order_management.html template -->
+<div class="unified-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+       <h5 class="mb-0">
+    <i class="fas fa-list me-2"></i>
+    All Orders ({{ orders_today|length }})
+</h5>
+        <small class="text-muted">
+            Showing latest {{ orders_today|length }} orders
+        </small>
+    </div>
+    
+    <div class="unified-table-container">
+        <table class="unified-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Staff</th>
+                    <th class="text-end">Total</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders_today %}
+                <tr>
+                    <td class="fw-semibold">
+                        {{ order.order_id }}
+                        {% if order.hex_id %}
+                        <br><small class="text-muted">#{{ order.hex_id }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <small>{{ order.created_at|date:"M d" }}</small>
+                        <br>
+                        <small class="text-muted">{{ order.created_at|time:"H:i" }}</small>
+                    </td>
+                    <td>
+                        {{ order.customer_name|default:'Walk-in' }}
+                        {% if order.customer %}
+                        <br><small class="text-muted">{{ order.customer.user_profile.customer_id|default:'' }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if order.staff %}
+                            {{ order.staff.username }}
+                        {% else %}
+                            <span class="text-muted">Kiosk</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end fw-semibold">₱{{ order.total_amount|floatformat:2 }}</td>
+                    <td>
+                        <span class="badge {% if order.payment_method == 'cash' %}bg-warning{% else %}bg-info{% endif %}">
+                            {{ order.get_payment_method_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge 
+                            {% if order.status == 'completed' %}bg-success
+                            {% elif order.status == 'pending' %}bg-warning
+                            {% elif order.status == 'cancelled' %}bg-danger
+                            {% elif order.status == 'voided' %}bg-dark
+                            {% else %}bg-secondary{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <a href="{% url 'order_detail' order.id %}" 
+                           class="unified-btn unified-btn-sm unified-btn-primary"
+                           title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        {% if order.status == 'completed' %}
+                        <a href="{% url 'staff_order_receipt' order.id %}" 
+                           class="unified-btn unified-btn-sm unified-btn-secondary"
+                           title="Print Receipt">
+                            <i class="fas fa-print"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">
+                        <i class="fas fa-inbox fa-2x mb-3 opacity-50"></i>
+                        <p>No orders found.</p>
+                        {% if not filter_values.is_admin %}
+                        <small>Try adjusting your filters or check if there are any kiosk orders.</small>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+<div id="orderDetailsModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Order Details</h3>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="orderDetailsContent">
+                <!-- Order details will be loaded here -->
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="closeOrderDetails" class="unified-btn unified-btn-secondary">Close</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.order-id-badge {
+    background: #8B4513;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: var(--text-sm);
+    font-family: monospace;
+}
+
+.status-pending-payment { 
+    background: #fff3cd; 
+    color: #856404; 
+    border: 1px solid #ffeaa7;
+}
+
+.status-paid { 
+    background: #d4edda; 
+    color: #155724; 
+    border: 1px solid #c3e6cb;
+}
+
+.unified-btn-success {
+    background: #28a745;
+    color: white;
+    border: 1px solid #1e7e34;
+}
+
+.unified-btn-success:hover {
+    background: #218838;
+    border-color: #1c7430;
+} 
+
+.status-badge {
+    font-size: var(--text-xs);
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.status-pending { 
+    background: #fff3cd; 
+    color: #856404; 
+    border: 1px solid #ffeaa7;
+}
+
+.status-completed { 
+    background: #d4edda; 
+    color: #155724; 
+    border: 1px solid #c3e6cb;
+}
+
+.status-pending_payment { 
+    background: #fff3cd; 
+    color: #856404; 
+    border: 1px solid #ffeaa7;
+}
+
+.unified-form-control-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: var(--text-sm);
+    min-width: 120px;
+}
+
+.badge {
+    font-size: var(--text-xs);
+    font-weight: 500;
+}
+
+#newOrdersBadge {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.order-row-new {
+    background: rgba(139, 69, 19, 0.05) !important;
+    animation: highlight 3s ease-in-out;
+}
+
+@keyframes highlight {
+    0% { background: rgba(139, 69, 19, 0.2); }
+    100% { background: rgba(139, 69, 19, 0.05); }
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: var(--bg-secondary);
+    margin: auto;
+    padding: 0;
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: var(--space-lg);
+}
+
+.modal-footer {
+    padding: var(--space-md) var(--space-lg);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-sm);
+}
+
+.close {
+    color: var(--text-muted);
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close:hover {
+    color: var(--text-primary);
+}
+</style>
+
+<script>
+let lastCheckTime = new Date().toISOString();
+let completedOrders = new Set(); // Track completed orders to prevent notifications
+let processedOrders = new Set(); // Track all orders we've already seen
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize completed orders set
+    console.log('Order List Loaded');
+    {% for order in todays_orders %}
+        {% if order.status == 'COMPLETED' %}
+            completedOrders.add({{ order.id }});
+        {% endif %}
+        processedOrders.add({{ order.id }});
+    {% endfor %}
+    
+    // Start checking for new orders
+    setInterval(checkNewOrders, 10000); // Check every 10 seconds
+    
+    // Update last updated time
+    updateLastUpdatedTime();
+});
+
+// Complete payment for cash orders
+function completePayment(orderId) {
+    if (!confirm('Mark this order as paid and complete the payment?')) {
+        return;
+    }
+    
+    // Show loading state
+    const button = document.querySelector(`button[onclick="completePayment(${orderId})"]`);
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    button.disabled = true;
+    
+    fetch(`/app/admin/orders/${orderId}/complete-payment/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Update status badge
+            const statusBadge = document.getElementById(`status-badge-${orderId}`);
+            statusBadge.textContent = data.status_display;
+            statusBadge.className = `badge status-badge status-${data.new_status.toLowerCase()}`;
+            
+            // Update dropdown
+            const statusSelect = document.querySelector(`select[data-order-id="${orderId}"]`);
+            statusSelect.value = data.new_status.toLowerCase();
+            
+            // Remove the complete payment button
+            const paymentButton = document.querySelector(`button[onclick="completePayment(${orderId})"]`);
+            if (paymentButton) {
+                paymentButton.remove();
+            }
+            
+            // Add to completed orders set
+            completedOrders.add(orderId);
+            
+            showNotification(`✅ Payment completed for order #${data.order_hex_id}`);
+            
+            // Refresh statistics after 1 second
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+            // Reset button
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error completing payment: ' + error.message);
+        // Reset button
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+
+function updateLastUpdatedTime() {
+    const now = new Date();
+    document.getElementById('lastUpdate').textContent = 
+        `Last updated: ${now.toLocaleTimeString()}`;
+}
+
+function checkNewOrders() {
+    fetch(`/app/api/new-orders-count/?last_check=${encodeURIComponent(lastCheckTime)}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.new_orders_count > 0) {
+                // Check if any of the new orders are not completed
+                fetch('/app/api/todays-orders/')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(ordersData => {
+                        let newPendingOrders = 0;
+                        
+                        ordersData.orders.forEach(order => {
+                            // Check if this is a new order we haven't processed yet
+                            if (!processedOrders.has(order.id) && order.status !== 'COMPLETED') {
+                                newPendingOrders++;
+                                processedOrders.add(order.id);
+                            }
+                        });
+                        
+                        if (newPendingOrders > 0) {
+                            // Show notification badge only for new pending orders
+                            const badge = document.getElementById('newOrdersBadge');
+                            badge.textContent = newPendingOrders;
+                            badge.style.display = 'inline-block';
+                            
+                            // Refresh orders list
+                            refreshOrders();
+                            
+                            // Show notification only for new orders
+                            showNotification(`📦 ${newPendingOrders} new order(s) received!`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching orders:', error);
+                    });
+            }
+            
+            lastCheckTime = data.current_time;
+            updateLastUpdatedTime();
+        })
+        .catch(error => {
+            console.error('Error checking new orders:', error);
+        });
+}
+
+function refreshOrders() {
+    fetch('/app/api/todays-orders/')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            updateOrdersTable(data.orders);
+            updateLastUpdatedTime();
+            
+            // Hide notification badge after refresh
+            document.getElementById('newOrdersBadge').style.display = 'none';
+        })
+        .catch(error => {
+            console.error('Error refreshing orders:', error);
+        });
+}
+
+function updateOrdersTable(orders) {
+    const tbody = document.getElementById('ordersTableBody');
+    
+    if (orders.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" class="text-center py-4">
+                    <div class="text-muted">
+                        <i class="fas fa-shopping-cart fa-2x mb-3"></i>
+                        <p>No orders for today yet.</p>
+                        <small>New orders will appear here automatically.</small>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    let html = '';
+    orders.forEach(order => {
+        // Determine if we should show the complete payment button
+        const showPaymentButton = order.payment_method === 'CASH' && order.status === 'PENDING_PAYMENT';
+        
+        html += `
+            <tr id="order-row-${order.id}">
+                <td class="fw-semibold">
+                    <span class="order-id-badge">#${order.hex_id}</span>
+                </td>
+                <td>${order.created_at}</td>
+                <td>
+                    <div class="fw-semibold">${order.customer_name}</div>
+                    ${order.notes ? `
+                    <small class="text-muted" title="${order.notes}">
+                        <i class="fas fa-sticky-note"></i> ${order.notes.length > 30 ? order.notes.substring(0, 30) + '...' : order.notes}
+                    </small>
+                    ` : ''}
+                </td>
+                <td>${order.customer_phone || '-'}</td>
+                <td>
+                    <span class="badge bg-secondary">${order.item_count || order.items.length} items</span>
+                </td>
+                <td class="fw-semibold text-success">₱${order.total_amount}</td>
+                <td>
+                    <span class="badge ${order.payment_method === 'CASH' ? 'bg-warning' : 'bg-info'}">
+                        ${order.payment_method_display || order.payment_method}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge ${order.is_walk_in ? 'bg-primary' : 'bg-success'}">
+                        ${order.is_walk_in ? 'Walk-in' : 'Online'}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge status-badge status-${order.status.toLowerCase()}" id="status-badge-${order.id}">
+                        ${order.status_display || order.status}
+                    </span>
+                </td>
+                <td>
+                    <div class="d-flex gap-1 flex-wrap">
+                        <select class="unified-form-control unified-form-control-sm status-select" 
+                                data-order-id="${order.id}"
+                                onchange="updateOrderStatus(${order.id}, this.value)">
+                            <option value="pending" ${order.status === 'PENDING' || order.status === 'PENDING_PAYMENT' ? 'selected' : ''}>Pending</option>
+                            <option value="completed" ${order.status === 'COMPLETED' ? 'selected' : ''}>Completed</option>
+                        </select>
+                        ${showPaymentButton ? `
+                        <button class="unified-btn unified-btn-sm unified-btn-success" 
+                                onclick="completePayment(${order.id})"
+                                title="Complete Payment">
+                            <i class="fas fa-check-circle"></i> Pay
+                        </button>
+                        ` : ''}
+                        <button class="unified-btn unified-btn-sm unified-btn-primary" 
+                                onclick="viewOrderDetails(${order.id})"
+                                title="View Order Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+function updateOrderStatus(orderId, status) {
+    // Make sure status is lowercase to match backend mapping
+    const frontendStatus = status.toLowerCase();
+    
+    fetch(`/app/admin/orders/update-status/${orderId}/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: frontendStatus })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Update status badge
+            const statusBadge = document.getElementById(`status-badge-${orderId}`);
+            statusBadge.textContent = data.status_display;
+            statusBadge.className = `badge status-badge status-${data.new_status.toLowerCase()}`;
+            
+            // Update dropdown to show the frontend status (not backend status)
+            const statusSelect = document.querySelector(`select[data-order-id="${orderId}"]`);
+            statusSelect.value = frontendStatus; // Keep frontend value
+            
+            // If order is completed, add to completed set to prevent notifications
+            if (frontendStatus === 'completed') {
+                completedOrders.add(orderId);
+            }
+            
+            showNotification(`✅ Order status updated to ${data.status_display}`);
+            
+            // Refresh statistics after 1 second
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating order status: ' + error.message);
+    });
+}
+
+function viewOrderDetails(orderId) {
+    const modal = document.getElementById('orderDetailsModal');
+    const content = document.getElementById('orderDetailsContent');
+    
+    // Show loading
+    content.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading order details...</p>
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+    
+    // Fetch order details from API
+    fetch(`/app/api/order-details/${orderId}/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                content.innerHTML = `
+                    <div class="order-details">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Order ID:</strong> #${data.order.hex_id}
+                            </div>
+                            <div class="col-6">
+                                <strong>Status:</strong> <span class="badge status-badge status-${data.order.status.toLowerCase()}">${data.order.status_display}</span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Customer:</strong> ${data.order.customer_name}
+                            </div>
+                            <div class="col-6">
+                                <strong>Phone:</strong> ${data.order.customer_phone || 'N/A'}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Total:</strong> ₱${data.order.total_amount}
+                            </div>
+                            <div class="col-6">
+                                <strong>Type:</strong> ${data.order.is_walk_in ? 'Walk-in' : 'Online'}
+                            </div>
+                        </div>
+                        ${data.order.notes ? `
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <strong>Notes:</strong> ${data.order.notes}
+                            </div>
+                        </div>
+                        ` : ''}
+                        <div class="order-items mt-4">
+                            <h5>Order Items</h5>
+                            <div class="unified-table-container">
+                                <table class="unified-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Cookie</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${data.items.map(item => `
+                                            <tr>
+                                                <td>${item.cookie_name}</td>
+                                                <td>${item.quantity}</td>
+                                                <td>₱${item.price}</td>
+                                                <td>₱${(item.quantity * item.price).toFixed(2)}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="alert alert-danger">
+                        Error loading order details: ${data.error || 'Unknown error'}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading order details:', error);
+            content.innerHTML = `
+                <div class="alert alert-danger">
+                    Error loading order details: ${error.message}
+                </div>
+            `;
+        });
+}
+
+function showNotification(message) {
+    // Don't show notifications for completed orders or status updates
+    if (message.includes('completed') || message.includes('Completed') || message.includes('updated')) {
+        return;
+    }
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'notification-alert';
+    notification.innerHTML = `
+        <div class="alert alert-success alert-dismissible fade show" role="alert" style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;">
+            <i class="fas fa-info-circle me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 3000);
+}
+
+// Modal functionality
+const orderDetailsModal = document.getElementById('orderDetailsModal');
+const closeOrderDetailsBtn = document.getElementById('closeOrderDetails');
+const closeButtons = document.querySelectorAll('.close');
+
+closeButtons.forEach(button => {
+    button.addEventListener('click', function() {
+        const modal = this.closest('.modal');
+        modal.style.display = 'none';
+    });
+});
+
+closeOrderDetailsBtn.addEventListener('click', () => {
+    orderDetailsModal.style.display = 'none';
+});
+
+window.addEventListener('click', function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+    }
+});
+
+// CSRF token helper
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

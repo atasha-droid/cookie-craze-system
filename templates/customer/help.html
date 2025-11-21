@@ -1,0 +1,271 @@
+{% extends 'customer/base_customer.html' %}
+{% load static %}
+
+{% block title %}Help & Support - Cookie Craze{% endblock %}
+
+{% block extra_head %}
+<style>
+    .help-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .help-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .help-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: var(--primary);
+    }
+
+    .help-section {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .help-section h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+
+    .help-section ol,
+    .help-section ul {
+        padding-left: 1.5rem;
+        color: var(--text-secondary);
+        line-height: 1.8;
+    }
+
+    @media (max-width: 768px) {
+        .help-container {
+            padding: 0 1rem;
+        }
+
+        .help-card {
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .help-title {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .help-section {
+            gap: 1rem;
+        }
+
+        .help-section h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .help-section ol,
+        .help-section ul {
+            padding-left: 1.25rem;
+            font-size: 0.95rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .help-container {
+            padding: 0 0.5rem;
+        }
+
+        .help-card {
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 0.375rem;
+        }
+
+        .help-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .help-section {
+            gap: 0.75rem;
+        }
+
+        .help-section h3 {
+            font-size: 0.95rem;
+        }
+
+        .help-section ol,
+        .help-section ul {
+            padding-left: 1rem;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .help-section p {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block nav_help_active %}active{% endblock %}
+
+{% block header %}
+<div class="header-content">
+    <div class="header-left">
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h1 class="page-title">Help & Support</h1>
+    </div>
+    
+    <div class="header-right">
+        <button class="theme-toggle" id="themeToggle">
+            <i class="fas fa-moon"></i>
+        </button>
+        
+        <div class="user-menu">
+            <div class="user-avatar">
+                {{ customer.name|first|upper }}
+            </div>
+            <div class="user-info">
+                <span class="user-name">{{ customer.name }}</span>
+                <span class="user-role">Customer</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+    <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 0.5rem; padding: 2rem; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--primary);">
+            <i class="fas fa-question-circle me-2"></i>How Can We Help You?
+        </h2>
+
+        <div style="display: grid; gap: 1.5rem;">
+            <!-- How to Order -->
+            <div>
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.75rem;">
+                    <i class="fas fa-shopping-cart me-2" style="color: var(--primary);"></i>How to Order
+                </h3>
+                <ol style="padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;">
+                    <li>Go to <strong>Place Order</strong> from the sidebar</li>
+                    <li>Browse available cookies and select quantities</li>
+                    <li>Review your order in the summary panel</li>
+                    <li>Choose your payment method (Cash or GCash)</li>
+                    <li>Click <strong>Place Order</strong> to submit</li>
+                </ol>
+            </div>
+
+            <!-- Payment Methods -->
+            <div>
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.75rem;">
+                    <i class="fas fa-credit-card me-2" style="color: var(--primary);"></i>Payment Methods
+                </h3>
+                <div style="color: var(--text-secondary); line-height: 1.8;">
+                    <p><strong>Cash Payment:</strong> Pay at the counter when you pick up your order.</p>
+                    <p><strong>GCash Payment:</strong> Pay via GCash mobile wallet. You'll receive payment instructions after placing your order.</p>
+                </div>
+            </div>
+
+            <!-- Order Status -->
+            <div>
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.75rem;">
+                    <i class="fas fa-truck me-2" style="color: var(--primary);"></i>Order Status
+                </h3>
+                <div style="color: var(--text-secondary); line-height: 1.8;">
+                    <p>Track your order status in real-time:</p>
+                    <ul style="padding-left: 1.5rem;">
+                        <li><strong>Pending:</strong> Order received, waiting for preparation</li>
+                        <li><strong>Preparing:</strong> Your cookies are being prepared</li>
+                        <li><strong>Ready:</strong> Your order is ready for pickup</li>
+                        <li><strong>Completed:</strong> Order has been picked up</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Loyalty Points -->
+            <div>
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.75rem;">
+                    <i class="fas fa-star me-2" style="color: var(--primary);"></i>Loyalty Points
+                </h3>
+                <div style="color: var(--text-secondary); line-height: 1.8;">
+                    <p>Earn points with every purchase! Points can be redeemed for discounts on future orders.</p>
+                    <p>Check your points balance in the <strong>Loyalty Points</strong> section.</p>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div style="background: var(--bg-tertiary); padding: 1.5rem; border-radius: 0.5rem; border-left: 4px solid var(--primary);">
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.75rem;">
+                    <i class="fas fa-phone me-2" style="color: var(--primary);"></i>Contact Us
+                </h3>
+                <div style="color: var(--text-secondary); line-height: 1.8;">
+                    <p><strong>Store Hours:</strong> Monday - Sunday, 9:00 AM - 8:00 PM</p>
+                    <p><strong>Phone:</strong> 0961-493-0977</p>
+                    <p><strong>Email:</strong> support@cookiecraze.com</p>
+                    <p><strong>Address:</strong> Brgy. Villa Cornejo, Kawayan, Biliran</p>
+                </div>
+            </div>
+
+            <!-- FAQ -->
+            <div>
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.75rem;">
+                    <i class="fas fa-comments me-2" style="color: var(--primary);"></i>Frequently Asked Questions
+                </h3>
+                <div style="color: var(--text-secondary); line-height: 1.8;">
+                    <p><strong>Q: Can I cancel my order?</strong><br>
+                    A: Yes, you can cancel your order before it starts being prepared.</p>
+                    
+                    <p><strong>Q: How long does it take to prepare my order?</strong><br>
+                    A: Most orders are ready within 15-30 minutes depending on the size.</p>
+                    
+                    <p><strong>Q: Do you offer delivery?</strong><br>
+                    A: Currently, we only offer pickup. Delivery options may be available in the future.</p>
+                    
+                    <p><strong>Q: What if a cookie is out of stock?</strong><br>
+                    A: Out-of-stock items will be clearly marked. You can only order available items.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        body.setAttribute('data-theme', 'dark');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    }
+    themeToggle.addEventListener('click', function() {
+        const currentTheme = body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        themeToggle.innerHTML = newTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    });
+
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('active');
+    });
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 1024) {
+            if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                sidebar.classList.remove('active');
+            }
+        }
+    });
+</script>
+{% endblock %}

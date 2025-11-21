@@ -1,0 +1,424 @@
+{% extends 'customer/base_customer.html' %}
+{% load static %}
+
+{% block title %}Order Status - Cookie Craze{% endblock %}
+
+{% block extra_head %}
+<style>
+    .order-status-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .order-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .order-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+    }
+
+    .order-date {
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+    }
+
+    /* Status Timeline */
+    .status-timeline {
+        margin: 2rem 0;
+    }
+
+    .timeline-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+
+    .timeline-steps::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 10%;
+        right: 10%;
+        height: 2px;
+        background: var(--border);
+        z-index: 1;
+    }
+
+    .timeline-step {
+        text-align: center;
+        flex: 1;
+        position: relative;
+        z-index: 2;
+    }
+
+    .step-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--bg-tertiary);
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.5rem;
+        border: 2px solid var(--border);
+        transition: all 0.3s ease;
+    }
+
+    .step-icon.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .step-icon.completed {
+        background: var(--success);
+        color: white;
+        border-color: var(--success);
+    }
+
+    .step-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .step-label.active {
+        color: var(--primary);
+    }
+
+    .step-label.completed {
+        color: var(--success);
+    }
+
+    /* Order Details */
+    .order-details {
+        border-top: 1px solid var(--border);
+        padding-top: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .order-items-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+    }
+
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .item-details {
+        flex: 1;
+    }
+
+    .item-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .item-meta {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .item-subtotal {
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    .order-total {
+        display: flex;
+        justify-content: space-between;
+        padding-top: 1rem;
+        font-size: 1.125rem;
+        font-weight: 700;
+        border-top: 2px solid var(--border);
+        margin-top: 1rem;
+    }
+
+    .total-label {
+        color: var(--text-primary);
+    }
+
+    .total-amount {
+        color: var(--primary);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        color: var(--border);
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-title {
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    .empty-message {
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+    }
+
+    /* Payment Info */
+    .payment-info {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background: var(--bg-tertiary);
+        border-radius: 0.375rem;
+        border-left: 4px solid var(--primary);
+    }
+
+    .payment-label {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .payment-value {
+        color: var(--text-muted);
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+    }
+
+    .status-pending {
+        background: rgba(255, 193, 7, 0.15);
+        color: var(--warning);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+    }
+
+    .status-preparing {
+        background: rgba(13, 110, 253, 0.15);
+        color: var(--info);
+        border: 1px solid rgba(13, 110, 253, 0.3);
+    }
+
+    .status-ready {
+        background: rgba(25, 135, 84, 0.15);
+        color: var(--success);
+        border: 1px solid rgba(25, 135, 84, 0.3);
+    }
+
+    .status-completed {
+        background: rgba(108, 117, 125, 0.15);
+        color: var(--secondary);
+        border: 1px solid rgba(108, 117, 125, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block nav_order_status_active %}active{% endblock %}
+
+{% block header %}
+<div class="header-content">
+    <div class="header-left">
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h1 class="page-title">Order Status</h1>
+    </div>
+    
+    <div class="header-right">
+        <button class="theme-toggle" id="themeToggle">
+            <i class="fas fa-moon"></i>
+        </button>
+        
+        <div class="user-menu">
+            <div class="user-avatar">
+                {{ customer.name|first|upper }}
+            </div>
+            <div class="user-info">
+                <span class="user-name">{{ customer.name }}</span>
+                <span class="user-role">Customer</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="order-status-container">
+    {% if active_order %}
+        <div class="order-card">
+            <h2 class="order-title">
+                Order #{{ active_order.order_id }}
+            </h2>
+            <p class="order-date">
+                Placed on {{ active_order.created_at|date:"F j, Y g:i A" }}
+            </p>
+
+            <!-- Status Badge -->
+            <div class="status-badge status-{{ active_order.status }}">
+                {{ active_order.get_status_display|upper }}
+            </div>
+
+            <!-- Status Timeline -->
+            <div class="status-timeline">
+                <div class="timeline-steps">
+                    <div class="timeline-step">
+                        <div class="step-icon {% if active_order.status == 'pending' %}active{% elif active_order.status in 'preparing ready completed' %}completed{% endif %}">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="step-label {% if active_order.status == 'pending' %}active{% elif active_order.status in 'preparing ready completed' %}completed{% endif %}">Pending</div>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="step-icon {% if active_order.status == 'preparing' %}active{% elif active_order.status in 'ready completed' %}completed{% endif %}">
+                            <i class="fas fa-cookie-bite"></i>
+                        </div>
+                        <div class="step-label {% if active_order.status == 'preparing' %}active{% elif active_order.status in 'ready completed' %}completed{% endif %}">Preparing</div>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="step-icon {% if active_order.status == 'ready' %}active{% elif active_order.status == 'completed' %}completed{% endif %}">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="step-label {% if active_order.status == 'ready' %}active{% elif active_order.status == 'completed' %}completed{% endif %}">Ready</div>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="step-icon {% if active_order.status == 'completed' %}completed{% endif %}">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="step-label {% if active_order.status == 'completed' %}completed{% endif %}">Completed</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Details -->
+            <div class="order-details">
+                <h3 class="order-items-title">Order Items</h3>
+                {% for item in active_order.items.all %}
+                    <div class="order-item">
+                        <div class="item-details">
+                            <div class="item-name">{{ item.cookie.name }}</div>
+                            <div class="item-meta">₱{{ item.price }} × {{ item.quantity }}</div>
+                        </div>
+                        <div class="item-subtotal">
+                            ₱{{ item.total_price }}
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                <div class="order-total">
+                    <span class="total-label">Total:</span>
+                    <span class="total-amount">₱{{ active_order.total_amount }}</span>
+                </div>
+            </div>
+
+            <!-- Payment Information -->
+            <div class="payment-info">
+                <div class="payment-label">Payment Method</div>
+                <div class="payment-value">{{ active_order.get_payment_method_display }}</div>
+                {% if active_order.payment_method == 'gcash' and not active_order.is_paid %}
+                <div class="payment-value text-warning mt-1">
+                    <i class="fas fa-clock me-1"></i>Awaiting payment verification
+                </div>
+                {% elif active_order.is_paid %}
+                <div class="payment-value text-success mt-1">
+                    <i class="fas fa-check-circle me-1"></i>Payment confirmed
+                </div>
+                {% endif %}
+            </div>
+
+            {% if active_order.notes %}
+            <div class="payment-info mt-2">
+                <div class="payment-label">Order Notes</div>
+                <div class="payment-value">{{ active_order.notes }}</div>
+            </div>
+            {% endif %}
+
+            {% if active_order.status == 'pending' %}
+                <button class="btn btn-outline-danger mt-3">
+                    <i class="fas fa-times me-2"></i>Cancel Order
+                </button>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-clipboard-list empty-icon"></i>
+            <h3 class="empty-title">No active order</h3>
+            <p class="empty-message">You don't have any active orders right now.</p>
+            <a href="{% url 'place_order' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Start a New Order
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+    
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        body.setAttribute('data-theme', 'dark');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    }
+    
+    themeToggle.addEventListener('click', function() {
+        const currentTheme = body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        themeToggle.innerHTML = newTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    });
+
+    // Sidebar toggle
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    
+    sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('active');
+    });
+
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 1024) {
+            if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                sidebar.classList.remove('active');
+            }
+        }
+    });
+
+    // Auto-refresh order status every 30 seconds if there's an active order
+    {% if active_order and active_order.status != 'completed' %}
+    setInterval(function() {
+        window.location.reload();
+    }, 30000); // 30 seconds
+    {% endif %}
+</script>
+{% endblock %}

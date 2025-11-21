@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile & Security - Cookie Craze{% endblock %}
+
+{% block content %}
+<div class="content staff-page">
+    <div class="unified-page-header">
+        <h1 class="unified-h1">Profile & Security</h1>
+        <p class="text-muted" style="font-size: var(--text-sm);">Manage your account details, password, and session</p>
+    </div>
+
+    <div class="row g-3">
+        <!-- Left: Basic Info -->
+        <div class="col-lg-7">
+            <div class="unified-card mb-3">
+                <h2 class="unified-h2 mb-3"><i class="fas fa-id-badge me-2"></i>Basic Profile</h2>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="avatar bg-secondary d-flex align-items-center justify-content-center" style="width:56px;height:56px;border-radius:50%;color:#fff;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold">{{ staff_user.username }}</div>
+                        <div class="text-muted" style="font-size: var(--text-sm);">
+                            {% if staff_obj %}
+                                Staff ID: <span class="badge bg-secondary">{{ staff_obj.staff_id }}</span>
+                                • Role: {{ staff_obj.get_role_display|default:"Staff" }}
+                            {% else %}
+                                Staff Member
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="profile">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="unified-form-label">Username</label>
+                            <input type="text" name="username" value="{{ staff_user.username }}" class="unified-form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="unified-form-label">Email</label>
+                            <input type="email" name="email" value="{{ staff_user.email }}" class="unified-form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="unified-form-label">Phone</label>
+                            <input type="text" name="phone_number" value="{{ staff_obj.phone_number|default:'' }}" class="unified-form-control">
+                        </div>
+                    </div>
+                    <div class="text-end mt-3">
+                        <button class="unified-btn unified-btn-primary" type="submit">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right: Security -->
+        <div class="col-lg-5">
+            <div class="unified-card mb-3">
+                <h2 class="unified-h2 mb-3"><i class="fas fa-shield-alt me-2"></i>Password</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="password">
+                    <div class="mb-3">
+                        <label class="unified-form-label">Current Password</label>
+                        <div class="position-relative">
+                            <input id="staff_current_password" type="password" name="current_password" class="unified-form-control pe-5" required>
+                            <button type="button" class="btn btn-link p-0 position-absolute end-0 top-50 translate-middle-y me-2" aria-label="Toggle password" onclick="togglePwd('staff_current_password', this)"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="unified-form-label">New Password</label>
+                        <div class="position-relative">
+                            <input id="staff_new_password1" type="password" name="new_password1" class="unified-form-control pe-5" required>
+                            <button type="button" class="btn btn-link p-0 position-absolute end-0 top-50 translate-middle-y me-2" aria-label="Toggle password" onclick="togglePwd('staff_new_password1', this)"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="unified-form-label">Confirm New Password</label>
+                        <div class="position-relative">
+                            <input id="staff_new_password2" type="password" name="new_password2" class="unified-form-control pe-5" required>
+                            <button type="button" class="btn btn-link p-0 position-absolute end-0 top-50 translate-middle-y me-2" aria-label="Toggle password" onclick="togglePwd('staff_new_password2', this)"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <button class="unified-btn unified-btn-primary" type="submit">
+                            <i class="fas fa-key me-2"></i>Update Password
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="unified-card">
+                <h2 class="unified-h2 mb-2"><i class="fas fa-sign-out-alt me-2"></i>Session</h2>
+                <p class="text-muted" style="font-size: var(--text-sm);">Log out of your staff session securely.</p>
+                <a href="{% url 'logout' %}" class="unified-btn unified-btn-secondary w-100">
+                    <i class="fas fa-door-open me-2"></i>Logout
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar i { font-size: 1.2rem; }
+</style>
+<script>
+function togglePwd(inputId, btn){
+  const input = document.getElementById(inputId);
+  if(!input) return;
+  const icon = btn.querySelector('i');
+  if(input.type === 'password'){
+    input.type = 'text';
+    if(icon){ icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+  } else {
+    input.type = 'password';
+    if(icon){ icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+  }
+}
+</script>
+{% endblock %}

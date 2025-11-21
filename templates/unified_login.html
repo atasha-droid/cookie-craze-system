@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Cookie Craze</title>
+    {% load static %}
+    {% load socialaccount %}
+    
+    <!-- Bootstrap 5.3.2 CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{% static 'images/cookie-craze-logo.png' %}" type="image/png">
+
+    <style>
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: #28a745; /* Solid green background */
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease-in-out;
+            max-width: 350px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(100%);
+        }
+        
+        .notification.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0 0 0 10px;
+            margin: 0;
+            line-height: 1;
+        }
+        
+        /* Error Alert Styles */
+        .alert-error {
+            background-color: #FEE2E2;
+            color: #B91C1C;
+            border: 1px solid #FCA5A5;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        [data-theme="dark"] .alert-error {
+            background-color: #7F1D1D;
+            color: #FECACA;
+            border-color: #FCA5A5;
+        }
+        
+        .alert-error i {
+            font-size: 1.25rem;
+        }
+        
+        .notification i {
+            font-size: 1.2rem;
+        }
+        .notification-close {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 1.1rem;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .notification-close:hover {
+            opacity: 1;
+        }
+
+        :root {
+            --primary: #8B4513;
+            --primary-light: #A0522D;
+            --primary-dark: #654321;
+            --accent: #D2691E;
+            --accent-light: #F5DEB3;
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --border: #e2e8f0;
+            --success: #28a745;
+            --danger: #e53e3e;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --text-primary: #f8f9fa;
+            --text-secondary: #d1d5db;
+            --text-muted: #9ca3af;
+            --border: #4a5568;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .login-container {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 750px;
+            width: 100%;
+            display: flex;
+            min-height: 450px;
+        }
+
+        .brand-section {
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .brand-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('{% static "images/cookie-pattern.png" %}') center/cover;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        .brand-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo-large {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .brand-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .brand-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .feature-item i {
+            color: var(--accent-light);
+            width: 20px;
+        }
+
+        .form-section {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .form-title {
+            font-size: 1.45rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: 0.02em;
+        }
+
+        .form-subtitle {
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+            background: #fefefe;
+        }
+
+        .form-control:hover {
+            border-color: var(--primary-light);
+        }
+
+        .form-group.has-icon .form-control {
+            padding-left: 2.5rem;
+        }
+
+        .form-group .form-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+            z-index: 2;
+            margin-top: 1.25rem;
+        }
+
+        .form-group:focus-within .form-icon {
+            color: var(--primary);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: 2px solid var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: 0 2px 8px rgba(139, 69, 19, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            border-color: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(139, 69, 19, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(139, 69, 19, 0.2);
+        }
+
+        .btn-google {
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .btn-google:hover {
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 1.75rem 0 1.25rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, rgba(148, 163, 184, 0.1), var(--border));
+        }
+
+        .divider span {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+        }
+
+        .alert-success {
+            background: rgba(40, 167, 69, 0.1);
+            border-left-color: var(--success);
+            color: #155724;
+        }
+
+        .alert-danger {
+            background: rgba(229, 62, 62, 0.1);
+            border-left-color: var(--danger);
+            color: #721c24;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .register-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .user-type-tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid var(--border);
+        }
+
+        .user-type-tab {
+            flex: 1;
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-type-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Password Toggle Styles */
+        .password-field {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            transition: color 0.3s ease;
+            z-index: 3;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            border-color: var(--primary);
+        }
+
+        .theme-toggle i {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover i {
+            color: var(--primary);
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            background: var(--bg-secondary);
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        }
+
+        [data-theme="dark"] .login-container {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .form-control {
+            background: #1f2937;
+            border-color: var(--border);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .form-control:focus {
+            background: #111827;
+            border-color: var(--primary);
+        }
+
+        [data-theme="dark"] .form-control::placeholder {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .alert-success {
+            background: rgba(34, 197, 94, 0.1);
+            color: #86efac;
+        }
+
+        [data-theme="dark"] .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+        }
+
+        /* Dark theme specific tweaks to ensure visibility */
+        [data-theme="dark"] .login-container,
+        [data-theme="dark"] .form-section {
+            background: var(--bg-secondary);
+        }
+
+        [data-theme="dark"] .brand-subtitle,
+        [data-theme="dark"] .feature-item span,
+        [data-theme="dark"] .form-label,
+        [data-theme="dark"] .form-title {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .feature-item i {
+            color: var(--accent-light);
+        }
+
+        [data-theme="dark"] .divider span,
+        [data-theme="dark"] .register-link p,
+        [data-theme="dark"] .register-link a,
+        [data-theme="dark"] .password-toggle i,
+        [data-theme="dark"] .form-group .form-icon {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .register-link a:hover {
+            color: var(--primary-light);
+        }
+
+        [data-theme="dark"] .btn-google {
+            background: #111827;
+            border-color: var(--primary);
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .btn-google i {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .btn-google:hover {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            background: var(--bg-secondary);
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .theme-toggle i {
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+                max-width: 380px;
+                min-height: 400px;
+            }
+            
+            .brand-section {
+                padding: 1.5rem;
+            }
+            
+            .form-section {
+                padding: 1.5rem;
+            }
+            
+            .brand-title {
+                font-size: 1.4rem;
+            }
+            
+            .form-title {
+                font-size: 1.3rem;
+            }
+            
+            .logo-large {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .theme-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .theme-toggle i {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+        <i class="fas fa-moon" id="theme-icon"></i>
+    </button>
+
+    <div class="login-container">
+        <!-- Brand Section -->
+        <div class="brand-section">
+            <div class="brand-content">
+                <img src="{% static 'images/cookie-craze-logo.png' %}" 
+                     alt="Cookie Craze Logo" 
+                     class="logo-large"
+                     onerror="this.style.display='none'; document.getElementById('logo-fallback-login').style.display='flex';">
+                <div id="logo-fallback-login" class="logo-fallback" style="display: none;">
+                    <img src="{% static 'images/cookie-craze-logo.png' %}" alt="Cookie Craze Logo" style="width: 60px; height: 60px; object-fit: contain;">
+                </div>
+                
+                <h1 class="brand-title">Cookie Craze</h1>
+                <p class="brand-subtitle">Welcome to our delicious world!</p>
+                
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <i class="fas fa-cookie-bite"></i>
+                        <span>Freshly Baked Daily</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="fas fa-star"></i>
+                        <span>Loyalty Rewards Program</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>Easy Online Ordering</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Secure & Fast Checkout</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Form Section -->
+        <div class="form-section">
+            <div class="form-header">
+                <h2 class="form-title">Sign In</h2>
+                <p class="form-subtitle">Access your account - all user types welcome</p>
+            </div>
+
+            <!-- Display Messages (exclude success to avoid showing logout success here) -->
+            {% if messages %}
+                {% for message in messages %}
+                    {% if 'success' not in message.tags %}
+                        <div class="alert-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            <!-- Login Form -->
+            <form method="post" id="loginForm">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="login">
+                
+                <div class="form-group has-icon">
+                    <label for="username" class="form-label">
+                        <i class="fas fa-user me-2"></i>Username or Customer ID
+                    </label>
+                    <i class="fas fa-user form-icon"></i>
+                    <input type="text" 
+                           id="username" 
+                           name="username" 
+                           class="form-control" 
+                           placeholder="Enter username or CUST1234"
+                           required>
+                </div>
+
+                <div class="form-group has-icon">
+                    <label for="password" class="form-label">
+                        <i class="fas fa-lock me-2"></i>Password
+                    </label>
+                    <i class="fas fa-lock form-icon"></i>
+                    <div class="password-field">
+                        <input type="password" 
+                               id="password" 
+                               name="password" 
+                               class="form-control" 
+                               placeholder="Enter your password"
+                               required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('password', 'password-eye')">
+                            <i class="fas fa-eye" id="password-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                </button>
+
+                <a href="{% url 'public_home' %}" class="btn btn-outline-secondary mt-2 w-100" style="border-width:2px">
+                    <i class="fas fa-home me-2"></i>Back to Home
+                </a>
+            </form>
+
+            <!-- Google Login -->
+            <div class="divider">
+                <span>or continue with</span>
+            </div>
+
+            <a href="/accounts/google/login/" class="btn btn-outline-danger">
+    Sign in with Google
+</a>
+
+            <!-- Registration Link -->
+            <div class="register-link">
+                <p class="mb-0">
+                    New customer? 
+                    <a href="#" onclick="showRegistrationModal()">Create an account</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div class="modal fade" id="registrationModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm" style="max-width: 420px;">
+            <div class="modal-content" style="border-radius: 14px; border: 1px solid var(--border); background: var(--bg-secondary);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--border);">
+                    <h5 class="modal-title" style="font-weight: 600; color: var(--text-primary);">
+                        <i class="fas fa-user-plus me-2"></i>Create Customer Account
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" id="registrationForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="register">
+                        
+                        <div class="form-group has-icon">
+                            <label for="reg_name" class="form-label">
+                                <i class="fas fa-user me-2"></i>Full Name
+                            </label>
+                            <i class="fas fa-user form-icon"></i>
+                            <input type="text" id="reg_name" name="name" class="form-control" placeholder="Enter your full name" required>
+                        </div>
+
+                        <div class="form-group has-icon">
+                            <label for="reg_email" class="form-label">
+                                <i class="fas fa-envelope me-2"></i>Email Address
+                            </label>
+                            <i class="fas fa-envelope form-icon"></i>
+                            <input type="email" id="reg_email" name="email" class="form-control" placeholder="Enter your email" required>
+                        </div>
+
+                        <div class="form-group has-icon">
+                            <label for="reg_phone" class="form-label">
+                                <i class="fas fa-phone me-2"></i>Phone Number
+                            </label>
+                            <i class="fas fa-phone form-icon"></i>
+                            <input type="tel" id="reg_phone" name="phone" class="form-control" placeholder="Enter your phone number" required>
+                        </div>
+
+                        <div class="form-group has-icon">
+                            <label for="reg_username" class="form-label">
+                                <i class="fas fa-at me-2"></i>Username
+                            </label>
+                            <i class="fas fa-at form-icon"></i>
+                            <input type="text" id="reg_username" name="username" class="form-control" placeholder="Choose a username" required>
+                        </div>
+
+                        <div class="form-group has-icon">
+                            <label for="reg_password1" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Password
+                            </label>
+                            <i class="fas fa-lock form-icon"></i>
+                            <div class="password-field">
+                                <input type="password" id="reg_password1" name="password1" class="form-control" placeholder="Create a password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('reg_password1', 'reg_password1_eye')">
+                                    <i class="fas fa-eye" id="reg_password1_eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group has-icon">
+                            <label for="reg_password2" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Confirm Password
+                            </label>
+                            <i class="fas fa-lock form-icon"></i>
+                            <div class="password-field">
+                                <input type="password" id="reg_password2" name="password2" class="form-control" placeholder="Confirm your password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('reg_password2', 'reg_password2_eye')">
+                                    <i class="fas fa-eye" id="reg_password2_eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mt-2">
+                            <i class="fas fa-user-plus me-2"></i>Create Account
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Notification Container -->
+    <div id="notification" class="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notification-message"></span>
+        <button type="button" class="notification-close" aria-label="Close" onclick="hideNotification()">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+
+    <script>
+        // Password toggle function
+        function togglePassword(inputId, eyeIconId) {
+            const passwordInput = document.getElementById(inputId);
+            const eyeIcon = document.getElementById(eyeIconId);
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        }
+
+        function showRegistrationModal() {
+            const modal = new bootstrap.Modal(document.getElementById('registrationModal'));
+            modal.show();
+        }
+
+        // Theme Toggle Functionality
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('theme-icon');
+            const currentTheme = body.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                body.removeAttribute('data-theme');
+                themeIcon.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeIcon.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Notification functions
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            const messageEl = document.getElementById('notification-message');
+            
+            if (!notification || !messageEl) return;
+            
+            messageEl.textContent = message;
+            notification.classList.add('show');
+            
+            // Auto-hide after 3 seconds
+            notification.timeout = setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        function hideNotification() {
+            const notification = document.getElementById('notification');
+            if (!notification) return;
+            
+            clearTimeout(notification.timeout);
+            notification.classList.remove('show');
+        }
+
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeIcon = document.getElementById('theme-icon');
+            
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                themeIcon.className = 'fas fa-sun';
+            } else {
+                document.body.removeAttribute('data-theme');
+                themeIcon.className = 'fas fa-moon';
+            }
+            
+            // Auto-focus on username field
+            document.getElementById('username').focus();
+            
+            // Auto-hide success alerts after 3 seconds
+            const alerts = document.querySelectorAll('.alert-success');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.3s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(() => {
+                        alert.style.display = 'none';
+                    }, 300);
+                }, 3000);
+            });
+
+            // Check for registration success in URL
+            function checkForRegistrationSuccess() {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('registered') === 'success') {
+                    const username = urlParams.get('username') || '';
+                    const decodedUsername = decodeURIComponent(username);
+                    showNotification(`Account created successfully! Welcome, ${decodedUsername}. Please log in to continue.`);
+                    
+                    // Clean up URL without page reload
+                    const cleanUrl = window.location.pathname;
+                    window.history.replaceState({}, document.title, cleanUrl);
+                }
+            }
+
+            // Check for auto-open registration modal
+            function checkForAutoOpenModal() {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('show_register') === '1') {
+                    // Small delay to ensure page is fully loaded
+                    setTimeout(() => {
+                        showRegistrationModal();
+                    }, 300);
+                    
+                    // Clean up URL without page reload
+                    const cleanUrl = window.location.pathname;
+                    window.history.replaceState({}, document.title, cleanUrl);
+                }
+            }
+            
+            // Check immediately and also after a short delay to ensure DOM is ready
+            checkForRegistrationSuccess();
+            checkForAutoOpenModal();
+            setTimeout(() => {
+                checkForRegistrationSuccess();
+                checkForAutoOpenModal();
+            }, 100);
+        });
+
+        // Form validation
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!username || !password) {
+                e.preventDefault();
+                alert('Please enter both username and password.');
+                return false;
+            }
+        });
+
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            const password1 = document.getElementById('reg_password1').value;
+            const password2 = document.getElementById('reg_password2').value;
+            
+            if (password1 !== password2) {
+                e.preventDefault();
+                alert('Passwords do not match.');
+                return false;
+            }
+        });
+
+        // Auto-dismiss error alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-hide error alerts after 5 seconds
+            const errorAlerts = document.querySelectorAll('.alert-error');
+            errorAlerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.3s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 300);
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+</html>

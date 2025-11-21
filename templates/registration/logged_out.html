@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="text-align: center; padding: 2rem;">
+    <h2>You have been successfully logged out</h2>
+    <p>Thank you for using the Cookie Craze System.</p>
+    <a href="{% url 'login' %}" class="btn">Login Again</a>
+    <a href="{% url 'dashboard' %}" class="btn">Return to Home</a>
+</div>
+{% endblock %}

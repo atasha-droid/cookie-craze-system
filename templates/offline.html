@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Offline - Cookie Craze{% endblock %}
+
+{% block content %}
+<div class="content" style="text-align: center; padding: 3rem;">
+    <div class="empty-state">
+        <div class="empty-state-icon" style="color: var(--warning);">
+            <i class="fas fa-wifi-slash" style="font-size: 4rem;"></i>
+        </div>
+        <h3>You're Offline</h3>
+        <p>Please check your internet connection and try again.</p>
+        <p style="color: var(--text); opacity: 0.7; margin-top: 1rem;">
+            Some features may be limited while offline.
+        </p>
+        <button onclick="window.location.reload()" class="btn btn-primary" style="margin-top: 1rem;">
+            <i class="fas fa-redo"></i> Retry Connection
+        </button>
+    </div>
+</div>
+{% endblock %}

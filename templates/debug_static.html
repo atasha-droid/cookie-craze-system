@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <title>Static Files Debug</title>
+</head>
+<body>
+    <h1>Static Files Debug Test</h1>
+    
+    <h2>Testing Favicon:</h2>
+    <p>Static URL: {% static 'images/cookie-craze-logo.png' %}</p>
+    
+    <h2>Image Test:</h2>
+    <img src="{% static 'images/cookie-craze-logo.png' %}" alt="Test Logo" style="max-width: 200px; border: 2px solid red;">
+    
+    <h2>Test Links:</h2>
+    <ul>
+        <li><a href="{% static 'images/cookie-craze-logo.png' %}" target="_blank">Direct link via static tag</a></li>
+        <li><a href="/static/images/cookie-craze-logo.png" target="_blank">Absolute path to logo</a></li>
+    </ul>
+    
+    <h2>Browser Test:</h2>
+    <p>Try opening these links in new tabs to see if the image loads.</p>
+</body>
+</html>

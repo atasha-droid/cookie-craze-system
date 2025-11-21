@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Authentication Test</h2>
+<p>User: {{ user }}</p>
+<p>Authenticated: {{ is_authenticated }}</p>
+<p>Groups: 
+    {% for group in groups %}
+        {{ group.name }}{% if not forloop.last %}, {% endif %}
+    {% empty %}
+        No groups
+    {% endfor %}
+</p>
+<a href="{% url 'dashboard' %}" class="btn">Go to Dashboard</a>
+{% endblock %}

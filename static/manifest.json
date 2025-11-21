@@ -1,0 +1,22 @@
+{
+    "name": "Cookie Craze - Cookie Management System",
+    "short_name": "CookieCraze",
+    "description": "Manage your cookie inventory and sales with ease",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#8B4513",
+    "orientation": "any",
+    "icons": [
+        {
+            "src": "/static/images/cookie-craze-logo.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/static/images/cookie-craze-logo.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

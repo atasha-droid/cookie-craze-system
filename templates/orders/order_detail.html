@@ -1,0 +1,446 @@
+<!-- templates/orders/order_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <!-- Header -->
+    <div class="unified-page-header">
+        <div>
+            <h1 class="unified-h1">
+                <i class="fas fa-receipt me-2"></i>
+                Order Details
+            </h1>
+            <p class="text-muted" style="font-size: var(--text-sm);">
+                Order #{{ order.order_id }} • {{ order.created_at|date:"M d, Y H:i" }}
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'order_list' %}" class="unified-btn unified-btn-secondary" data-no-loading>
+                <i class="fas fa-arrow-left me-2"></i>
+                Back to Orders
+            </a>
+            {% if order.status != 'voided' %}
+            <a href="{% url 'update_order_status' order.id %}" class="unified-btn unified-btn-primary" data-no-loading>
+                <i class="fas fa-edit me-2"></i>
+                Update Status
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="row g-4">
+        <!-- Left Column - Order Details & Payment -->
+        <div class="col-lg-8">
+            <!-- Order Items -->
+            <div class="unified-card mb-4">
+                <h2 class="unified-h2">
+                    <i class="fas fa-list-alt me-2"></i>
+                    Order Items
+                </h2>
+                
+                <div class="unified-table-container">
+                    <table class="unified-table">
+                        <thead>
+                            <tr>
+                                <th>Cookie</th>
+                                <th class="text-center">Quantity</th>
+                                <th class="text-end">Price</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">{{ item.cookie.name }}</div>
+                                    <small class="text-muted">{{ item.cookie.get_flavor_display }}</small>
+                                </td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-end">₱{{ item.price|floatformat:2 }}</td>
+                                <td class="text-end fw-semibold text-success">₱{{ item.total_price|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    <i class="fas fa-cookie-bite fa-2x mb-2"></i>
+                                    <p>No items in this order</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">Subtotal:</td>
+                                <td class="text-end fw-bold">₱{{ order.total_amount|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">Total Amount:</td>
+                                <td class="text-end fw-bold fs-5 text-success">₱{{ order.total_amount|floatformat:2 }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Payment Information - MOVED HERE -->
+            <div class="unified-card mb-4">
+                <h2 class="unified-h2">
+                    <i class="fas fa-credit-card me-2"></i>
+                    Payment Information
+                </h2>
+                
+                <div class="space-y-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Payment Method</small>
+                            <div class="fw-semibold text-capitalize">{{ order.payment_method }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Total Due</small>
+                            <div class="fw-semibold fs-5 text-success">₱{{ order.total_amount|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cash Payment Details -->
+                    {% if order.payment_method == 'cash' %}
+                        {% if order.cash_received %}
+                        <div class="p-3 rounded mt-3" style="background: rgba(40, 167, 69, 0.1); border-left: 4px solid var(--success);">
+                            <h4 class="unified-h4 mb-3" style="color: var(--success); font-size: var(--text-base);">
+                                <i class="fas fa-money-bill-wave me-2"></i>Cash Payment Breakdown
+                            </h4>
+                            <div class="space-y-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted">Total Due:</span>
+                                    <span class="fw-semibold">₱{{ order.total_amount|floatformat:2 }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted">Cash Paid:</span>
+                                    <span class="fw-semibold text-primary">₱{{ order.cash_received|floatformat:2 }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center border-top pt-2">
+                                    <span class="text-muted">Change:</span>
+                                    <span class="fw-bold text-success">₱{{ order.change|floatformat:2 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% elif order.is_paid %}
+                        <div class="p-3 rounded mt-3" style="background: rgba(255, 193, 7, 0.1); border-left: 4px solid var(--warning);">
+                            <div class="text-center">
+                                <i class="fas fa-exclamation-triangle text-warning mb-2"></i>
+                                <p class="text-muted mb-0" style="font-size: var(--text-sm);">
+                                    Cash payment completed but details not recorded
+                                </p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% if order.is_paid and order.paid_at %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Payment Status</small>
+                            <span class="badge bg-success">Paid</span>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Paid At</small>
+                            <div class="fw-semibold">{{ order.paid_at|date:"M d, Y H:i" }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Order Notes -->
+            {% if order.notes %}
+            <div class="unified-card">
+                <h2 class="unified-h2">
+                    <i class="fas fa-sticky-note me-2"></i>
+                    Order Notes
+                </h2>
+                <div class="p-3 bg-light rounded">
+                    {{ order.notes|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column - Compact Sidebar -->
+        <div class="col-lg-4">
+            <!-- Compact Order Status -->
+            <div class="unified-card mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h3 class="unified-h3 mb-0" style="font-size: var(--text-lg);">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Status
+                    </h3>
+                    {% if order.status == 'completed' %}
+                    <i class="fas fa-check-circle text-success fs-5"></i>
+                    {% elif order.status == 'pending' %}
+                    <i class="fas fa-clock text-warning fs-5"></i>
+                    {% elif order.status == 'voided' %}
+                    <i class="fas fa-ban text-danger fs-5"></i>
+                    {% else %}
+                    <i class="fas fa-question-circle text-secondary fs-5"></i>
+                    {% endif %}
+                </div>
+                
+                <div class="text-center py-2">
+                    {% if order.status == 'completed' %}
+                    <span class="badge bg-success">
+                        <i class="fas fa-check-circle me-1"></i>
+                        Completed
+                    </span>
+                    {% elif order.status == 'pending' %}
+                    <span class="badge bg-warning text-dark">
+                        <i class="fas fa-clock me-1"></i>
+                        Pending
+                    </span>
+                    {% elif order.status == 'voided' %}
+                    <span class="badge bg-danger">
+                        <i class="fas fa-ban me-1"></i>
+                        Voided
+                    </span>
+                    {% else %}
+                    <span class="badge bg-secondary">
+                        {{ order.status|title }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="mt-2">
+                    <div class="row g-2 text-center">
+                        <div class="col-6">
+                            <small class="text-muted d-block">Order Type</small>
+                            <span class="badge {% if order.order_type == 'walkin' %}bg-info{% else %}bg-primary{% endif %}" style="font-size: 0.7rem;">
+                                {{ order.order_type|title }}
+                            </span>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Created</small>
+                            <div class="fw-semibold" style="font-size: var(--text-sm);">{{ order.created_at|date:"M d, Y" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compact Customer Information -->
+            <div class="unified-card mb-3">
+                <h3 class="unified-h3 mb-2" style="font-size: var(--text-lg);">
+                    <i class="fas fa-user me-2"></i>
+                    Customer
+                </h3>
+                
+                <div class="space-y-2">
+                    <div>
+                        <small class="text-muted d-block">Name</small>
+                        <div class="fw-semibold" style="font-size: var(--text-sm);">{{ order.customer_name|default:"Walk-in" }}</div>
+                    </div>
+                    
+                    {% if order.customer_phone %}
+                    <div>
+                        <small class="text-muted d-block">Phone</small>
+                        <div class="fw-semibold" style="font-size: var(--text-sm);">{{ order.customer_phone }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if order.customer %}
+                    <div>
+                        <small class="text-muted d-block">Loyalty Points</small>
+                        <div class="fw-semibold text-success" style="font-size: var(--text-sm);">{{ order.customer.loyalty_points|default:0 }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Compact Staff Information -->
+            {% if order.staff %}
+            <div class="unified-card mb-3">
+                <h3 class="unified-h3 mb-2" style="font-size: var(--text-lg);">
+                    <i class="fas fa-user-tie me-2"></i>
+                    Staff
+                </h3>
+                
+                <div class="space-y-2">
+                    <div>
+                        <small class="text-muted d-block">Recorded By</small>
+                        <div class="fw-semibold" style="font-size: var(--text-sm);">{{ order.staff.username }}</div>
+                    </div>
+                    
+                    <div>
+                        <small class="text-muted d-block">Order Time</small>
+                        <div class="fw-semibold" style="font-size: var(--text-sm);">{{ order.created_at|date:"H:i" }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Compact Actions -->
+            <div class="unified-card">
+                <h3 class="unified-h3 mb-2" style="font-size: var(--text-lg);">
+                    <i class="fas fa-cogs me-2"></i>
+                    Actions
+                </h3>
+                
+                <div class="d-grid gap-1">
+                    <a href="{% url 'staff_order_receipt' order.id %}" class="unified-btn unified-btn-primary unified-btn-sm" target="_blank">
+                        <i class="fas fa-print me-1"></i>
+                        Print Receipt
+                    </a>
+                    
+                    {% if order.status == 'completed' and not order.is_daily_report %}
+                    <a href="{% url 'void_order' order.id %}" class="unified-btn unified-btn-danger unified-btn-sm">
+                        <i class="fas fa-ban me-1"></i>
+                        Void Order
+                    </a>
+                    {% endif %}
+                    
+                    {% if order.status == 'pending' and order.payment_method == 'cash' %}
+                    <button class="unified-btn unified-btn-success unified-btn-sm" onclick="completePayment({{ order.id }})">
+                        <i class="fas fa-check-circle me-1"></i>
+                        Mark as Paid
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for additional functionality -->
+<script>
+// Function to complete payment via AJAX
+function completePayment(orderId) {
+    if (!confirm('Are you sure you want to mark this order as paid?')) {
+        return;
+    }
+
+    // Get CSRF token
+    const csrftoken = getCookie('csrftoken');
+    
+    fetch(`/app/orders/${orderId}/complete-payment/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrftoken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Network error occurred. Please try again.');
+    });
+}
+
+// CSRF Token function
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Add some interactive effects
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to cards
+    const cards = document.querySelectorAll('.unified-card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.transition = 'transform 0.2s ease';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+
+<style>
+.unified-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 4px solid var(--primary);
+}
+
+.unified-card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.space-y-2 > * + * {
+    margin-top: var(--space-2);
+}
+
+.space-y-3 > * + * {
+    margin-top: var(--space-3);
+}
+
+.badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.unified-table th {
+    background: var(--bg-tertiary);
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border);
+}
+
+.unified-table tfoot {
+    background: var(--bg-tertiary);
+    font-weight: 600;
+}
+
+.unified-table tfoot tr:last-child {
+    border-top: 2px solid var(--border);
+}
+
+/* Compact sidebar styling */
+.unified-btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: var(--text-sm);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .unified-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-3);
+    }
+    
+    .unified-table-container {
+        font-size: var(--text-sm);
+    }
+}
+
+@media (max-width: 576px) {
+    .unified-table {
+        font-size: var(--text-xs);
+    }
+    
+    .unified-table th,
+    .unified-table td {
+        padding: 0.5rem 0.25rem;
+    }
+}
+</style>
+{% endblock %}

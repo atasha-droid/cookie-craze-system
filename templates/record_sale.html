@@ -1,0 +1,1812 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}New Record - Cookie Craze{% endblock %}
+
+{% block content %}
+<div class="content staff-page">
+    <div class="unified-page-header">
+        <h1 class="unified-h1">New Order</h1>
+        {% if staff %}
+        <p class="text-muted" style="font-size: var(--text-sm);">Staff: {{ staff.user.username }} ({{ staff.staff_id }})</p>
+        {% endif %}
+    </div>
+
+    {% if error %}
+    <div class="unified-alert unified-alert-error">
+        <i class="fas fa-exclamation-triangle me-2"></i> {{ error }}
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <!-- Left Column: Order Type & Dynamic Content -->
+        <div class="col-lg-7">
+            <!-- ORDER TYPE SELECTION -->
+            <div class="unified-card mb-4">
+                <h2 class="unified-h2">
+                    <i class="fas fa-shopping-cart me-2"></i> Order Type
+                </h2>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="order-type-card" data-type="walkin">
+                            <input type="radio" name="order_type" id="order_type_walkin" value="walkin" checked class="order-type-radio">
+                            <label for="order_type_walkin" class="order-type-label">
+                                <div class="order-type-icon walkin">
+                                    <i class="fas fa-walking"></i>
+                                </div>
+                                <div class="order-type-info">
+                                    <h4 class="order-type-title">Walk-in Order</h4>
+                                    <p class="order-type-desc">Create new order with cookie selection</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="order-type-card" data-type="kiosk">
+                            <input type="radio" name="order_type" id="order_type_kiosk" value="kiosk" class="order-type-radio">
+                            <label for="order_type_kiosk" class="order-type-label">
+                                <div class="order-type-icon kiosk">
+                                    <i class="fas fa-tablet-alt"></i>
+                                </div>
+                                <div class="order-type-info">
+                                    <h4 class="order-type-title">Kiosk Order</h4>
+                                    <p class="order-type-desc">Process existing kiosk order</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KIOSK ORDER SEARCH SECTION -->
+            <div id="kiosk-order-section" class="unified-card mb-4" style="display: none;">
+                <h2 class="unified-h2">
+                    <i class="fas fa-search me-2"></i> Find Kiosk Order
+                </h2>
+                
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="unified-form-label">Search Kiosk Orders</label>
+                        <div class="position-relative">
+                            <input type="text" 
+                                   class="unified-form-control" 
+                                   id="kiosk-order-search" 
+                                   placeholder="Enter Kiosk Order ID, Reference ID, or Customer Name..."
+                                   autocomplete="off">
+                            <div class="position-absolute top-100 start-0 end-0 bg-white border rounded shadow-lg mt-1" 
+                                 id="kiosk-suggestions" 
+                                 style="display: none; z-index: 1000; max-height: 300px; overflow-y: auto;">
+                                <!-- Kiosk order suggestions will appear here -->
+                            </div>
+                        </div>
+                        <small class="text-muted">Search by Kiosk Order ID (KIO-*), Reference ID, or Customer Name</small>
+                    </div>
+                </div>
+
+                <!-- Selected Kiosk Order Display -->
+                <div id="selected-kiosk-container" class="mt-3" style="display: none;">
+                    <div class="p-3 rounded" style="border-left: 4px solid var(--success); background: var(--bg-tertiary);">
+                        <h3 class="unified-h3 mb-2" style="color: var(--success); font-size: var(--text-base);">
+                            <i class="fas fa-check-circle me-2"></i> Selected Kiosk Order
+                        </h3>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <div><strong>Kiosk Order ID:</strong> <span id="selected-kiosk-id"></span></div>
+                                <div><strong>Reference ID:</strong> <span id="selected-kiosk-ref"></span></div>
+                                <div><strong>Total Amount:</strong> <span id="selected-kiosk-amount"></span></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div><strong>Customer:</strong> <span id="selected-kiosk-customer"></span></div>
+                                <div><strong>Order Date:</strong> <span id="selected-kiosk-date"></span></div>
+                                <div><strong>Payment Method:</strong> <span id="selected-kiosk-payment"></span></div>
+                            </div>
+                        </div>
+                        <!-- REMOVED DUPLICATE: <input type="hidden" name="kiosk_order_id" id="kiosk_order_id"> -->
+                        <button type="button" class="unified-btn unified-btn-sm unified-btn-danger mt-2" id="clear-kiosk-btn">
+                            <i class="fas fa-times me-1"></i> Change Kiosk Order
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Kiosk Order Items Display -->
+                <div id="kiosk-order-items" class="mt-3" style="display: none;">
+                    <h3 class="unified-h3 mb-3">
+                        <i class="fas fa-list-alt me-2"></i> Order Items
+                    </h3>
+                    <div class="unified-table-container">
+                        <table class="unified-table">
+                            <thead>
+                                <tr>
+                                    <th>Cookie</th>
+                                    <th>Qty</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="kiosk-items-body">
+                                <!-- Kiosk order items will appear here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WALK-IN CUSTOMER SECTION -->
+            <div id="walkin-customer-section" class="unified-card mb-4">
+                <h2 class="unified-h2">
+                    <i class="fas fa-user me-2"></i> Customer Information
+                </h2>
+                
+                <!-- Customer Search -->
+                <div class="mb-3">
+                    <label class="unified-form-label" for="customer-search">
+                        Search Customer by Name or ID
+                    </label>
+                    <div class="position-relative">
+                        <input type="text" id="customer-search" 
+                               placeholder="Type customer name or ID to search..." 
+                               class="unified-form-control" autocomplete="off">
+                        <div id="customer-results" class="search-results-dropdown" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Selected Customer Display -->
+                <div id="selected-customer-container" style="display: none;">
+                    <div class="p-3 rounded mb-3" style="border-left: 4px solid var(--success); background: var(--bg-tertiary);">
+                        <h3 class="unified-h3 mb-2" style="color: var(--success); font-size: var(--text-base);">
+                            <i class="fas fa-check-circle me-2"></i> Selected Customer
+                        </h3>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <div><strong>Name:</strong> <span id="selected-customer-name"></span></div>
+                                <div><strong>Customer ID:</strong> <span id="selected-customer-id"></span></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div><strong>Phone:</strong> <span id="selected-customer-phone"></span></div>
+                                <div><strong>Loyalty Points:</strong> <span id="selected-customer-points"></span></div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="customer_id" id="customer_id">
+                        <button type="button" class="unified-btn unified-btn-sm unified-btn-danger mt-2" id="clear-customer-btn">
+                            <i class="fas fa-times me-1"></i> Change Customer
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Walk-in Customer Option -->
+                <div id="walkin-customer-container">
+                    <div class="p-3 rounded" style="border-left: 4px solid var(--info); background: var(--bg-tertiary);">
+                        <h3 class="unified-h3 mb-2" style="color: var(--info); font-size: var(--text-base);">
+                            <i class="fas fa-walking me-2"></i> Walk-in Customer
+                        </h3>
+                        <p class="text-muted mb-0" style="font-size: var(--text-sm);">No customer selected. This will be recorded as a walk-in sale.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COOKIE SELECTION SECTION (Only for Walk-in) -->
+            <div id="cookie-selection-section" class="unified-card">
+                <h2 class="unified-h2">
+                    <i class="fas fa-cookie-bite me-2"></i> Select Cookies
+                </h2>
+                
+                <!-- Cookie Grid by Category -->
+                {% for category_name, category_cookies in cookies_by_category.items %}
+                <div class="category-section mb-4">
+                    <h3 class="unified-h3 mb-3" style="font-size: var(--text-lg);">{{ category_name }} Cookies</h3>
+                    <div class="cookie-grid">
+                        {% for cookie in category_cookies %}
+                        <div class="cookie-card" data-cookie-id="{{ cookie.id }}">
+                            <div class="cookie-image">
+                                {% if cookie.image %}
+                                <img src="{{ cookie.image.url }}" alt="{{ cookie.name }}" class="cookie-img">
+                                {% else %}
+                                <div class="cookie-icon">
+                                    <i class="fas fa-cookie-bite"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="cookie-info">
+                                <div class="cookie-name">{{ cookie.name }}</div>
+                                <div class="cookie-flavor">{{ cookie.get_flavor_display }}</div>
+                                <div class="cookie-price">₱{{ cookie.price }}</div>
+                                <div class="cookie-stock">Stock: {{ cookie.stock_quantity }}</div>
+                                
+                                <div class="quantity-controls">
+                                    <button type="button" class="quantity-btn minus" data-cookie-id="{{ cookie.id }}">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" 
+                                           id="cookie-{{ cookie.id }}-quantity"
+                                           class="quantity-input" 
+                                           value="0" 
+                                           min="0" 
+                                           max="{{ cookie.stock_quantity }}">
+                                    <button type="button" class="quantity-btn plus" data-cookie-id="{{ cookie.id }}">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right Column: Order Summary & Payment -->
+        <div class="col-lg-5">
+            <form method="post" id="sale-form">
+                {% csrf_token %}
+                <input type="hidden" name="order_type" id="order_type_input" value="walkin">
+                <input type="hidden" name="kiosk_order_id" id="kiosk_order_id" value="">
+                
+                <!-- Selected Items Summary -->
+                <div class="unified-card mb-4">
+                    <h2 class="unified-h2">
+                        <i class="fas fa-shopping-cart me-2"></i> Order Summary
+                    </h2>
+                    <div id="selected-items-container">
+                        <!-- Walk-in Order Summary -->
+                        <div id="walkin-order-summary">
+                            <div id="no-items-message" class="unified-alert">
+                                <i class="fas fa-info-circle me-2"></i> No cookies selected yet. Use the quantity controls to add cookies.
+                            </div>
+                            <div id="selected-items-table" style="display: none;">
+                                <div class="unified-table-container">
+                                    <table class="unified-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Cookie</th>
+                                                <th>Qty</th>
+                                                <th>Price</th>
+                                                <th>Total</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="selected-items-body">
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="total-section mt-3">
+                                    <div class="total-row">
+                                        <span class="total-label">Subtotal:</span>
+                                        <span class="total-amount" id="subtotal-amount">₱0.00</span>
+                                    </div>
+                                    <div class="total-row">
+                                        <span class="total-label">Grand Total:</span>
+                                        <span class="grand-total-amount" id="grand-total">₱0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kiosk Order Summary -->
+                        <div id="kiosk-order-summary" style="display: none;">
+                            <div class="p-3 rounded" style="border-left: 4px solid var(--primary); background: var(--bg-tertiary);">
+                                <h3 class="unified-h3 mb-3" style="color: var(--primary); font-size: var(--text-base);">
+                                    <i class="fas fa-tablet-alt me-2"></i> Kiosk Order Summary
+                                </h3>
+                                <div id="kiosk-summary-details">
+                                    <!-- Kiosk order summary will appear here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method Section -->
+                <div class="unified-card mb-4">
+                    <h2 class="unified-h2">
+                        <i class="fas fa-money-bill-wave me-2"></i> Payment Information
+                    </h2>
+                    
+                    <div class="mb-3">
+                        <label class="unified-form-label" for="payment_method">
+                            Payment Method
+                        </label>
+                        <select name="payment_method" id="payment_method" required class="unified-form-control">
+                            <option value="cash" selected>Cash</option>
+                            <option value="gcash">GCash</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Cash Payment Details -->
+                    <div id="cash-details" class="p-3 rounded mb-3" style="display: none;">
+                        <h3 class="unified-h3 mb-3" style="color: var(--success); font-size: var(--text-base);">
+                            <i class="fas fa-money-bill-wave me-2"></i> Cash Payment
+                        </h3>
+                        <div class="payment-fields">
+                            <div class="mb-3">
+                                <label class="unified-form-label">Total Amount</label>
+                                <div class="amount-display" style="background: var(--bg-secondary); padding: var(--space-sm); border-radius: var(--radius); font-weight: 600; color: var(--primary); text-align: center;">
+                                    ₱<span id="display-total">0.00</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="unified-form-label" for="amount_paid">Amount Paid</label>
+                                <input type="number" name="amount_paid" id="amount_paid" 
+                                       step="0.01" min="0" value="0"
+                                       class="unified-form-control" placeholder="0.00">
+                            </div>
+                            <div class="mb-3">
+                                <label class="unified-form-label">Change</label>
+                                <div class="amount-display" style="background: var(--bg-secondary); padding: var(--space-sm); border-radius: var(--radius); font-weight: 600; color: var(--success); text-align: center;">
+                                    ₱<span id="display-change">0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- GCash Payment Details -->
+                    <div id="gcash-details" class="p-3 rounded mb-3" style="display: none;">
+                        <h3 class="unified-h3 mb-3" style="color: var(--info); font-size: var(--text-base);">
+                            <i class="fas fa-mobile-alt me-2"></i> GCash Payment
+                        </h3>
+                        <div class="mb-3">
+                            <label class="unified-form-label" for="gcash_number">GCash Number</label>
+                            <input type="text" name="gcash_number" id="gcash_number" 
+                                   placeholder="Enter sender's GCash number" class="unified-form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="unified-form-label" for="gcash_reference">Reference Number</label>
+                            <input type="text" name="gcash_reference" id="gcash_reference" 
+                                   placeholder="Enter reference number" class="unified-form-control">
+                        </div>
+                    </div>
+                    
+                    <!-- Card Payment Details -->
+                    <div id="card-details" class="p-3 rounded mb-3" style="display: none;">
+                        <h3 class="unified-h3 mb-3" style="color: var(--warning); font-size: var(--text-base);">
+                            <i class="fas fa-credit-card me-2"></i> Card Payment
+                        </h3>
+                        <div class="mb-3">
+                            <label class="unified-form-label" for="card_number">Card Number</label>
+                            <input type="text" name="card_number" id="card_number" 
+                                   placeholder="Enter card number" class="unified-form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="unified-form-label" for="card_holder">Cardholder Name</label>
+                            <input type="text" name="card_holder" id="card_holder" 
+                                   placeholder="Enter cardholder name" class="unified-form-control">
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="unified-form-label" for="card_expiry">Expiry Date</label>
+                                <input type="text" name="card_expiry" id="card_expiry" 
+                                       placeholder="MM/YY" class="unified-form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="unified-form-label" for="card_cvv">CVV</label>
+                                <input type="text" name="card_cvv" id="card_cvv" 
+                                       placeholder="Enter CVV" class="unified-form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loyalty Points Section -->
+                    <div id="loyalty-section" class="p-3 rounded" style="border-left: 4px solid var(--primary); background: var(--bg-tertiary); display: none;">
+                        <h3 class="unified-h3 mb-3" style="color: var(--primary); font-size: var(--text-base);">
+                            <i class="fas fa-gift me-2"></i> Loyalty Points
+                        </h3>
+                        <div class="loyalty-info">
+                            <div class="mb-2">
+                                <strong>Points to Earn:</strong> <span id="points-to-earn">0</span> points
+                            </div>
+                            <div class="mb-2">
+                                <strong>New Total Points:</strong> <span id="new-total-points">0</span> points
+                            </div>
+                            <small class="text-muted">1 peso = 1 loyalty point. Points are automatically added when order is completed.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons - Side by Side -->
+                <div class="unified-card">
+                    <div class="action-buttons">
+                        <a href="{% url 'dashboard' %}" class="cancel-btn">
+                            <i class="fas fa-times me-2"></i> Cancel Sale
+                        </a>
+                        <button type="submit" class="complete-btn" id="submit-btn">
+                            <i class="fas fa-check-circle me-2"></i> Complete Sale
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+  function parsePeso(text){
+    if(!text) return 0;
+    return parseFloat(String(text).replace(/[^0-9.]/g,'')||'0')||0;
+  }
+  function fmt(n){
+    return (isNaN(n)?0:n).toFixed(2);
+  }
+  function updatePaymentVisibility(){
+    var method = document.getElementById('payment_method').value;
+    var cash = document.getElementById('cash-details');
+    var gcash = document.getElementById('gcash-details');
+    if(method === 'cash'){
+      cash.style.display = '';
+      gcash.style.display = 'none';
+    } else if(method === 'gcash'){
+      cash.style.display = 'none';
+      gcash.style.display = '';
+    }
+  }
+  function syncTotals(){
+    var grandEl = document.getElementById('grand-total');
+    var total = grandEl ? parsePeso(grandEl.textContent) : 0;
+    var outTotal = document.getElementById('display-total');
+    if(outTotal) outTotal.textContent = fmt(total);
+    var paidEl = document.getElementById('amount_paid');
+    if(paidEl){
+      var changeEl = document.getElementById('display-change');
+      var paid = parsePeso(paidEl.value);
+      if(changeEl) changeEl.textContent = fmt(Math.max(paid - total, 0));
+    }
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    var sel = document.getElementById('payment_method');
+    if(sel){
+      sel.addEventListener('change', updatePaymentVisibility);
+      updatePaymentVisibility();
+    }
+    var paidEl = document.getElementById('amount_paid');
+    if(paidEl){
+      paidEl.addEventListener('input', syncTotals);
+    }
+    // keep totals in sync when the order total changes
+    var grandEl = document.getElementById('grand-total');
+    if(grandEl && 'MutationObserver' in window){
+      var obs = new MutationObserver(syncTotals);
+      obs.observe(grandEl, {childList:true, characterData:true, subtree:true});
+    }
+    // initial
+    updatePaymentVisibility();
+    syncTotals();
+
+    // Dynamic required attributes and submit validation
+    function applyRequired(){
+      var method = document.getElementById('payment_method').value;
+      var paid = document.getElementById('amount_paid');
+      var gnum = document.getElementById('gcash_number');
+      var gref = document.getElementById('gcash_reference');
+      if(paid){ paid.required = (method === 'cash'); }
+      if(gnum){ gnum.required = (method === 'gcash'); }
+      if(gref){ gref.required = (method === 'gcash'); }
+    }
+    if(sel){ sel.addEventListener('change', applyRequired); }
+    applyRequired();
+
+    var form = document.getElementById('sale-form');
+    if(form){
+      form.addEventListener('submit', function(e){
+        var orderType = document.getElementById('order_type_input')?.value || 'walkin';
+
+        // For kiosk orders, let the backend (complete_kiosk_order) handle validation.
+        if(orderType === 'kiosk'){
+          return;
+        }
+
+        // Walk-in validations
+        var total = parsePeso(document.getElementById('grand-total')?.textContent);
+        if(!total || total <= 0){
+          e.preventDefault();
+          alert('Please add at least one item to the order.');
+          return;
+        }
+
+        var method = document.getElementById('payment_method').value;
+        if(method === 'cash'){
+          var paidVal = parsePeso(document.getElementById('amount_paid')?.value);
+          if(!(paidVal >= total)){
+            e.preventDefault();
+            alert('Cash Amount Paid must be at least equal to the Grand Total.');
+            return;
+          }
+        } else if(method === 'gcash'){
+          var gnum = document.getElementById('gcash_number')?.value.trim();
+          var gref = document.getElementById('gcash_reference')?.value.trim();
+          if(!gnum || !gref){
+            e.preventDefault();
+            alert('Please enter both GCash Number and Reference Number to proceed.');
+            return;
+          }
+        }
+      });
+    }
+  });
+})();
+</script>
+
+<style>
+/* Your existing CSS styles remain the same */
+/* Split Layout */
+.row.g-4 {
+    gap: var(--space-xl) !important;
+}
+
+.col-lg-7, .col-lg-5 {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+/* Cookie Grid Layout - 3 Grid with Smaller Cards */
+.cookie-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: var(--space-lg);
+}
+
+.cookie-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.875rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.cookie-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cookie-image {
+    width: 100%;
+    height: 70px;
+    background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.cookie-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cookie-icon {
+    font-size: 1.25rem;
+    color: var(--primary);
+}
+
+.cookie-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.cookie-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 0;
+    height: 2rem;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.cookie-flavor {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-bottom: 0;
+    line-height: 1.2;
+}
+
+.cookie-price {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0.25rem 0;
+}
+
+.cookie-stock {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+}
+
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: auto;
+    justify-content: center;
+}
+
+.quantity-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.7rem;
+}
+
+.quantity-btn:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary);
+    transform: scale(1.05);
+}
+
+.quantity-input {
+    width: 50px;
+    text-align: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.25rem;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 0 0.25rem;
+}
+
+.quantity-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.cancel-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.cancel-btn:hover {
+    background: var(--danger);
+    color: white;
+    border-color: var(--danger);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    text-decoration: none;
+}
+
+.complete-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--primary);
+    color: white;
+    border: 2px solid var(--primary-dark);
+    border-radius: var(--radius);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.complete-btn:hover {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+}
+
+.complete-btn:disabled {
+    background: var(--text-muted);
+    border-color: var(--text-muted);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Customer Search */
+.search-results-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: var(--shadow-lg);
+}
+
+.search-result-item {
+    padding: var(--space-sm);
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    background: var(--bg-secondary);
+    font-size: var(--text-sm);
+}
+
+.search-result-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+/* Order Summary Styles */
+.total-section {
+    background: var(--bg-tertiary);
+    padding: var(--space-md);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--primary);
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+    padding: var(--space-xs) 0;
+}
+
+.total-row:last-child {
+    margin-bottom: 0;
+    border-top: 1px solid var(--border);
+    padding-top: var(--space-sm);
+}
+
+.total-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+}
+
+.total-amount {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+}
+
+.grand-total-amount {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: var(--text-lg);
+}
+
+/* Category Sections */
+.category-section {
+    margin-bottom: var(--space-xl);
+}
+
+.category-section:last-child {
+    margin-bottom: 0;
+}
+
+/* Payment Fields */
+.payment-fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.amount-display {
+    background: var(--bg-secondary);
+    padding: var(--space-sm);
+    border-radius: var(--radius);
+    font-weight: 600;
+    text-align: center;
+    border: 1px solid var(--border);
+}
+
+/* ORDER TYPE SELECTION STYLES */
+.order-type-card {
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--bg-secondary);
+}
+
+.order-type-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.order-type-card.selected {
+    border-color: var(--primary);
+    background: rgba(139, 69, 19, 0.05);
+}
+
+.order-type-radio {
+    display: none;
+}
+
+.order-type-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    cursor: pointer;
+    margin: 0;
+}
+
+.order-type-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.order-type-icon.walkin {
+    background: rgba(13, 110, 253, 0.1);
+    color: var(--info);
+}
+
+.order-type-icon.kiosk {
+    background: rgba(111, 66, 193, 0.1);
+    color: #6f42c1;
+}
+
+.order-type-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.order-type-desc {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Selected state */
+.order-type-radio:checked + .order-type-label .order-type-card {
+    border-color: var(--primary);
+    background: rgba(139, 69, 19, 0.05);
+}
+
+.order-type-radio:checked + .order-type-label .order-type-icon.walkin {
+    background: var(--info);
+    color: white;
+}
+
+.order-type-radio:checked + .order-type-label .order-type-icon.kiosk {
+    background: #6f42c1;
+    color: white;
+}
+
+/* Kiosk Suggestions */
+#kiosk-suggestions {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+}
+
+.kiosk-suggestion-item {
+    padding: var(--space-sm);
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: all 0.2s ease;
+}
+
+.kiosk-suggestion-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.kiosk-suggestion-item:last-child {
+    border-bottom: none;
+}
+
+/* Additional styles for kiosk order display */
+#kiosk-order-items {
+    margin-top: 1rem;
+}
+
+.kiosk-summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.kiosk-summary-item:last-child {
+    border-bottom: none;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .cookie-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.875rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .col-lg-7, .col-lg-5 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .cookie-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .cookie-card {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .cookie-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .cookie-card {
+        padding: 0.75rem;
+    }
+    
+    .cookie-image {
+        height: 65px;
+    }
+    
+    .quantity-controls {
+        gap: 0.4rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .cancel-btn,
+    .complete-btn {
+        width: 100%;
+    }
+
+    .order-type-label {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-sm);
+    }
+}
+
+@media (max-width: 576px) {
+    .cookie-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .cookie-card {
+        padding: 0.625rem;
+    }
+    
+    .cookie-image {
+        height: 60px;
+    }
+    
+    .cookie-name {
+        font-size: 0.75rem;
+        height: 1.8rem;
+    }
+    
+    .cookie-price {
+        font-size: 0.8rem;
+    }
+    
+    .quantity-input {
+        width: 45px;
+        font-size: 0.75rem;
+    }
+    
+    .quantity-btn {
+        width: 26px;
+        height: 26px;
+    }
+}
+
+/* Table Styles for Selected Items */
+.unified-table {
+    font-size: var(--text-sm);
+}
+
+.unified-table th,
+.unified-table td {
+    padding: var(--space-xs) var(--space-sm);
+    vertical-align: middle;
+}
+
+.unified-table th {
+    background: var(--bg-tertiary);
+    font-weight: 600;
+    font-size: var(--text-xs);
+    color: var(--text-primary);
+}
+</style>
+
+<script>
+// Remove duplicate kiosk_order_id elements if they exist
+document.addEventListener('DOMContentLoaded', function() {
+    const kioskInputs = document.querySelectorAll('#kiosk_order_id');
+    if (kioskInputs.length > 1) {
+        console.log(`Found ${kioskInputs.length} kiosk_order_id elements - removing duplicates`);
+        // Keep only the first one (in the form), remove others
+        for (let i = 1; i < kioskInputs.length; i++) {
+            kioskInputs[i].remove();
+        }
+    }
+});
+
+let selectedCookies = {};
+let selectedCustomer = null;
+let selectedKioskOrder = null;
+let grandTotal = 0;
+
+// Order Type Functions
+function toggleOrderType() {
+    const isWalkin = document.getElementById('order_type_walkin').checked;
+    const isKiosk = document.getElementById('order_type_kiosk').checked;
+    
+    console.log('=== TOGGLE ORDER TYPE ===');
+    console.log('Is Walkin:', isWalkin);
+    console.log('Is Kiosk:', isKiosk);
+    
+    // Update the hidden order_type input
+    const orderTypeInput = document.getElementById('order_type_input');
+    if (orderTypeInput) {
+        orderTypeInput.value = isKiosk ? 'kiosk' : 'walkin';
+        console.log('✓ order_type_input set to:', orderTypeInput.value);
+    }
+    
+    // Show/hide sections
+    document.getElementById('kiosk-order-section').style.display = isKiosk ? 'block' : 'none';
+    document.getElementById('walkin-customer-section').style.display = isWalkin ? 'block' : 'none';
+    document.getElementById('cookie-selection-section').style.display = isWalkin ? 'block' : 'none';
+    document.getElementById('walkin-order-summary').style.display = isWalkin ? 'block' : 'none';
+    document.getElementById('kiosk-order-summary').style.display = isKiosk ? 'block' : 'none';
+    
+    // Update card styles
+    document.querySelectorAll('.order-type-card').forEach(card => {
+        const type = card.getAttribute('data-type');
+        const isSelected = (type === 'walkin' && isWalkin) || (type === 'kiosk' && isKiosk);
+        card.classList.toggle('selected', isSelected);
+    });
+    
+    // Clear selections when switching
+    if (isWalkin && selectedKioskOrder) {
+        clearKioskSelection();
+    }
+    if (isKiosk && (Object.keys(selectedCookies).length > 0 || selectedCustomer)) {
+        clearCustomerSelection();
+        clearAllCookies();
+    }
+    
+    // Reset payment
+    document.getElementById('amount_paid').value = '0';
+    calculateChange();
+    document.getElementById('submit-btn').disabled = false;
+    
+    console.log('✓ Order type toggled successfully');
+}
+
+function selectOrderType(type) {
+    document.getElementById(`order_type_${type}`).checked = true;
+    toggleOrderType();
+}
+
+// Kiosk Order Functions
+function searchKioskOrders(query) {
+    const kioskSuggestions = document.getElementById('kiosk-suggestions');
+    
+    console.log('=== SEARCHING KIOSK ORDERS ===');
+    console.log('Search query:', query);
+    
+    kioskSuggestions.innerHTML = `
+        <div class="kiosk-suggestion-item" style="text-align: center; color: var(--text-muted);">
+            <i class="fas fa-spinner fa-spin me-2"></i>
+            Searching pending kiosk orders...
+        </div>
+    `;
+    kioskSuggestions.style.display = 'block';
+
+    fetch(`/app/api/search-kiosk-orders/?q=${encodeURIComponent(query)}`)
+        .then(response => {
+            console.log('Search response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Search results data:', data);
+            if (data.error) {
+                console.error('Backend error:', data.error);
+                kioskSuggestions.innerHTML = `
+                    <div class="kiosk-suggestion-item" style="text-align: center; color: var(--danger);">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Backend Error: ${data.error}
+                    </div>
+                `;
+            } else {
+                displayKioskSuggestions(data.results || []);
+            }
+        })
+        .catch(error => {
+            console.error('Error searching kiosk orders:', error);
+            kioskSuggestions.innerHTML = `
+                <div class="kiosk-suggestion-item" style="text-align: center; color: var(--danger);">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Network Error: ${error.message}
+                </div>
+            `;
+        });
+}
+
+function displayKioskSuggestions(orders) {
+    const kioskSuggestions = document.getElementById('kiosk-suggestions');
+    
+    if (orders.length === 0) {
+        kioskSuggestions.innerHTML = `
+            <div class="kiosk-suggestion-item" style="text-align: center; color: var(--text-muted);">
+                <i class="fas fa-search me-2"></i>
+                No pending kiosk orders found
+            </div>
+        `;
+        return;
+    }
+
+    let resultsHTML = '';
+    orders.forEach(order => {
+        resultsHTML += `
+            <div class="kiosk-suggestion-item" onclick="selectKioskOrder(${JSON.stringify(order).replace(/"/g, '&quot;')})">
+                <div class="fw-semibold">${order.order_id}</div>
+                <div class="text-muted" style="font-size: var(--text-xs);">
+                    ${order.customer_name} • ₱${order.total_amount} • ${order.payment_method}
+                </div>
+                <div class="text-muted" style="font-size: var(--text-xs);">
+                    ${order.created_at} • Ref: ${order.hex_id}
+                </div>
+            </div>
+        `;
+    });
+
+    kioskSuggestions.innerHTML = resultsHTML;
+}
+
+function selectKioskOrder(order) {
+    selectedKioskOrder = order;
+    
+    console.log('=== SELECTING KIOSK ORDER ===');
+    console.log('Order selected:', order);
+    
+    // Update display
+    document.getElementById('selected-kiosk-id').textContent = order.order_id;
+    document.getElementById('selected-kiosk-ref').textContent = order.hex_id;
+    document.getElementById('selected-kiosk-amount').textContent = `₱${order.total_amount}`;
+    document.getElementById('selected-kiosk-customer').textContent = order.customer_name;
+    document.getElementById('selected-kiosk-date').textContent = order.created_at;
+    document.getElementById('selected-kiosk-payment').textContent = order.payment_method;
+    
+    // Set the hidden inputs - Use querySelector to get the correct one
+    const kioskOrderIdInput = document.querySelector('#kiosk_order_id');
+    const orderTypeInput = document.getElementById('order_type_input');
+    
+    if (kioskOrderIdInput) {
+        kioskOrderIdInput.value = order.id;
+        console.log('✓ kiosk_order_id set to:', kioskOrderIdInput.value);
+    }
+    
+    if (orderTypeInput) {
+        orderTypeInput.value = 'kiosk';
+        console.log('✓ order_type set to: kiosk');
+    }
+    
+    // Show selected kiosk order
+    document.getElementById('selected-kiosk-container').style.display = 'block';
+    document.getElementById('kiosk-suggestions').style.display = 'none';
+    document.getElementById('kiosk-order-search').value = order.order_id;
+    
+    // Load kiosk order items
+    loadKioskOrderItems(order.id);
+    
+    // Update kiosk order summary
+    updateKioskOrderSummary(order);
+    
+    // Auto-set payment method from kiosk order
+    if (order.payment_method) {
+        const paymentMethodSelect = document.getElementById('payment_method');
+        const paymentMethod = order.payment_method.toLowerCase();
+        if (paymentMethodSelect.querySelector(`option[value="${paymentMethod}"]`)) {
+            paymentMethodSelect.value = paymentMethod;
+        }
+        togglePaymentDetails();
+    }
+    
+    console.log('✓ Kiosk order selection completed');
+}
+
+function loadKioskOrderItems(orderId) {
+    console.log('=== LOADING KIOSK ORDER ITEMS ===');
+    console.log('Order ID:', orderId);
+    
+    fetch(`/app/api/kiosk-order-items/${orderId}/`)
+        .then(response => {
+            console.log('Items response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Kiosk order items data:', data);
+            if (data.error) {
+                console.error('Backend error loading items:', data.error);
+                // Show error but continue
+                displayKioskOrderItems([]);
+            } else {
+                displayKioskOrderItems(data.items || []);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading kiosk order items:', error);
+            // Show empty state but continue
+            displayKioskOrderItems([]);
+        });
+}
+
+function displayKioskOrderItems(items) {
+    const kioskItemsBody = document.getElementById('kiosk-items-body');
+    const kioskOrderItems = document.getElementById('kiosk-order-items');
+    
+    if (items.length === 0) {
+        kioskItemsBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center text-muted py-3">
+                    No items found in this order
+                </td>
+            </tr>
+        `;
+    } else {
+        let itemsHTML = '';
+        items.forEach(item => {
+            itemsHTML += `
+                <tr>
+                    <td class="fw-semibold">${item.cookie_name}</td>
+                    <td>${item.quantity}</td>
+                    <td class="text-success">₱${item.price}</td>
+                    <td class="text-primary fw-bold">₱${item.total}</td>
+                </tr>
+            `;
+        });
+        kioskItemsBody.innerHTML = itemsHTML;
+    }
+    
+    kioskOrderItems.style.display = 'block';
+}
+
+function updateKioskOrderSummary(order) {
+    const kioskSummaryDetails = document.getElementById('kiosk-summary-details');
+    
+    kioskSummaryDetails.innerHTML = `
+        <div class="kiosk-summary-item">
+            <span><strong>Order ID:</strong></span>
+            <span>${order.order_id}</span>
+        </div>
+        <div class="kiosk-summary-item">
+            <span><strong>Customer:</strong></span>
+            <span>${order.customer_name}</span>
+        </div>
+        <div class="kiosk-summary-item">
+            <span><strong>Total Amount:</strong></span>
+            <span class="fw-bold text-success">₱${order.total_amount}</span>
+        </div>
+        <div class="kiosk-summary-item">
+            <span><strong>Payment Method:</strong></span>
+            <span>${order.payment_method}</span>
+        </div>
+        <div class="kiosk-summary-item">
+            <span><strong>Order Date:</strong></span>
+            <span>${order.created_at}</span>
+        </div>
+    `;
+    
+    // Update payment display
+    document.getElementById('display-total').textContent = order.total_amount;
+    grandTotal = parseFloat(order.total_amount);
+    
+    // Hide loyalty section for kiosk orders
+    document.getElementById('loyalty-section').style.display = 'none';
+}
+
+function clearKioskSelection() {
+    selectedKioskOrder = null;
+    document.getElementById('selected-kiosk-container').style.display = 'none';
+    const kioskOrderIdInput = document.querySelector('#kiosk_order_id');
+    if (kioskOrderIdInput) {
+        kioskOrderIdInput.value = '';
+    }
+    document.getElementById('kiosk-order-search').value = '';
+    document.getElementById('kiosk-order-items').style.display = 'none';
+    document.getElementById('kiosk-summary-details').innerHTML = '';
+    document.getElementById('kiosk-order-search').focus();
+    document.getElementById('display-total').textContent = '0.00';
+    grandTotal = 0;
+    
+    // Reset payment method to default
+    document.getElementById('payment_method').value = 'cash';
+    togglePaymentDetails();
+}
+
+// Customer Search Functions
+function searchCustomers(query) {
+    const customerResults = document.getElementById('customer-results');
+    
+    customerResults.innerHTML = `
+        <div class="search-result-item" style="text-align: center; color: var(--text-muted);">
+            <i class="fas fa-spinner fa-spin me-2"></i>
+            Searching customers...
+        </div>
+    `;
+    customerResults.style.display = 'block';
+
+    fetch(`{% url 'search_customers' %}?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            displayCustomerResults(data.results || []);
+        })
+        .catch(error => {
+            console.error('Error searching customers:', error);
+            customerResults.innerHTML = `
+                <div class="search-result-item" style="text-align: center; color: var(--danger);">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error searching customers.
+                </div>
+            `;
+        });
+}
+
+function displayCustomerResults(customers) {
+    const customerResults = document.getElementById('customer-results');
+    
+    if (customers.length === 0) {
+        customerResults.innerHTML = `
+            <div class="search-result-item" style="text-align: center; color: var(--text-muted);">
+                <i class="fas fa-search me-2"></i>
+                No customers found
+            </div>
+        `;
+        return;
+    }
+
+    let resultsHTML = '';
+    customers.forEach(customer => {
+        resultsHTML += `
+            <div class="search-result-item" onclick="selectCustomer(${JSON.stringify(customer).replace(/"/g, '&quot;')})">
+                <div class="fw-semibold">${customer.name}</div>
+                <div class="text-muted" style="font-size: var(--text-xs);">
+                    ID: ${customer.customer_id} | Phone: ${customer.phone}
+                </div>
+            </div>
+        `;
+    });
+
+    customerResults.innerHTML = resultsHTML;
+}
+
+function selectCustomer(customer) {
+    selectedCustomer = customer;
+    
+    // Update display
+    document.getElementById('selected-customer-name').textContent = customer.name;
+    document.getElementById('selected-customer-id').textContent = customer.customer_id;
+    document.getElementById('selected-customer-phone').textContent = customer.phone;
+    document.getElementById('selected-customer-points').textContent = customer.loyalty_points;
+    document.getElementById('customer_id').value = customer.id;
+    
+    // Show selected customer, hide walk-in and search
+    document.getElementById('selected-customer-container').style.display = 'block';
+    document.getElementById('walkin-customer-container').style.display = 'none';
+    document.getElementById('customer-search').value = '';
+    document.getElementById('customer-results').style.display = 'none';
+    
+    // Update loyalty points display
+    updateLoyaltyPoints();
+}
+
+function clearCustomerSelection() {
+    selectedCustomer = null;
+    document.getElementById('selected-customer-container').style.display = 'none';
+    document.getElementById('walkin-customer-container').style.display = 'block';
+    document.getElementById('customer_id').value = '';
+    document.getElementById('loyalty-section').style.display = 'none';
+}
+
+// Cookie Quantity Management
+function updateCookieQuantity(cookieId, change) {
+    const input = document.getElementById(`cookie-${cookieId}-quantity`);
+    const currentValue = parseInt(input.value) || 0;
+    const newValue = Math.max(0, currentValue + change);
+    
+    input.value = newValue;
+    validateCookieQuantity(cookieId, newValue);
+}
+
+function validateCookieQuantity(cookieId, quantity) {
+    quantity = parseInt(quantity) || 0;
+    
+    if (quantity > 0) {
+        // Get cookie data from the card
+        const cookieCard = document.querySelector(`[data-cookie-id="${cookieId}"]`);
+        const cookieName = cookieCard.querySelector('.cookie-name').textContent;
+        const cookiePrice = parseFloat(cookieCard.querySelector('.cookie-price').textContent.replace('₱', ''));
+        const maxStock = parseInt(cookieCard.querySelector('.cookie-stock').textContent.replace('Stock: ', ''));
+        
+        if (quantity > maxStock) {
+            quantity = maxStock;
+            document.getElementById(`cookie-${cookieId}-quantity`).value = quantity;
+            alert(`Only ${maxStock} items available in stock.`);
+        }
+        
+        selectedCookies[cookieId] = {
+            id: cookieId,
+            name: cookieName,
+            price: cookiePrice,
+            stock: maxStock,
+            quantity: quantity
+        };
+    } else {
+        delete selectedCookies[cookieId];
+    }
+    
+    updateSelectedItemsTable();
+    updateLoyaltyPoints();
+}
+
+function updateSelectedItemsTable() {
+    const tableBody = document.getElementById('selected-items-body');
+    const noItemsMessage = document.getElementById('no-items-message');
+    const table = document.getElementById('selected-items-table');
+    const grandTotalElement = document.getElementById('grand-total');
+    const displayTotalElement = document.getElementById('display-total');
+    const subtotalElement = document.getElementById('subtotal-amount');
+    
+    tableBody.innerHTML = '';
+    grandTotal = 0;
+
+    Object.values(selectedCookies).forEach(cookie => {
+        const total = cookie.price * cookie.quantity;
+        grandTotal += total;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="fw-semibold" style="font-size: var(--text-xs);">${cookie.name}</td>
+            <td style="font-size: var(--text-xs);">${cookie.quantity}</td>
+            <td style="color: var(--success); font-weight: 600; font-size: var(--text-xs);">₱${cookie.price.toFixed(2)}</td>
+            <td style="color: var(--primary); font-weight: 700; font-size: var(--text-xs);">₱${total.toFixed(2)}</td>
+            <td>
+                <button type="button" class="unified-btn unified-btn-danger unified-btn-sm remove-cookie-btn" data-cookie-id="${cookie.id}" style="padding: var(--space-xs);">
+                    <i class="fas fa-trash" style="font-size: var(--text-xs);"></i>
+                </button>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+
+    const formattedTotal = grandTotal.toFixed(2);
+    grandTotalElement.textContent = formattedTotal;
+    displayTotalElement.textContent = formattedTotal;
+    subtotalElement.textContent = formattedTotal;
+
+    if (Object.keys(selectedCookies).length === 0) {
+        noItemsMessage.style.display = 'block';
+        table.style.display = 'none';
+    } else {
+        noItemsMessage.style.display = 'none';
+        table.style.display = 'block';
+    }
+    
+    // Recalculate change if cash payment
+    calculateChange();
+}
+
+function removeCookie(cookieId) {
+    delete selectedCookies[cookieId];
+    document.getElementById(`cookie-${cookieId}-quantity`).value = 0;
+    updateSelectedItemsTable();
+    updateLoyaltyPoints();
+}
+
+function clearAllCookies() {
+    selectedCookies = {};
+    document.querySelectorAll('.quantity-input').forEach(input => {
+        input.value = 0;
+    });
+    updateSelectedItemsTable();
+    updateLoyaltyPoints();
+}
+
+// Loyalty Points Calculation
+function updateLoyaltyPoints() {
+    const loyaltySection = document.getElementById('loyalty-section');
+    const pointsToEarn = document.getElementById('points-to-earn');
+    const newTotalPoints = document.getElementById('new-total-points');
+    
+    if (selectedCustomer && grandTotal > 0) {
+        const pointsEarned = Math.floor(grandTotal); // 1 peso = 1 point
+        const currentPoints = parseInt(selectedCustomer.loyalty_points) || 0;
+        const totalPoints = currentPoints + pointsEarned;
+        
+        pointsToEarn.textContent = pointsEarned;
+        newTotalPoints.textContent = totalPoints;
+        loyaltySection.style.display = 'block';
+    } else {
+        loyaltySection.style.display = 'none';
+    }
+}
+
+// Payment Method Handling
+function togglePaymentDetails() {
+    const paymentMethod = document.getElementById('payment_method').value;
+    const cashDetails = document.getElementById('cash-details');
+    const gcashDetails = document.getElementById('gcash-details');
+    const cardDetails = document.getElementById('card-details');
+    
+    cashDetails.style.display = 'none';
+    gcashDetails.style.display = 'none';
+    cardDetails.style.display = 'none';
+    
+    if (paymentMethod === 'cash') {
+        cashDetails.style.display = 'block';
+    } else if (paymentMethod === 'gcash') {
+        gcashDetails.style.display = 'block';
+    } else if (paymentMethod === 'card') {
+        cardDetails.style.display = 'block';
+    }
+}
+
+function calculateChange() {
+    const amountPaid = parseFloat(document.getElementById('amount_paid').value) || 0;
+    const changeElement = document.getElementById('display-change');
+    
+    const change = amountPaid - grandTotal;
+    changeElement.textContent = Math.max(0, change).toFixed(2);
+    
+    // Style change amount
+    if (change < 0) {
+        changeElement.style.color = 'var(--danger)';
+    } else {
+        changeElement.style.color = 'var(--success)';
+    }
+}
+
+// Form Validation - FIXED VERSION FOR BOTH ORDER TYPES
+document.getElementById('sale-form').addEventListener('submit', function(e) {
+    const isWalkin = document.getElementById('order_type_walkin').checked;
+    const isKiosk = document.getElementById('order_type_kiosk').checked;
+    
+    console.log('=== FORM SUBMISSION VALIDATION ===');
+    console.log('Is Walkin:', isWalkin);
+    console.log('Is Kiosk:', isKiosk);
+    console.log('Selected Cookies:', Object.keys(selectedCookies).length);
+    
+    // Get the actual form values - use querySelector to get the correct one
+    const kioskOrderIdInput = document.querySelector('#kiosk_order_id');
+    const kioskOrderId = kioskOrderIdInput ? kioskOrderIdInput.value : '';
+    const orderTypeInput = document.getElementById('order_type_input').value;
+    
+    console.log('Kiosk Order ID from form:', kioskOrderId);
+    console.log('Order Type from form:', orderTypeInput);
+    
+    let isValid = true;
+    let errorMessage = '';
+    
+    if (isWalkin) {
+        // Walk-in order validation - must have cookies selected
+        if (Object.keys(selectedCookies).length === 0) {
+            isValid = false;
+            errorMessage = 'Please select at least one cookie for the walk-in sale.';
+        } else {
+            // Ensure order type is set to walkin
+            document.getElementById('order_type_input').value = 'walkin';
+            
+            // Add hidden inputs for each selected cookie
+            addCookieInputsToForm();
+        }
+        
+    } else if (isKiosk) {
+        // Kiosk order validation - ONLY check if kiosk_order_id has a value
+        if (!kioskOrderId || kioskOrderId.trim() === '') {
+            isValid = false;
+            errorMessage = 'Please select a kiosk order to complete the sale.';
+        }
+        
+        // Ensure order type is set to kiosk
+        document.getElementById('order_type_input').value = 'kiosk';
+    }
+    
+    if (!isValid) {
+        e.preventDefault();
+        alert(errorMessage);
+        return false;
+    }
+    
+    console.log('✓ Form validation passed, submitting...');
+    console.log('Final order_type:', document.getElementById('order_type_input').value);
+    console.log('Final kiosk_order_id:', kioskOrderId);
+    console.log('Selected cookies to submit:', selectedCookies);
+    
+    return true;
+});
+
+// Function to add cookie inputs to the form before submission
+function addCookieInputsToForm() {
+    // Remove any existing cookie inputs
+    const existingCookieInputs = document.querySelectorAll('input[name^="cookie_"]');
+    existingCookieInputs.forEach(input => input.remove());
+    
+    // Add new cookie inputs for each selected cookie
+    Object.values(selectedCookies).forEach(cookie => {
+        if (cookie.quantity > 0) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = `cookie_${cookie.id}`;
+            input.value = cookie.quantity;
+            document.getElementById('sale-form').appendChild(input);
+            console.log(`Added cookie input: cookie_${cookie.id} = ${cookie.quantity}`);
+        }
+    });
+}
+
+// Initialize everything when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded - initializing record sale...');
+    
+    // Initialize order type
+    toggleOrderType();
+    
+    // Add event listeners to order type cards
+    document.querySelectorAll('.order-type-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const type = this.getAttribute('data-type');
+            selectOrderType(type);
+        });
+    });
+    
+    // Add event listeners to radio buttons
+    document.getElementById('order_type_walkin').addEventListener('change', toggleOrderType);
+    document.getElementById('order_type_kiosk').addEventListener('change', toggleOrderType);
+    
+    // Kiosk search functionality
+    const kioskSearch = document.getElementById('kiosk-order-search');
+    let searchTimeout;
+    
+    kioskSearch.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+            document.getElementById('kiosk-suggestions').style.display = 'none';
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            searchKioskOrders(query);
+        }, 300);
+    });
+    
+    // Customer search functionality
+    const customerSearch = document.getElementById('customer-search');
+    customerSearch.addEventListener('input', function() {
+        const query = this.value.trim();
+        if (query.length >= 2) {
+            searchCustomers(query);
+        } else {
+            document.getElementById('customer-results').style.display = 'none';
+        }
+    });
+    
+    // Payment method change
+    document.getElementById('payment_method').addEventListener('change', togglePaymentDetails);
+    
+    // Amount paid calculation
+    document.getElementById('amount_paid').addEventListener('input', calculateChange);
+    
+    // Cookie quantity buttons
+    document.querySelectorAll('.quantity-btn.plus').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const cookieId = this.getAttribute('data-cookie-id');
+            updateCookieQuantity(cookieId, 1);
+        });
+    });
+    
+    document.querySelectorAll('.quantity-btn.minus').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const cookieId = this.getAttribute('data-cookie-id');
+            updateCookieQuantity(cookieId, -1);
+        });
+    });
+    
+    // Cookie quantity inputs
+    document.querySelectorAll('.quantity-input').forEach(input => {
+        input.addEventListener('change', function() {
+            const cookieId = this.id.replace('cookie-', '').replace('-quantity', '');
+            validateCookieQuantity(cookieId, this.value);
+        });
+    });
+    
+    // Remove cookie buttons (delegated)
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-cookie-btn')) {
+            const cookieId = e.target.closest('.remove-cookie-btn').getAttribute('data-cookie-id');
+            removeCookie(cookieId);
+        }
+    });
+    
+    // Clear buttons
+    document.getElementById('clear-kiosk-btn').addEventListener('click', clearKioskSelection);
+    document.getElementById('clear-customer-btn').addEventListener('click', clearCustomerSelection);
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#kiosk-order-search') && !e.target.closest('#kiosk-suggestions')) {
+            document.getElementById('kiosk-suggestions').style.display = 'none';
+        }
+        if (!e.target.closest('#customer-search') && !e.target.closest('#customer-results')) {
+            document.getElementById('customer-results').style.display = 'none';
+        }
+    });
+    
+    console.log('✓ Record sale page initialized successfully');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+
+{% block title %}Sales Monitoring - Cookie Craze{% endblock %}
+
+{% block content %}
+<div class="content">
+    <div class="unified-page-header">
+        <h1 class="unified-h1">Sales Monitoring</h1>
+        <div class="text-muted" style="font-size: var(--text-sm);">
+            <i class="fas fa-chart-line me-1"></i> Monitor daily sales performance and staff reports
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="unified-card">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="unified-form-label">Date</label>
+                <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}" 
+                       class="unified-form-control">
+            </div>
+            <div class="col-md-4">
+                <label class="unified-form-label">Staff Member</label>
+                <select name="staff" class="unified-form-control">
+                    <option value="">All Staff</option>
+                    {% for staff in all_staff %}
+                    <option value="{{ staff.id }}" {% if staff_filter == staff.id|stringformat:"i" %}selected{% endif %}>
+                        {{ staff.user.username }} ({{ staff.staff_id }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="unified-btn unified-btn-primary flex-grow-1">
+                    <i class="fas fa-filter me-2"></i> Apply Filters
+                </button>
+                <a href="{% url 'admin_sales_monitoring_csv' %}?date={{ selected_date|date:'Y-m-d' }}{% if staff_filter %}&staff={{ staff_filter }}{% endif %}"
+                   class="unified-btn unified-btn-secondary" style="white-space: nowrap;">
+                    <i class="fas fa-file-csv me-2"></i> CSV
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Daily Summary - 4 Column Grid -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="unified-card text-center h-100">
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                        <i class="fas fa-money-bill-wave text-primary" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div class="text-start">
+                        <h3 class="unified-h3 mb-1">Total Sales</h3>
+                        <div class="unified-stat-number">₱{{ daily_summary.total_sales|floatformat:2 }}</div>
+                    </div>
+                </div>
+                <div class="unified-stat-label">Completed Orders Revenue</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="unified-card text-center h-100">
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                        <i class="fas fa-receipt text-success" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div class="text-start">
+                        <h3 class="unified-h3 mb-1">Transactions</h3>
+                        <div class="unified-stat-number">{{ daily_summary.total_transactions }}</div>
+                    </div>
+                </div>
+                <div class="unified-stat-label">Completed Orders</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="unified-card text-center h-100">
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
+                        <i class="fas fa-calendar-day text-warning" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div class="text-start">
+                        <h3 class="unified-h3 mb-1">Date</h3>
+                        <div class="unified-stat-number" style="font-size: var(--text-lg);">
+                            {{ selected_date|date:"M d, Y" }}
+                        </div>
+                    </div>
+                </div>
+                <div class="unified-stat-label">Selected Date</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="unified-card text-center h-100">
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                        <i class="fas fa-check-circle text-success" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div class="text-start">
+                        <h3 class="unified-h3 mb-1">Completion</h3>
+                        <div class="unified-stat-number">{{ daily_summary.completion_rate|floatformat:1 }}%</div>
+                    </div>
+                </div>
+                <div class="unified-stat-label">Order Completion Rate</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Completed Orders Section -->
+    <div class="unified-card mb-4">
+        <h2 class="unified-h2">
+            <i class="fas fa-clock me-2"></i>
+            Recent Order Completions
+        </h2>
+        
+        {% if recent_completed_orders %}
+        <div class="unified-table-container">
+            <table class="unified-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Staff</th>
+                        <th>Amount</th>
+                        <th>Completed</th>
+                        <th>Payment</th>
+                        <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_completed_orders %}
+                    <tr>
+                        <td class="fw-semibold">{{ order.order_id }}</td>
+                        <td>{{ order.customer_name|default:"Walk-in" }}</td>
+                        <td>{{ order.staff.username|default:"System" }}</td>
+                        <td class="text-success fw-bold">₱{{ order.total_amount|floatformat:2 }}</td>
+                        <td>{{ order.completed_at|date:"H:i" }}</td>
+                        <td>
+                            <span class="badge bg-secondary text-capitalize">
+                                {{ order.payment_method }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge {% if order.order_type == 'kiosk' %}bg-purple{% else %}bg-info{% endif %}">
+                                {{ order.get_order_type_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-check-circle text-muted mb-3" style="font-size: 2rem;"></i>
+            <h5 class="text-muted">No completed orders for selected date</h5>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sales by Staff -->
+    <div class="unified-card mb-4">
+        <h2 class="unified-h2">Sales by Staff</h2>
+        {% if sales_by_staff %}
+        <div class="unified-table-container">
+            <table class="unified-table">
+                <thead>
+                    <tr>
+                        <th>Staff</th>
+                        <th>Staff ID</th>
+                        <th>Total Sales</th>
+                        <th>Transactions</th>
+                        <th>Average</th>
+                        <th>Daily Reports</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for staff_sales in sales_by_staff %}
+                    <tr>
+                        <td class="fw-semibold">{{ staff_sales.staff_name }}</td>
+                        <td>{{ staff_sales.staff_staff_id }}</td>
+                        <td class="fw-semibold text-success">₱{{ staff_sales.staff_sales|floatformat:2 }}</td>
+                        <td>{{ staff_sales.staff_transactions }}</td>
+                        <td>₱{{ staff_sales.avg_sales_per_transaction|floatformat:2 }}</td>
+                        <td>
+                            <span class="badge {% if staff_sales.daily_reports > 0 %}bg-success{% else %}bg-warning{% endif %}">
+                                {{ staff_sales.daily_reports }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-chart-bar text-muted mb-3" style="font-size: 2rem;"></i>
+            <h5 class="text-muted">No sales data for selected date</h5>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Top Selling Items -->
+    <div class="unified-card mb-4">
+        <h2 class="unified-h2">Top Selling Items</h2>
+        {% if top_items %}
+        <div class="unified-table-container">
+            <table class="unified-table">
+                <thead>
+                    <tr>
+                        <th>Cookie</th>
+                        <th>Quantity Sold</th>
+                        <th>Revenue</th>
+                        <th>Average Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in top_items %}
+                    <tr>
+                        <td class="fw-semibold">{{ item.cookie__name }}</td>
+                        <td>{{ item.quantity_sold }}</td>
+                        <td class="fw-semibold text-success">₱{{ item.revenue|floatformat:2 }}</td>
+                        <td>₱{% if item.quantity_sold > 0 %}{{ item.avg_price|floatformat:2 }}{% else %}0.00{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-cookie text-muted mb-3" style="font-size: 2rem;"></i>
+            <h5 class="text-muted">No items sold for selected date</h5>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Staff Without Reports -->
+    {% if staff_without_reports %}
+    <div class="unified-card">
+        <h2 class="unified-h2 text-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Staff Without Daily Reports
+        </h2>
+        <div class="row g-2">
+            {% for staff in staff_without_reports %}
+            <div class="col-md-4">
+                <div class="p-3 rounded border-warning" style="border-left: 4px solid var(--warning); background: rgba(255, 193, 7, 0.1);">
+                    <div class="fw-semibold">{{ staff.user.username }}</div>
+                    <small class="text-muted">{{ staff.staff_id }}</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.unified-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.unified-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.bg-opacity-10 {
+    background-color: rgba(var(--primary-rgb), 0.1);
+}
+
+.rounded-circle {
+    border-radius: 50% !important;
+}
+
+.unified-stat-number {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.unified-stat-label {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+.border-warning {
+    border-color: var(--warning) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .unified-stat-number {
+        font-size: var(--text-lg);
+    }
+    
+    .d-flex.align-items-center.justify-content-center {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .d-flex.align-items-center.justify-content-center .text-start {
+        text-align: center !important;
+        margin-top: var(--space-3);
+    }
+    
+    .bg-opacity-10.rounded-circle.p-3.me-3 {
+        margin-right: 0 !important;
+        margin-bottom: var(--space-2);
+    }
+    
+    .col-xl-3, .col-md-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+</style>
+{% endblock %}

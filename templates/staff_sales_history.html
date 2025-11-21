@@ -1,0 +1,616 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content staff-page">
+    <div id="pageLoadingOverlay" class="page-loading-overlay" style="display: none;">
+        <div class="page-loading-spinner">
+            <i class="fas fa-spinner fa-spin me-2"></i>
+            Loading...
+        </div>
+    </div>
+
+    <div class="unified-page-header">
+        <h1 class="unified-h1">Order History (Completed)</h1>
+        <p class="text-muted" style="font-size: var(--text-sm);">View and filter your completed orders</p>
+    </div>
+
+    <!-- Filters: Date range, payment, search -->
+    <div class="unified-card">
+        <form method="post">
+            {% csrf_token %}
+            <div class="d-flex gap-3 align-items-end flex-wrap">
+                <div class="unified-form-group" style="margin-bottom: 0;">
+                    <label for="start_date" class="unified-form-label">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" value="{{ start_date|date:'Y-m-d' }}" class="unified-form-control" required>
+                </div>
+                <div class="unified-form-group" style="margin-bottom: 0;">
+                    <label for="end_date" class="unified-form-label">End Date</label>
+                    <input type="date" name="end_date" id="end_date" value="{{ end_date|date:'Y-m-d' }}" class="unified-form-control" required>
+                </div>
+                <div class="unified-form-group" style="margin-bottom: 0;">
+                    <label for="payment_method" class="unified-form-label">Payment</label>
+                    <select name="payment_method" id="payment_method" class="unified-form-control">
+                        <option value="" {% if not payment_method %}selected{% endif %}>All</option>
+                        <option value="cash" {% if payment_method == 'cash' %}selected{% endif %}>Cash</option>
+                        <option value="gcash" {% if payment_method == 'gcash' %}selected{% endif %}>GCash</option>
+                        <option value="card" {% if payment_method == 'card' %}selected{% endif %}>Card</option>
+                        <option value="maya" {% if payment_method == 'maya' %}selected{% endif %}>Maya</option>
+                    </select>
+                </div>
+                <div class="unified-form-group" style="margin-bottom: 0;">
+                    <label for="q" class="unified-form-label">Search</label>
+                    <input type="text" name="q" id="q" value="{{ query }}" placeholder="Order ID or Customer" class="unified-form-control">
+                </div>
+                <button type="submit" class="unified-btn unified-btn-primary">Generate Report</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="unified-card text-center">
+                <h3 class="unified-h3">Total Sales</h3>
+                <div class="unified-stat-number">₱{{ summary.total_sales|floatformat:2 }}</div>
+                <div class="unified-stat-label">Revenue</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="unified-card text-center">
+                <h3 class="unified-h3">Transactions</h3>
+                <div class="unified-stat-number">{{ summary.total_transactions }}</div>
+                <div class="unified-stat-label">Sales</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="unified-card text-center">
+                <h3 class="unified-h3">Voided Sales</h3>
+                <div class="unified-stat-number text-danger">{{ summary.voided_sales }}</div>
+                <div class="unified-stat-label">Cancelled</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="unified-card text-center">
+                <h3 class="unified-h3">Date Range</h3>
+                <div class="text-muted" style="font-size: var(--text-sm);">
+                    {{ start_date|date:"M d, Y" }} to {{ end_date|date:"M d, Y" }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales List -->
+    <div class="unified-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="unified-h2">Completed Sales</h2>
+            <div class="d-flex gap-2">
+                <button class="unified-btn unified-btn-sm unified-btn-secondary" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <button class="unified-btn unified-btn-sm unified-btn-primary" onclick="window.location.reload()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="unified-table-container">
+            <table class="unified-table">
+                <thead>
+                    <tr>
+                        <th>Sale ID</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Items</th>
+                        <th>Total Amount</th>
+                        <th>Payment Method</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                    <tr>
+                        <td class="fw-semibold">{{ sale.order_id|default:sale.display_id }}</td>
+                        <td>{{ sale.completed_at|default_if_none:sale.created_at|date:"M d, Y H:i" }}</td>
+                        <td>{% if sale.customer %}{{ sale.customer.name }}{% else %}{{ sale.customer_name|default:"Walk-in" }}{% endif %}</td>
+                        <td>
+                            {% with sale.items.all as items %}
+                                {% if items %}
+                                    {% for item in items|slice:":2" %}
+                                        {{ item.cookie.name }}{% if item.quantity > 1 %} (x{{ item.quantity }}){% endif %}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                    {% if items|length > 2 %}
+                                        <br><small class="text-muted">+{{ items|length|add:"-2" }} more</small>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">No items</span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td class="fw-semibold {% if sale.status == 'voided' %}text-danger{% else %}text-success{% endif %}">
+                            ₱{{ sale.total_amount }}
+                        </td>
+                        <td>{{ sale.get_payment_method_display }}</td>
+                        <td>
+                            {% if sale.status == 'voided' %}
+                                <span class="badge bg-danger">Voided</span>
+                            {% else %}
+                                <span class="badge bg-success">Completed</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'staff_order_receipt' sale.id %}" class="unified-btn unified-btn-sm unified-btn-primary">
+                                    <i class="fas fa-receipt"></i>
+                                </a>
+                                {% if sale.status == 'completed' %}
+                                <button class="unified-btn unified-btn-sm unified-btn-warning void-sale-btn" 
+                                        data-sale-id="{{ sale.id }}"
+                                        title="Void Sale">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                                {% else %}
+                                <span class="text-muted">Voided</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-inbox fa-3x mb-3"></i>
+                                <h5>No sales records found</h5>
+                                <p class="mb-3">No sales match your current filter criteria.</p>
+                                <a href="{% url 'staff_sales_history' %}" class="unified-btn unified-btn-primary">
+                                    <i class="fas fa-refresh me-2"></i> Reset Filters
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Personal Performance -->
+    <div class="unified-card">
+        <h2 class="unified-h2">Your Performance Summary</h2>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="text-center p-3 rounded" style="background: var(--bg-tertiary);">
+                    <h4 class="text-primary mb-2">Average Sale</h4>
+                    <div class="unified-stat-number">₱{{ summary.average_sale|floatformat:2 }}</div>
+                    <small class="text-muted">Per transaction</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-3 rounded" style="background: var(--bg-tertiary);">
+                    <h4 class="text-success mb-2">Success Rate</h4>
+                    <div class="unified-stat-number">
+                        {% if summary.total_transactions > 0 %}
+                            {{ summary.total_transactions|floatformat:0 }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">Completed sales</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-3 rounded" style="background: var(--bg-tertiary);">
+                    <h4 class="text-info mb-2">Period Activity</h4>
+                    <div class="unified-stat-number">{{ sales|length }}</div>
+                    <small class="text-muted">Total records</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Void Confirmation Modal -->
+<div id="voidModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Void Sale Confirmation</h3>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="saleDetails" class="mb-3">
+                <!-- Sale details will be loaded here -->
+            </div>
+            <form id="voidForm">
+                {% csrf_token %}
+                <div class="unified-form-group">
+                    <label for="admin_username" class="unified-form-label">Admin Username</label>
+                    <input type="text" id="admin_username" name="admin_username" class="unified-form-control" required 
+                           autocomplete="username" placeholder="Enter admin username">
+                </div>
+                <div class="unified-form-group">
+                    <label for="admin_password" class="unified-form-label">Admin Password</label>
+                    <input type="password" id="admin_password" name="admin_password" class="unified-form-control" required 
+                           autocomplete="current-password" placeholder="Enter admin password">
+                </div>
+                <div class="unified-form-group">
+                    <label for="void_reason" class="unified-form-label">Reason for Void</label>
+                    <select id="void_reason" name="void_reason" class="unified-form-control" required>
+                        <option value="">Select a reason</option>
+                        <option value="Customer changed mind">Customer changed mind</option>
+                        <option value="Wrong items sold">Wrong items sold</option>
+                        <option value="Payment issue">Payment issue</option>
+                        <option value="System error">System error</option>
+                        <option value="other">Other reason</option>
+                    </select>
+                </div>
+                <div class="unified-form-group" id="otherReasonContainer" style="display: none;">
+                    <label for="other_reason" class="unified-form-label">Please specify</label>
+                    <textarea id="other_reason" name="other_reason" class="unified-form-control" rows="2" 
+                              placeholder="Enter specific reason..."></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button id="cancelVoid" class="unified-btn unified-btn-secondary">Cancel</button>
+            <button id="confirmVoid" class="unified-btn unified-btn-warning">
+                <i class="fas fa-ban"></i> Confirm Void
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Void Success Modal -->
+<div id="voidSuccessModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+            <h3>Sale Voided Successfully</h3>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body text-center">
+            <i class="fas fa-check-circle text-success mb-3" style="font-size: 3rem;"></i>
+            <h4 class="text-success">Sale Voided</h4>
+            <p id="voidSuccessMessage" class="mb-0"></p>
+            <p class="text-muted mt-2"><small>Inventory has been automatically restored.</small></p>
+        </div>
+        <div class="modal-footer">
+            <button id="closeVoidSuccess" class="unified-btn unified-btn-primary">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loadingModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-body text-center py-4">
+            <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+            <p class="mb-0">Processing void request...</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.unified-btn-warning {
+    background: #ffc107;
+    color: #000;
+    border: 1px solid #ffb300;
+}
+
+.unified-btn-warning:hover {
+    background: #ffb300;
+    color: #000;
+    transform: translateY(-1px);
+}
+
+.badge {
+    font-size: var(--text-xs);
+    padding: 0.25rem 0.5rem;
+}
+
+.modal {
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: var(--text-lg);
+}
+
+.close {
+    color: var(--text-muted);
+    font-size: var(--text-xl);
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close:hover {
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+}
+
+.modal-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    background-color: var(--bg-tertiary);
+}
+
+/* Dark mode support */
+[data-theme="dark"] .modal-content {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .modal-header {
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border);
+}
+
+[data-theme="dark"] .modal-footer {
+    background: var(--bg-tertiary);
+    border-top: 1px solid var(--border);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 1rem;
+    }
+    
+    .d-flex.gap-2 {
+        flex-direction: column;
+    }
+    
+    .unified-btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: var(--text-xs);
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const voidModal = document.getElementById('voidModal');
+    const voidSuccessModal = document.getElementById('voidSuccessModal');
+    const loadingModal = document.getElementById('loadingModal');
+    const voidSaleButtons = document.querySelectorAll('.void-sale-btn');
+    const cancelVoidBtn = document.getElementById('cancelVoid');
+    const confirmVoidBtn = document.getElementById('confirmVoid');
+    const closeVoidSuccessBtn = document.getElementById('closeVoidSuccess');
+    const closeButtons = document.querySelectorAll('.close');
+    const voidReason = document.getElementById('void_reason');
+    const otherReasonContainer = document.getElementById('otherReasonContainer');
+    
+    let currentSaleId = null;
+
+    // Reason selection handler
+    if (voidReason) {
+        voidReason.addEventListener('change', function() {
+            if (otherReasonContainer) {
+                otherReasonContainer.style.display = this.value === 'other' ? 'block' : 'none';
+            }
+        });
+    }
+
+    // Open void modal
+    voidSaleButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            currentSaleId = this.getAttribute('data-sale-id');
+            console.log('Opening void modal for sale:', currentSaleId);
+            loadSaleDetails(currentSaleId);
+        });
+    });
+
+    // Load sale details for the modal
+    function loadSaleDetails(saleId) {
+        console.log('Loading sale details for:', saleId);
+        
+        // Show loading state
+        document.getElementById('saleDetails').innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading sale details...</p>
+            </div>
+        `;
+        
+        voidModal.style.display = 'flex';
+
+        fetch(`/app/sales/${saleId}/void/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Sale details loaded:', data);
+                
+                if (data.status === 'voided') {
+                    document.getElementById('saleDetails').innerHTML = `
+                        <div class="alert alert-danger">
+                            <strong>This sale has already been voided.</strong>
+                        </div>
+                    `;
+                    document.getElementById('confirmVoid').disabled = true;
+                    return;
+                }
+                
+                document.getElementById('saleDetails').innerHTML = `
+                    <div class="alert alert-warning">
+                        <strong>You are about to void this sale:</strong>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <strong>Sale ID:</strong> #${data.sale_id}
+                        </div>
+                        <div class="col-6">
+                            <strong>Amount:</strong> ₱${data.total_amount}
+                        </div>
+                        <div class="col-6">
+                            <strong>Date:</strong> ${data.date_time}
+                        </div>
+                        <div class="col-6">
+                            <strong>Payment:</strong> ${data.payment_method}
+                        </div>
+                        <div class="col-12">
+                            <strong>Customer:</strong> ${data.customer}
+                        </div>
+                    </div>
+                `;
+                document.getElementById('confirmVoid').disabled = false;
+            })
+            .catch(error => {
+                console.error('Error loading sale details:', error);
+                document.getElementById('saleDetails').innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>Error loading sale details:</strong> ${error.message}
+                    </div>
+                `;
+                document.getElementById('confirmVoid').disabled = true;
+            });
+    }
+
+    // Close modals
+    function closeModal(modal) {
+        modal.style.display = 'none';
+    }
+
+    closeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const modal = this.closest('.modal');
+            closeModal(modal);
+        });
+    });
+
+    cancelVoidBtn.addEventListener('click', () => closeModal(voidModal));
+    closeVoidSuccessBtn.addEventListener('click', () => {
+        closeModal(voidSuccessModal);
+        location.reload(); // Refresh to show updated status
+    });
+
+    // Confirm void
+    confirmVoidBtn.addEventListener('click', function() {
+        const username = document.getElementById('admin_username').value;
+        const password = document.getElementById('admin_password').value;
+        const reasonSelect = document.getElementById('void_reason');
+        const otherReason = document.getElementById('other_reason');
+        const reason = reasonSelect.value === 'other' ? 
+            `Other: ${otherReason ? otherReason.value : ''}` : 
+            reasonSelect.value;
+
+        if (!username || !password) {
+            alert('Please enter admin username and password');
+            return;
+        }
+
+        if (!reason) {
+            alert('Please select a reason for voiding this sale');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('admin_username', username);
+        formData.append('admin_password', password);
+        formData.append('void_reason', reason);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+        // Show loading modal
+        loadingModal.style.display = 'flex';
+        closeModal(voidModal);
+
+        console.log('Sending void request for sale:', currentSaleId);
+
+        fetch(`/app/sales/${currentSaleId}/void/`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Void response:', data);
+            loadingModal.style.display = 'none';
+            
+            if (data.success) {
+                document.getElementById('voidSuccessMessage').textContent = data.message;
+                voidSuccessModal.style.display = 'flex';
+            } else {
+                alert('Error: ' + data.error);
+                voidModal.style.display = 'flex';
+            }
+        })
+        .catch(error => {
+            console.error('Error voiding sale:', error);
+            loadingModal.style.display = 'none';
+            alert('Error voiding sale. Please check console for details.');
+            voidModal.style.display = 'flex';
+        });
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal')) {
+            closeModal(event.target);
+        }
+    });
+
+    // Add enter key support for form
+    document.getElementById('voidForm')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('confirmVoid').click();
+        }
+    });
+});
+</script>
+{% endblock %}

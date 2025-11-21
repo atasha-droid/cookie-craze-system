@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Customers - Cookie Craze{% endblock %}
+
+{% block content %}
+<div class="content">
+    <div class="unified-page-header">
+        <div>
+            <h1 class="unified-h1 mb-1">Customer Management</h1>
+            <p class="text-muted mb-0">View all registered customers, filter by status and date, and drill into order history.</p>
+        </div>
+    </div>
+
+    <div class="unified-card unified-card-sm mb-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="unified-form-label">Search</label>
+                <input type="text" name="search" value="{{ search }}" class="unified-form-control" placeholder="Name, phone, email, customer ID, username">
+            </div>
+            <div class="col-md-2">
+                <label class="unified-form-label">Status</label>
+                <select name="status" class="unified-form-control">
+                    <option value="">All</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="unified-form-label">Joined From</label>
+                <input type="date" name="start_date" value="{{ start_date }}" class="unified-form-control">
+            </div>
+            <div class="col-md-2">
+                <label class="unified-form-label">Joined To</label>
+                <input type="date" name="end_date" value="{{ end_date }}" class="unified-form-control">
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="unified-btn unified-btn-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="unified-card unified-card-sm">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h2 class="unified-h2 mb-0">Customers</h2>
+            <span class="unified-stat-label">Total customers: <strong>{{ customers|length }}</strong></span>
+        </div>
+
+        <div class="unified-table-container">
+            <table class="unified-table">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Contact</th>
+                        <th>Customer ID</th>
+                        <th class="text-center">Orders</th>
+                        <th class="text-end">Total Spent</th>
+                        <th class="text-center">Joined</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if customers %}
+                        {% for c in customers %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold text-primary">{{ c.name }}</div>
+                                <div class="text-muted" style="font-size: 0.8rem;">{{ c.user_profile.user.username }}</div>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.85rem;">{{ c.phone|default:'-' }}</div>
+                                <div class="text-muted" style="font-size: 0.8rem;">{{ c.email }}</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-primary">{{ c.user_profile.customer_id }}</span>
+                            </td>
+                            <td class="text-center">
+                                {{ c.total_orders|default:0 }}
+                            </td>
+                            <td class="text-end">
+                                ₱{{ c.total_spent|default:0|floatformat:2 }}
+                            </td>
+                            <td class="text-center" style="font-size: 0.85rem;">
+                                {{ c.date_joined|date:'Y-m-d' }}
+                            </td>
+                            <td class="text-center">
+                                {% if c.user_profile.user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                    <a href="{% url 'admin_customer_orders' c.id %}" class="unified-btn unified-btn-secondary unified-btn-sm">Orders</a>
+                                    <form id="customer-status-form-{{ c.id }}" method="post" action="{% if c.user_profile.user.is_active %}{% url 'admin_deactivate_customer' c.id %}{% else %}{% url 'admin_activate_customer' c.id %}{% endif %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        {% if c.user_profile.user.is_active %}
+                                            <button type="button" class="unified-btn unified-btn-danger unified-btn-sm btn-deactivate-customer" data-customer-name="{{ c.name }}" data-form-id="customer-status-form-{{ c.id }}">Deactivate</button>
+                                        {% else %}
+                                            <button type="submit" class="unified-btn unified-btn-primary unified-btn-sm">Activate</button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">No customers found for the selected filters.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Deactivation Confirmation Modal (page-specific) -->
+<div id="customerDeactivateModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Deactivate Customer</h3>
+            <span class="close" id="customerDeactivateModalClose">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p class="mb-2">Are you sure you want to deactivate this customer?</p>
+            <p class="text-muted mb-0"><strong>Customer:</strong> <span id="customerDeactivateName"></span></p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="unified-btn unified-btn-secondary" id="customerDeactivateCancel">Cancel</button>
+            <button type="button" class="unified-btn unified-btn-danger" id="customerDeactivateConfirm">Deactivate</button>
+        </div>
+    </div>
+    <style>
+        /* Scope minimal overrides here to avoid affecting global modal styles */
+        #customerDeactivateModal {
+            display: none;
+        }
+    </style>
+</div>
+
+<script>
+    (function() {
+        let pendingFormId = null;
+
+        const modal = document.getElementById('customerDeactivateModal');
+        const nameSpan = document.getElementById('customerDeactivateName');
+        const btnClose = document.getElementById('customerDeactivateModalClose');
+        const btnCancel = document.getElementById('customerDeactivateCancel');
+        const btnConfirm = document.getElementById('customerDeactivateConfirm');
+
+        function openModal(customerName, formId) {
+            pendingFormId = formId;
+            if (nameSpan) {
+                nameSpan.textContent = customerName || '';
+            }
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        function closeModal() {
+            pendingFormId = null;
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const target = e.target;
+            if (target.classList && target.classList.contains('btn-deactivate-customer')) {
+                e.preventDefault();
+                const customerName = target.getAttribute('data-customer-name') || '';
+                const formId = target.getAttribute('data-form-id');
+                if (formId) {
+                    openModal(customerName, formId);
+                }
+            }
+        });
+
+        if (btnClose) {
+            btnClose.addEventListener('click', closeModal);
+        }
+        if (btnCancel) {
+            btnCancel.addEventListener('click', closeModal);
+        }
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+        }
+        if (btnConfirm) {
+            btnConfirm.addEventListener('click', function() {
+                if (!pendingFormId) return;
+                const form = document.getElementById(pendingFormId);
+                if (form) {
+                    form.submit();
+                }
+                closeModal();
+            });
+        }
+    })();
+</script>
+
+{% endblock %}

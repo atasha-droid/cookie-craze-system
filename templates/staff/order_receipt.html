@@ -1,0 +1,486 @@
+<!-- templates/staff/order_receipt.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Receipt - #{{ order.order_id }}</title>
+    <style>
+        /* Receipt-specific styles for printing */
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+            background: #fff;
+            padding: 10px;
+        }
+        
+        .receipt-container {
+            max-width: 300px;
+            margin: 0 auto;
+            border: 1px solid #000;
+            padding: 15px;
+            background: #fff;
+        }
+        
+        .receipt-header {
+            text-align: center;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .business-name {
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+            color: #8B4513;
+        }
+        
+        .business-address {
+            font-size: 10px;
+            margin-bottom: 2px;
+            color: #666;
+            line-height: 1.2;
+        }
+        
+        .business-contact {
+            font-size: 10px;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        
+        .business-tagline {
+            font-size: 9px;
+            margin-bottom: 5px;
+            color: #8B4513;
+            font-style: italic;
+        }
+        
+        .receipt-title {
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 3px;
+        }
+        
+        .receipt-info {
+            margin-bottom: 8px;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 3px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 2px;
+            font-size: 11px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+        }
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+            font-size: 10px;
+        }
+        
+        .items-table th {
+            text-align: left;
+            border-bottom: 1px solid #000;
+            padding: 4px 2px;
+            font-weight: bold;
+            font-size: 9px;
+        }
+        
+        .items-table td {
+            padding: 3px 2px;
+            border-bottom: 1px dashed #ccc;
+            vertical-align: top;
+        }
+        
+        .items-table .text-right {
+            text-align: right;
+        }
+        
+        .items-table .text-center {
+            text-align: center;
+        }
+        
+        .category {
+            font-size: 8px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .total-section {
+            border-top: 2px solid #000;
+            margin-top: 8px;
+            padding-top: 8px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+        
+        .grand-total {
+            font-size: 13px;
+            font-weight: bold;
+            border-top: 1px solid #000;
+            padding-top: 4px;
+        }
+        
+        .payment-summary {
+            margin: 8px 0;
+            padding: 6px;
+            background: #f8f8f8;
+            border: 1px dashed #000;
+        }
+        
+        .payment-details {
+            margin-top: 4px;
+            padding-top: 4px;
+            border-top: 1px dashed #ccc;
+        }
+        
+        .cash-breakdown {
+            background: rgba(139, 69, 19, 0.1);
+            padding: 4px;
+            margin-top: 3px;
+            border-radius: 2px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px dashed #000;
+            font-size: 9px;
+            color: #666;
+        }
+        
+        .thank-you {
+            font-weight: bold;
+            margin: 5px 0;
+            color: #8B4513;
+        }
+        
+        .barcode {
+            text-align: center;
+            margin: 8px 0;
+            font-family: 'Libre Barcode 39', monospace;
+            font-size: 22px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 2px;
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-completed {
+            background: #28a745;
+            color: white;
+        }
+        
+        .status-pending {
+            background: #ffc107;
+            color: black;
+        }
+        
+        .status-voided {
+            background: #dc3545;
+            color: white;
+        }
+        
+        /* Print-specific styles */
+        @media print {
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            
+            .receipt-container {
+                border: none;
+                padding: 8px;
+                max-width: 100%;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            @page {
+                margin: 0;
+                size: auto;
+            }
+        }
+        
+        /* Screen-specific styles */
+        @media screen {
+            body {
+                background: #f5f5f5;
+                padding: 20px;
+            }
+            
+            .receipt-container {
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+            
+            .print-controls {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            
+            .btn-print {
+                background: #8B4513;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                margin: 3px;
+            }
+            
+            .btn-print:hover {
+                background: #654321;
+            }
+            
+            .user-role-badge {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: #17a2b8;
+                color: white;
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 9px;
+                font-weight: bold;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Screen-only controls -->
+    <div class="print-controls no-print">
+        <button type="button" class="btn-print" onclick="closeReceipt()">
+            <i class="fas fa-times me-1"></i> Close
+        </button>
+        <a href="{% url 'order_management' %}" class="btn-print" style="text-decoration:none; display:inline-block; text-align:center;">
+            <i class="fas fa-list me-1"></i> Orders
+        </a>
+        <a href="{% url 'staff_record_sale' %}" class="btn-print" style="text-decoration:none; display:inline-block; text-align:center;">
+            <i class="fas fa-plus me-1"></i> New Order
+        </a>
+    </div>
+
+    <!-- Receipt Content -->
+    <div class="receipt-container">
+        <!-- Business Header (ASCII style) -->
+        <div class="receipt-header" style="text-transform:none">
+            <div class="business-name" style="color:#000">COOKIE CRAZE</div>
+            <div class="business-address">Brgy. Villa Cornejo, Kawayan, Biliran</div>
+            <div class="business-contact">Contact: 0961-493-0977</div>
+            <div class="receipt-title" style="margin-top:6px">ORDER RECEIPT</div>
+        </div>
+
+        <!-- Order Information (exact labels) -->
+        <div class="receipt-info">
+            <div class="info-row">
+                <span class="info-label">Receipt No.:</span>
+                <span>RCPT-{{ order.created_at|date:"Y" }}-{{ order.id|stringformat:"05d" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Order ID:</span>
+                <span>{{ order.order_id }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date:</span>
+                <span>{% now "Y-m-d" %}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Time:</span>
+                <span>{% now "h:i A" %}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Cashier:</span>
+                <span>{{ order.staff.username|default:'—' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Customer:</span>
+                <span>{{ order.customer_name|default:'Walk-in' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Payment Method:</span>
+                <span>{{ order.payment_method|upper }}</span>
+            </div>
+        </div>
+
+        <!-- Customer Information -->
+        <div class="receipt-info">
+            <div class="section-title">CUSTOMER INFORMATION</div>
+            {% if order.customer_name %}
+            <div class="info-row">
+                <span>Name:</span>
+                <span>{{ order.customer_name }}</span>
+            </div>
+            {% else %}
+            <div class="info-row">
+                <span>Customer:</span>
+                <span>Walk-in Customer</span>
+            </div>
+            {% endif %}
+            
+            {% if order.customer_phone %}
+            <div class="info-row">
+                <span>Phone:</span>
+                <span>{{ order.customer_phone }}</span>
+            </div>
+            {% endif %}
+            
+            {% if order.customer %}
+            <div class="info-row">
+                <span>Customer ID:</span>
+                <span>{{ order.customer.user_profile.customer_id }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ITEMS section -->
+        <div class="section-title">ITEMS</div>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-right">Price</th>
+                    <th class="text-right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items.all %}
+                <tr>
+                    <td>{{ item.cookie.name }}</td>
+                    <td class="text-center">{{ item.quantity }}</td>
+                    <td class="text-right">₱{{ item.price|floatformat:2 }}</td>
+                    <td class="text-right">₱{{ item.total_price|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Totals with Discount line -->
+        <div class="total-section">
+            <div class="total-row">
+                <span>Subtotal:</span>
+                <span>₱{{ order.total_amount|floatformat:2 }}</span>
+            </div>
+            <div class="total-row">
+                <span>Discount:</span>
+                <span>₱0.00</span>
+            </div>
+            <div class="total-row grand-total">
+                <span>GRAND TOTAL:</span>
+                <span>₱{{ order.total_amount|floatformat:2 }}</span>
+            </div>
+        </div>
+
+        <!-- Payment Details (Cash vs GCash) -->
+        {% if order.payment_method == 'cash' %}
+        <div class="payment-summary">
+            <div class="section-title">CASH PAYMENT</div>
+            <div class="info-row"><span>Cash Received:</span><span>₱{{ order.cash_received|default:order.total_amount|floatformat:2 }}</span></div>
+            <div class="info-row"><span>Change:</span><span>₱{{ order.change|default:0|floatformat:2 }}</span></div>
+        </div>
+        {% elif order.payment_method == 'gcash' %}
+        <div class="payment-summary">
+            <div class="section-title">GCASH PAYMENT</div>
+            <div class="info-row"><span>Reference No.:</span><span>{{ order.gcash_reference|default:'—' }}</span></div>
+            <div class="info-row"><span>Amount:</span><span>₱{{ order.gcash_amount|default:order.total_amount|floatformat:2 }}</span></div>
+            {% if order.gcash_screenshot %}
+            <div class="info-row" style="flex-direction: column; align-items: flex-start; margin-top: 4px;">
+                <span>Proof of Payment:</span>
+                <a href="{{ order.gcash_screenshot.url }}" target="_blank" style="margin-top: 4px;">
+                    <img src="{{ order.gcash_screenshot.url }}" alt="GCash Screenshot" style="max-width: 100%; max-height: 150px; border: 1px solid #000;">
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <div class="footer">
+            <div>Thank you for choosing Cookie Craze!</div>
+            <div>Please keep your receipt for verification.</div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-print functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-print when page loads (uncomment if needed)
+            // window.print();
+            
+            // Add keyboard shortcut for printing (Ctrl+P)
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                    e.preventDefault();
+                    window.print();
+                }
+                
+                // Escape key to close
+                if (e.key === 'Escape') {
+                    window.close();
+                }
+            });
+        });
+        
+        function closeReceipt(){
+            // Try to close the window; if blocked, fallback to dashboard
+            window.close();
+            setTimeout(function(){
+                if(!document.hidden) { // crude check: if still visible, redirect
+                    window.location.href = '{% url "staff_dashboard" %}';
+                }
+            }, 150);
+        }
+        
+        // Handle print events
+        window.addEventListener('beforeprint', function() {
+            document.querySelectorAll('.no-print').forEach(el => {
+                el.style.display = 'none';
+            });
+        });
+        
+        window.addEventListener('afterprint', function() {
+            document.querySelectorAll('.no-print').forEach(el => {
+                el.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>

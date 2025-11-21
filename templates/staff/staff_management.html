@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content">
+    <div class="unified-page-header">
+        <h1 class="unified-h1">Staff Management</h1>
+        <div class="text-muted" style="font-size: var(--text-sm);">
+            <i class="fas fa-users-cog me-1"></i> Manage staff accounts and approvals
+        </div>
+    </div>
+
+    <!-- Pending Approvals -->
+    <div class="unified-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="unified-h2 text-warning">
+                <i class="fas fa-user-clock me-2"></i>
+                Pending Approvals
+            </h2>
+            {% if pending_staff %}
+            <span class="badge bg-warning text-dark">{{ pending_staff|length }} pending</span>
+            {% endif %}
+        </div>
+
+        {% if pending_staff %}
+        <div class="unified-table-container">
+            <table class="unified-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Staff ID</th>
+                        <th>Date Registered</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for staff in pending_staff %}
+                    <tr>
+                        <td class="fw-semibold">{{ staff.user.username }}</td>
+                        <td>{{ staff.user.email }}</td>
+                        <td>{{ staff.staff_id|default:"N/A" }}</td>
+                        <td>{{ staff.user.date_joined|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-clock me-1"></i>
+                                Pending Approval
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-2 justify-content-center">
+                                <!-- Approve Form -->
+                                <form method="post" action="{% url 'approve_staff' staff.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="unified-btn unified-btn-success unified-btn-sm">
+                                        <i class="fas fa-check me-1"></i>Approve
+                                    </button>
+                                </form>
+                                
+                                <!-- Reject Form -->
+                                <form method="post" action="{% url 'reject_staff' staff.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="unified-btn unified-btn-danger unified-btn-sm" 
+                                       onclick="return confirm('Are you sure you want to reject {{ staff.user.username }}? This action cannot be undone.')">
+                                        <i class="fas fa-times me-1"></i>Reject
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-check-circle text-success mb-3" style="font-size: 2rem;"></i>
+            <h5 class="text-success">No pending approvals</h5>
+            <p class="text-muted" style="font-size: var(--text-sm);">
+                All staff registration requests have been processed.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Active Staff -->
+    <div class="unified-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="unified-h2 text-success">
+                <i class="fas fa-user-check me-2"></i>
+                Active Staff Members
+            </h2>
+            <span class="badge bg-success">{{ active_staff|length }} active</span>
+        </div>
+
+        {% if active_staff %}
+        <div class="unified-table-container">
+            <table class="unified-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Staff ID</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Last Login</th>
+                        <th>Date Joined</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for staff in active_staff %}
+                    <tr>
+                        <td class="fw-semibold">
+                            {% if staff.user == request.user %}
+                            <span class="text-primary">(You) {{ staff.user.username }}</span>
+                            {% else %}
+                            {{ staff.user.username }}
+                            {% endif %}
+                        </td>
+                        <td>{{ staff.staff_id }}</td>
+                        <td>{{ staff.user.email }}</td>
+                        <td>
+                            <span class="badge {% if staff.role == 'admin' %}bg-danger{% elif staff.role == 'manager' %}bg-warning{% else %}bg-primary{% endif %}">
+                                {{ staff.get_role_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if staff.user.is_active %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>
+                                Active
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-ban me-1"></i>
+                                Inactive
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if staff.user.last_login %}
+                            {{ staff.user.last_login|date:"M d, Y H:i" }}
+                            {% else %}
+                            <span class="text-muted">Never</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ staff.date_joined|date:"M d, Y" }}</td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                {% if staff.user != request.user %}
+                                {% if staff.role != 'admin' or request.user.is_superuser %}
+                                <!-- Edit Button -->
+                                <a href="{% url 'edit_staff' staff.id %}" class="unified-btn unified-btn-primary unified-btn-sm" title="Edit Staff">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                
+                                <!-- Deactivate/Activate Button -->
+                                {% if staff.user.is_active %}
+                                <form method="post" action="{% url 'deactivate_staff' staff.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="unified-btn unified-btn-warning unified-btn-sm" 
+                                       onclick="return confirm('Are you sure you want to deactivate {{ staff.user.username }}?')" title="Deactivate">
+                                        <i class="fas fa-user-slash"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form method="post" action="{% url 'activate_staff' staff.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="unified-btn unified-btn-success unified-btn-sm" title="Activate">
+                                        <i class="fas fa-user-check"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                
+                                <!-- Delete Button -->
+                                {% if not staff.user.is_superuser %}
+                                <form method="post" action="{% url 'delete_staff' staff.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="unified-btn unified-btn-danger unified-btn-sm"
+                                       onclick="return confirm('Are you sure you want to permanently delete {{ staff.user.username }}? This action cannot be undone.')" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-users text-muted mb-3" style="font-size: 2rem;"></i>
+            <h5 class="text-muted">No active staff members</h5>
+            <p class="text-muted" style="font-size: var(--text-sm);">
+                Approved staff members will appear here.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add this JavaScript to ensure CSRF works -->
+<script>
+// Function to get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Set up CSRF token for all forms
+document.addEventListener('DOMContentLoaded', function() {
+    const csrftoken = getCookie('csrftoken');
+    
+    // Ensure all forms have CSRF token
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        const existingToken = form.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (!existingToken && csrftoken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrftoken;
+            form.appendChild(csrfInput);
+        }
+    });
+});
+</script>
+
+<style>
+.unified-table th, .unified-table td {
+    padding: 0.75rem;
+    vertical-align: middle;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.unified-btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Ensure forms display inline */
+form.d-inline {
+    display: inline-block;
+    margin: 0 2px;
+}
+</style>
+{% endblock %}

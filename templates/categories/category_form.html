@@ -1,0 +1,126 @@
+﻿{% extends 'base.html' %}
+
+{% block content %}
+<div class="content">
+    <!-- Header -->
+    <div class="unified-page-header">
+        <div>
+            <h1 class="unified-h1">{{ title }}</h1>
+            <p class="text-muted" style="font-size: var(--text-sm);">
+                {% if title == 'Add New Category' %}
+                Create a new category to organize your cookies
+                {% else %}
+                Update category details and settings
+                {% endif %}
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'category_list' %}" class="unified-btn unified-btn-secondary" data-no-loading>
+                <i class="fas fa-arrow-left me-2"></i>
+                Back to Categories
+            </a>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="unified-card">
+        <form method="post" id="categoryForm">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Please correct the errors below:</strong>
+                <ul class="mb-0 mt-2">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="row g-3">
+                <!-- Name -->
+                <div class="col-md-6">
+                    <label class="unified-form-label">Category Name *</label>
+                    {{ form.name }}
+                    {% if form.name.help_text %}
+                    <small class="form-text text-muted">{{ form.name.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <!-- Color -->
+                <div class="col-md-6">
+                    <label class="unified-form-label">Color</label>
+                    <div class="d-flex align-items-center gap-2">
+                        {{ form.color }}
+                        <div class="color-preview rounded border" style="width: 40px; height: 40px; background-color: {{ form.color.value|default:'#007bff' }};"></div>
+                    </div>
+                </div>
+
+                <!-- Icon -->
+                <div class="col-md-6">
+                    <label class="unified-form-label">Icon Class</label>
+                    {{ form.icon }}
+                    <small class="form-text text-muted">
+                        Use Font Awesome icon classes (e.g., fas fa-star, fas fa-crown)
+                    </small>
+                </div>
+
+                <!-- Active Status -->
+                <div class="col-md-6">
+                    <div class="form-check form-switch mt-4">
+                        {{ form.is_active }}
+                        <label class="form-check-label unified-form-label" for="{{ form.is_active.id_for_label }}">
+                            Active Category
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="col-12">
+                    <label class="unified-form-label">Description</label>
+                    {{ form.description }}
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+                <a href="{% url 'category_list' %}" class="unified-btn unified-btn-secondary">
+                    <i class="fas fa-times me-2"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="unified-btn unified-btn-primary">
+                    <i class="fas fa-save me-2"></i>
+                    {% if title == 'Add New Category' %}Create Category{% else %}Update Category{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update color preview
+    const colorInput = document.getElementById('{{ form.color.id_for_label }}');
+    const colorPreview = document.querySelector('.color-preview');
+    
+    if (colorInput && colorPreview) {
+        colorInput.addEventListener('input', function() {
+            colorPreview.style.backgroundColor = this.value;
+        });
+    }
+    
+    // Form submission loading
+    const form = document.getElementById('categoryForm');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    form.addEventListener('submit', function() {
+        submitBtn.classList.add('button-loading');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+    });
+});
+</script>
+{% endblock %}

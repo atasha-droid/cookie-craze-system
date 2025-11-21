@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment — Cookie Craze</title>
+    {% load static %}
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{% static 'images/cookie-craze-logo.png' %}" type="image/png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    {% if redirect_url %}
+    {% endif %}
+    
+    <style>
+        :root {
+            --primary: #8B4513;
+            --primary-light: #A0522D;
+            --primary-dark: #654321;
+            --accent: #D2691E;
+            --accent-light: #F5DEB3;
+            --success: #28a745;
+            --warning: #ecc94b;
+            --danger: #e53e3e;
+            --info: #3182ce;
+            
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f8f9fa;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --border: #e2e8f0;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f1419;
+            --bg-secondary: #1a202c;
+            --bg-tertiary: #2d3748;
+            --text-primary: #f7fafc;
+            --text-secondary: #e2e8f0;
+            --text-muted: #a0aec0;
+            --border: #4a5568;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            line-height: 1.6;
+        }
+
+        .payment-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .payment-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        .payment-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .payment-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .payment-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .payment-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .order-info {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        @media (max-width: 768px) {
+            .payment-container {
+                padding: 1.5rem 1rem;
+            }
+
+            .order-info {
+                padding: 1.25rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .payment-instructions {
+                padding: 1.25rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .qr-code {
+                max-width: 150px;
+            }
+
+            .action-buttons {
+                gap: 0.75rem;
+                margin-top: 1.5rem;
+            }
+
+            .btn {
+                padding: 0.65rem 1.25rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .payment-container {
+                padding: 1rem 0.75rem;
+            }
+
+            .order-info {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .info-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.35rem;
+                padding: 0.35rem 0;
+            }
+
+            .payment-instructions {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .instructions-title {
+                font-size: 0.95rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .instructions-list li {
+                padding: 0.35rem 0;
+                font-size: 0.9rem;
+            }
+
+            .qr-container {
+                margin: 1.5rem 0;
+            }
+
+            .qr-code {
+                max-width: 120px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-top: 1rem;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+                padding: 0.6rem 1rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .total-amount {
+            font-size: 1.25rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .payment-instructions {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .instructions-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .instructions-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .instructions-list li {
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .instructions-list li i {
+            color: var(--primary);
+            margin-top: 0.25rem;
+        }
+
+        .qr-container {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .qr-code {
+            max-width: 200px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .countdown {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-top: 1rem;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: var(--warning);
+            color: #000;
+        }
+
+        .status-paid {
+            background: var(--success);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .payment-container {
+                margin: 1rem auto;
+            }
+            
+            .payment-card {
+                padding: 1.5rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="payment-container">
+        <div class="payment-card">
+            <div class="payment-header">
+                <div class="payment-icon">
+                    {% if payment_method == 'cash' %}
+                        <i class="fas fa-money-bill-wave"></i>
+                    {% else %}
+                        <i class="fas fa-mobile-alt"></i>
+                    {% endif %}
+                </div>
+
+                <h1 class="payment-title">Complete Your Payment</h1>
+                <p class="payment-subtitle">Order #{{ order.hex_id }}</p>
+            </div>
+
+            <!-- Order Information -->
+            <div class="order-info">
+                <div class="info-row">
+                    <span class="info-label">Order ID:</span>
+                    <span class="info-value">{{ order.hex_id }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Customer:</span>
+                    <span class="info-value">{{ customer.name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Payment Method:</span>
+                    <span class="info-value">{{ payment_method|upper }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span class="status-badge status-pending">Pending Payment</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Total Amount:</span>
+                    <span class="info-value total-amount">₱{{ order.total_amount|floatformat:2 }}</span>
+                </div>
+            </div>
+
+            <!-- Payment Instructions -->
+            <div class="payment-instructions">
+                <h3 class="instructions-title">Payment Instructions</h3>
+                {% if payment_method == 'cash' %}
+                <ul class="instructions-list">
+                    <li>
+                        <i class="fas fa-info-circle"></i>
+                        <span>This order is set to Cash on pickup.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-money-bill"></i>
+                        <span>Bring the exact amount (₱{{ order.total_amount|floatformat:2 }}) when collecting your order.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-store"></i>
+                        <span>Proceed to the counter and provide your Order ID: {{ order.hex_id }}</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Staff will confirm your payment and prepare your order.</span>
+                    </li>
+                </ul>
+                {% else %}
+                <ul class="instructions-list">
+                    <li>
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>Open your GCash app on your mobile device.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-qrcode"></i>
+                        <span>Scan the QR code below or use the phone number provided.</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Enter the amount: ₱{{ order.total_amount|floatformat:2 }}</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Complete the payment in your GCash app.</span>
+                    </li>
+                </ul>
+                {% endif %}
+            </div>
+
+            <!-- QR Code for Digital Payments -->
+            {% if qr_code_data and payment_method == 'gcash' %}
+            <div class="qr-container">
+                <img src="{{ qr_code_data }}" alt="{{ payment_method|upper }} QR Code" class="qr-code">
+                <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.875rem;">
+                    Scan this QR code with your GCash app
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                {% if redirect_url %}
+                    <a id="continueBtn" href="{{ redirect_url }}" class="btn btn-primary">
+                        <i class="fas fa-external-link-alt"></i>
+                        {% if payment_method == 'cash' %}Continue{% else %}Continue to GCASH{% endif %}
+                    </a>
+                {% endif %}
+
+                <a href="{% url 'order_confirmation' order.id %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Order
+                </a>
+
+                <a href="{% url 'customer_dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-home"></i>
+                    Dashboard
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Theme Toggle (if needed)
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+            document.body.setAttribute('data-theme', 'dark');
+        }
+
+        // Auto-redirect countdown
+     {% if redirect_url %}
+        let countdown = 3;
+        const countdownElement = document.getElementById('countdown');
+        
+        const countdownInterval = setInterval(function() {
+            countdown--;
+            if (countdownElement) {
+                countdownElement.textContent = countdown;
+            }
+            
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                window.location.href = "{{ redirect_url }}";
+            }
+        }, 1000);
+
+        // Manual redirect button
+        document.getElementById('continueBtn')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = "{{ redirect_url }}";
+        });
+        
+{% endif %}
+
+        // Payment confirmation for cash
+        document.querySelector('form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure you have completed the payment?')) {
+                this.submit();
+            }
+        });
+    </script>
+</body>
+</html>

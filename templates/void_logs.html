@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content">
+    <h1 class="unified-h1">Void Logs</h1>
+
+    <!-- Filter Form -->
+    <div class="unified-card">
+        <form method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <div class="unified-form-group" style="margin-bottom: 0;">
+                        <label for="date" class="unified-form-label">Date</label>
+                        <input type="date" name="date" id="date" value="{{ date_filter }}" class="unified-form-control">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="unified-form-group" style="margin-bottom: 0;">
+                        <label for="staff" class="unified-form-label">Staff Member</label>
+                        <select name="staff" id="staff" class="unified-form-control">
+                            <option value="">All Staff</option>
+                            {% for staff in all_staff %}
+                            <option value="{{ staff.id }}" {% if staff_filter == staff.id|stringformat:"i" %}selected{% endif %}>
+                                {{ staff.user.username }} ({{ staff.staff_id }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="unified-btn unified-btn-primary">Filter</button>
+                    <a href="{% url 'void_logs' %}" class="unified-btn unified-btn-secondary">Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="unified-card text-center">
+                <h3 class="unified-h3">Total Voids</h3>
+                <div class="unified-stat-number">{{ summary_stats.total_voids }}</div>
+                <div class="unified-stat-label">All Time</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="unified-card text-center">
+                <h3 class="unified-h3">Today's Voids</h3>
+                <div class="unified-stat-number">{{ summary_stats.total_voids_today }}</div>
+                <div class="unified-stat-label">Today</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="unified-card text-center">
+                <h3 class="unified-h3">Total Voided Amount</h3>
+                <div class="unified-stat-number text-danger">₱{{ summary_stats.total_voided_amount }}</div>
+                <div class="unified-stat-label">Revenue Lost</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Void Logs Table -->
+    <div class="unified-card">
+        <h2 class="unified-h2">Void Transaction History</h2>
+        <div class="unified-table-container">
+            <table class="unified-table">
+                <thead>
+                    <tr>
+                        <th>Void ID</th>
+                        <th>Sale ID</th>
+                        <th>Staff Member</th>
+                        <th>Admin User</th>
+                        <th>Original Amount</th>
+                        <th>Reason</th>
+                        <th>Date/Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for void_log in void_logs %}
+                    <tr>
+                        <td class="fw-semibold">{{ void_log.void_id }}</td>
+                        <td class="fw-semibold">#{{ void_log.sale.id }}</td>
+                        <td>
+                            {% if void_log.staff_member %}
+                                {{ void_log.staff_member.user.username }} ({{ void_log.staff_member.staff_id }})
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ void_log.admin_user.username }}</td>
+                        <td class="fw-semibold text-danger">₱{{ void_log.original_total }}</td>
+                        <td>
+                            <span title="{{ void_log.reason }}">
+                                {{ void_log.reason|truncatewords:10 }}
+                            </span>
+                        </td>
+                        <td>{{ void_log.void_date|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-clipboard-list fa-2x mb-3"></i>
+                            <p>No void transactions found.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div class="text-muted">
+                Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }} records
+            </div>
+            <nav>
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if staff_filter %}&staff={{ staff_filter }}{% endif %}">Previous</a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if staff_filter %}&staff={{ staff_filter }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if staff_filter %}&staff={{ staff_filter }}{% endif %}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

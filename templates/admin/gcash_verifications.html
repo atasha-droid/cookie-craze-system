@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}GCash Verification - Cookie Craze{% endblock %}
+
+{% block content %}
+<div class="content">
+    <div class="unified-page-header">
+        <div>
+            <h1 class="unified-h1 mb-1">GCash Verification</h1>
+            <p class="text-muted mb-0">Review and confirm pending GCash payments.</p>
+        </div>
+    </div>
+
+    <div class="unified-card unified-card-sm mb-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="unified-form-label">Search</label>
+                <input type="text" name="search" value="{{ search }}" class="unified-form-control" placeholder="Order ID, customer, GCash reference, hex ID">
+            </div>
+            <div class="col-md-3">
+                <label class="unified-form-label">Status</label>
+                <select name="status" class="unified-form-control">
+                    <option value="">All</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="preparing" {% if status_filter == 'preparing' %}selected{% endif %}>Preparing</option>
+                    <option value="ready" {% if status_filter == 'ready' %}selected{% endif %}>Ready</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="unified-form-label">Date</label>
+                <input type="date" name="date" value="{{ date }}" class="unified-form-control">
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="unified-btn unified-btn-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="unified-card unified-card-sm">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h2 class="unified-h2 mb-0">Pending GCash Orders</h2>
+            <span class="unified-stat-label">Total pending: <strong>{{ pending_orders|length }}</strong></span>
+        </div>
+
+        <div class="unified-table-container" style="font-size: var(--text-sm);">
+            <table class="unified-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>GCash Reference</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-center">Created</th>
+                        <th class="text-center">Staff</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if pending_orders %}
+                        {% for o in pending_orders %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold text-primary">{{ o.order_id }}</div>
+                                <div class="text-muted" style="font-size: 0.8rem;">{{ o.display_id }}</div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold" style="font-size: 0.9rem;">{{ o.customer_name|default:'Walk-in Customer' }}</div>
+                                <div class="text-muted" style="font-size: 0.8rem;">{{ o.customer_phone|default:'-' }}</div>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.85rem;">{{ o.gcash_reference|default:'Not set' }}</div>
+                            </td>
+                            <td class="text-center">
+                                {% if o.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% elif o.status == 'preparing' %}
+                                    <span class="badge bg-info text-dark">Preparing</span>
+                                {% elif o.status == 'ready' %}
+                                    <span class="badge bg-primary">Ready</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ o.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">₱{{ o.total_amount|floatformat:2 }}</td>
+                            <td class="text-center" style="font-size: 0.85rem;">{{ o.created_at|date:'Y-m-d H:i' }}</td>
+                            <td class="text-center" style="font-size: 0.85rem;">{{ o.staff.username|default:'—' }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'order_detail' o.id %}" class="unified-btn unified-btn-secondary unified-btn-sm">Review</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">No pending GCash orders found.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

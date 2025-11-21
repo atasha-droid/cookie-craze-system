@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Database Test</h1>
+
+<div class="debug-info">
+    <h2>Data Overview</h2>
+    <p><strong>Total Cookies:</strong> {{ cookie_count }}</p>
+    <p><strong>Available Cookies (stock > 0):</strong> {{ available_cookies }}</p>
+    <p><strong>Total Customers:</strong> {{ customer_count }}</p>
+    
+    <h3>Sample Cookie Names (for testing search):</h3>
+    <ul>
+        {% for cookie in sample_cookies %}
+        <li>{{ cookie }}</li>
+        {% empty %}
+        <li>No cookies in database</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="action-buttons">
+    <a href="{% url 'record_sale' %}" class="btn">
+        <i class="fas fa-cash-register"></i> Test Sales Page
+    </a>
+    <a href="{% url 'debug_sales_search' %}" class="btn">
+        <i class="fas fa-bug"></i> Debug Sales Search
+    </a>
+    {% if cookie_count == 0 %}
+    <a href="/admin/cookie_app/cookie/add/" class="btn" target="_blank">
+        <i class="fas fa-plus"></i> Add Cookies via Admin
+    </a>
+    {% endif %}
+</div>
+{% endblock %}

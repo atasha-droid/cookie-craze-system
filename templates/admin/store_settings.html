@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Store Settings - Cookie Craze{% endblock %}
+
+{% block content %}
+<div class="content">
+    <div class="unified-page-header">
+        <div>
+            <h1 class="unified-h1 mb-1">Store Settings</h1>
+            <p class="text-muted mb-0">Manage store information, contact details, tax, and GCash configuration.</p>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="unified-card unified-card-sm mb-4">
+            <h2 class="unified-h2 mb-3">Business Information</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="unified-form-label" for="id_store_name">Store Name</label>
+                    {{ form.store_name }}
+                </div>
+                <div class="col-md-6">
+                    <label class="unified-form-label" for="id_business_hours">Business Hours</label>
+                    {{ form.business_hours }}
+                    <div class="text-muted" style="font-size: 0.8rem;">e.g. Mon-Sun, 9:00 AM - 9:00 PM</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="unified-form-label" for="id_contact_email">Contact Email</label>
+                    {{ form.contact_email }}
+                </div>
+                <div class="col-md-6">
+                    <label class="unified-form-label" for="id_contact_phone">Contact Phone</label>
+                    {{ form.contact_phone }}
+                </div>
+                <div class="col-12">
+                    <label class="unified-form-label" for="id_address">Address</label>
+                    {{ form.address }}
+                </div>
+            </div>
+        </div>
+
+        <div class="unified-card unified-card-sm mb-4">
+            <h2 class="unified-h2 mb-3">Tax & Theme</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="unified-form-label" for="id_tax_rate">Tax Rate (%)</label>
+                    {{ form.tax_rate }}
+                </div>
+                <div class="col-md-4">
+                    <label class="unified-form-label" for="id_theme_primary_color">Primary Color</label>
+                    {{ form.theme_primary_color }}
+                </div>
+                <div class="col-md-4">
+                    <label class="unified-form-label" for="id_theme_secondary_color">Secondary Color</label>
+                    {{ form.theme_secondary_color }}
+                </div>
+                <div class="col-md-6">
+                    <label class="unified-form-label" for="id_logo">Store Logo</label>
+                    {{ form.logo }}
+                    {% if settings_obj.logo %}
+                        <div class="mt-2" style="font-size: 0.8rem;">
+                            Current logo:
+                            <img src="{{ settings_obj.logo.url }}" alt="Store Logo" style="max-height:40px; margin-left:8px; border-radius:4px;">
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="unified-card unified-card-sm mb-4">
+            <h2 class="unified-h2 mb-3">GCash Configuration</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="unified-form-label" for="id_gcash_account_name">GCash Account Name</label>
+                    {{ form.gcash_account_name }}
+                </div>
+                <div class="col-md-6">
+                    <label class="unified-form-label" for="id_gcash_account_number">GCash Account Number</label>
+                    {{ form.gcash_account_number }}
+                </div>
+                <div class="col-12">
+                    <label class="unified-form-label" for="id_gcash_instructions">GCash Instructions</label>
+                    {{ form.gcash_instructions }}
+                    <div class="text-muted" style="font-size: 0.8rem;">Shown to customers during GCash payment (e.g. send screenshot, reference format).</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end">
+            <button type="submit" class="unified-btn unified-btn-primary">
+                <i class="fas fa-save me-1"></i> Save Settings
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

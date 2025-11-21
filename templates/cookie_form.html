@@ -1,0 +1,154 @@
+﻿{% extends 'base.html' %}
+
+{% block content %}
+<div class="content">
+    <!-- Header -->
+    <div class="unified-page-header">
+        <div>
+            <h1 class="unified-h1">{{ title }}</h1>
+            <p class="text-muted" style="font-size: var(--text-sm);">
+                {% if title == 'Add New Cookie' %}
+                Add a new cookie to your inventory
+                {% else %}
+                Update cookie details and information
+                {% endif %}
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'inventory' %}" class="unified-btn unified-btn-secondary" data-no-loading>
+                <i class="fas fa-arrow-left me-2"></i>
+                Back to Inventory
+            </a>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="unified-card">
+        <form method="post" id="cookieForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Please correct the errors below:</strong>
+                <ul class="mb-0 mt-2">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="row g-3">
+                <!-- Name -->
+                <div class="col-md-6">
+                    <label class="unified-form-label">Cookie Name *</label>
+                    {{ form.name }}
+                </div>
+
+                <!-- Flavor -->
+                <div class="col-md-6">
+                    <label class="unified-form-label">Flavor *</label>
+                    {{ form.flavor }}
+                </div>
+
+                <!-- Category -->
+                <div class="col-md-6">
+                    <label class="unified-form-label">Category *</label>
+                    {{ form.category }}
+                </div>
+
+                <!-- Price -->
+                <div class="col-md-6">
+                    <label class="unified-form-label">Price (₱) *</label>
+                    {{ form.price }}
+                </div>
+
+                <!-- Stock Quantity -->
+                <div class="col-md-6">
+                    <label class="unified-form-label">Stock Quantity *</label>
+                    {{ form.stock_quantity }}
+                </div>
+
+                <!-- Expiration Date -->
+                <div class="col-md-6">
+                    <label class="unified-form-label">Expiration Date</label>
+                    {{ form.expiration_date }}
+                </div>
+
+                <!-- Image -->
+                <div class="col-12">
+                    <label class="unified-form-label">Cookie Image</label>
+                    {{ form.image }}
+                    {% if form.instance.image %}
+                    <div class="mt-2">
+                        <small class="text-muted">Current image:</small>
+                        <div class="mt-1">
+                            <img src="{{ form.instance.image.url }}" alt="{{ form.instance.name }}" style="max-width: 200px; max-height: 150px;" class="border rounded">
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div class="col-12">
+                    <label class="unified-form-label">Description</label>
+                    {{ form.description }}
+                    <small class="form-text text-muted">Optional description of the cookie</small>
+                </div>
+
+                <!-- Availability -->
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        {{ form.is_available }}
+                        <label class="form-check-label unified-form-label" for="{{ form.is_available.id_for_label }}">
+                            Available for Sale
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+                <a href="{% url 'inventory' %}" class="unified-btn unified-btn-secondary">
+                    <i class="fas fa-times me-2"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="unified-btn unified-btn-primary">
+                    <i class="fas fa-save me-2"></i>
+                    {% if title == 'Add New Cookie' %}Add Cookie{% else %}Update Cookie{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form submission loading
+    const form = document.getElementById('cookieForm');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    form.addEventListener('submit', function() {
+        submitBtn.classList.add('button-loading');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+    });
+
+    // Add validation styling
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.checkValidity()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

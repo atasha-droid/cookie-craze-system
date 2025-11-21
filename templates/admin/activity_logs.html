@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content">
+    <div class="unified-page-header">
+        <h1 class="unified-h1">
+            <i class="fas fa-clipboard-list text-primary me-2"></i>
+            Activity Logs
+        </h1>
+        <div class="text-muted" style="font-size: var(--text-sm);">
+            <i class="fas fa-history me-1"></i> Track all system activities and user actions
+        </div>
+    </div>
+
+    <!-- Activity Summary Stats -->
+    <div class="row g-3 mb-4">
+        <!-- Today's Activities -->
+        <div class="col-xl-3 col-lg-6">
+            <div class="unified-card text-center h-100">
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                        <i class="fas fa-history text-primary" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div class="text-start">
+                        <h3 class="unified-h3 mb-1">Today's Activities</h3>
+                        <div class="unified-stat-number">{{ summary_stats.total_activities_today }}</div>
+                    </div>
+                </div>
+                <div class="unified-stat-label">Total actions today</div>
+            </div>
+        </div>
+
+        <!-- Active Users Today -->
+        <div class="col-xl-3 col-lg-6">
+            <div class="unified-card text-center h-100">
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                        <i class="fas fa-users text-success" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div class="text-start">
+                        <h3 class="unified-h3 mb-1">Active Users</h3>
+                        <div class="unified-stat-number">{{ summary_stats.total_users_active_today }}</div>
+                    </div>
+                </div>
+                <div class="unified-stat-label">Users active today</div>
+            </div>
+        </div>
+
+        <!-- Sales Activities -->
+        <div class="col-xl-3 col-lg-6">
+            <div class="unified-card text-center h-100">
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
+                        <i class="fas fa-shopping-cart text-info" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div class="text-start">
+                        <h3 class="unified-h3 mb-1">Sales Activities</h3>
+                        <div class="unified-stat-number">{{ summary_stats.sales_activities_today }}</div>
+                    </div>
+                </div>
+                <div class="unified-stat-label">Sales actions today</div>
+            </div>
+        </div>
+
+        <!-- Inventory Activities -->
+        <div class="col-xl-3 col-lg-6">
+            <div class="unified-card text-center h-100">
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
+                        <i class="fas fa-boxes text-warning" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div class="text-start">
+                        <h3 class="unified-h3 mb-1">Inventory Activities</h3>
+                        <div class="unified-stat-number">{{ summary_stats.inventory_activities_today }}</div>
+                    </div>
+                </div>
+                <div class="unified-stat-label">Inventory actions today</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column - Activity Logs -->
+        <div class="col-xl-12">
+            <!-- Filters -->
+            <div class="unified-card mb-4">
+                <h2 class="unified-h2">
+                    <i class="fas fa-filter me-2"></i>
+                    Filter Activities
+                </h2>
+                
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="unified-form-label">Date</label>
+                        <input type="date" name="date" value="{{ date_filter }}" class="unified-form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="unified-form-label">Action Type</label>
+                        <select name="action" class="unified-form-control">
+                            <option value="">All Actions</option>
+                            {% for action_value, action_label in action_choices %}
+                                <option value="{{ action_value }}" {% if action_filter == action_value %}selected{% endif %}>
+                                    {{ action_label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="unified-form-label">User</label>
+                        <input type="text" name="user" value="{{ user_filter }}" placeholder="Search user..." class="unified-form-control">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="unified-btn unified-btn-primary me-2 w-100">
+                            <i class="fas fa-search me-2"></i>Apply Filters
+                        </button>
+                    </div>
+                    <div class="col-12">
+                        <a href="{% url 'activity_logs' %}" class="unified-btn unified-btn-secondary">
+                            <i class="fas fa-times me-2"></i>Clear Filters
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Activity Logs Table -->
+            <div class="unified-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="unified-h2">
+                        <i class="fas fa-list-alt me-2"></i>
+                        System Activity Logs
+                    </h2>
+                    <span class="badge bg-primary">{{ page_obj.paginator.count }} total records</span>
+                </div>
+                
+                {% if activity_logs %}
+                <div class="unified-table-container">
+                    <table class="unified-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Description</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in activity_logs %}
+                            <tr>
+                                <td>
+                                    <small class="text-muted">{{ log.timestamp|date:"M d, Y" }}</small><br>
+                                    <small class="text-muted">{{ log.timestamp|date:"H:i:s" }}</small>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">{{ log.user.username }}</div>
+                                    {% if log.staff %}
+                                        <small class="text-muted">{{ log.staff.staff_id }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if log.action == 'sale_created' %}bg-success
+                                        {% elif log.action == 'cookie_added' %}bg-info
+                                        {% elif log.action == 'staff_approved' %}bg-success
+                                        {% elif log.action == 'staff_rejected' %}bg-danger
+                                        {% elif log.action == 'user_registered' %}bg-info
+                                        {% elif log.action == 'login' %}bg-primary
+                                        {% elif log.action == 'logout' %}bg-secondary
+                                        {% elif 'deleted' in log.action %}bg-danger
+                                        {% elif 'updated' in log.action %}bg-warning
+                                        {% else %}bg-secondary{% endif %} text-capitalize">
+                                        {{ log.get_action_display }}
+                                    </span>
+                                </td>
+                                <td class="text-wrap" style="max-width: 400px;">
+                                    {{ log.description }}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ log.ip_address|default:"-" }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if date_filter %}&date={{ date_filter }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}">Previous</a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clipboard-list text-muted mb-3" style="font-size: 3rem;"></i>
+                    <h4 class="text-muted">No activity logs found</h4>
+                    <p class="text-muted" style="font-size: var(--text-sm);">
+                        {% if date_filter or action_filter or user_filter %}
+                            Try adjusting your filters to see more results.
+                        {% else %}
+                            Activity logs will appear here once users start using the system.
+                        {% endif %}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.unified-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.unified-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.bg-opacity-10 {
+    background-color: rgba(var(--primary-rgb), 0.1);
+}
+
+.rounded-circle {
+    border-radius: 50% !important;
+}
+
+.unified-stat-number {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.unified-stat-label {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.space-y-3 > * + * {
+    margin-top: var(--space-3);
+}
+
+.text-wrap {
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .unified-stat-number {
+        font-size: var(--text-lg);
+    }
+    
+    .d-flex.align-items-center.justify-content-center {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .d-flex.align-items-center.justify-content-center .text-start {
+        text-align: center !important;
+        margin-top: var(--space-3);
+    }
+    
+    .bg-opacity-10.rounded-circle.p-3.me-3 {
+        margin-right: 0 !important;
+        margin-bottom: var(--space-2);
+    }
+    
+    .unified-table-container {
+        font-size: var(--text-xs);
+    }
+    
+    .unified-table th,
+    .unified-table td {
+        padding: var(--space-2);
+    }
+}
+</style>
+{% endblock %}

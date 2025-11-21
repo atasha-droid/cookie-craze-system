@@ -1,0 +1,431 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content">
+    <div class="unified-card">
+        <div class="receipt-container">
+            <div class="receipt-header">
+                <h1 class="unified-h1">Sale Receipt</h1>
+                <p class="receipt-number">Sale #{{ sale.id }}</p>
+                {% if sale.hex_id %}
+                <p class="order-id">Order ID: {{ sale.hex_id }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="receipt-details">
+                <div class="unified-card unified-card-sm">
+                    <h3 class="unified-h3">Sale Information</h3>
+                    <div class="receipt-info-grid">
+                        <div class="receipt-info-item">
+                            <strong>Date:</strong> {{ sale.date_time|date:"M d, Y H:i" }}
+                        </div>
+                        <div class="receipt-info-item">
+                            <strong>Customer:</strong> {{ sale.customer.name|default:"Walk-in Customer" }}
+                        </div>
+                        {% if sale.customer %}
+                        <div class="receipt-info-item">
+                            <strong>Customer ID:</strong> {{ sale.customer.id }}
+                        </div>
+                        {% endif %}
+                        <div class="receipt-info-item">
+                            <strong>Payment Method:</strong> {{ sale.get_payment_method_display }}
+                        </div>
+                        {% if sale.staff %}
+                        <div class="receipt-info-item">
+                            <strong>Staff:</strong> {{ sale.staff.user.username }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Loyalty Points Section -->
+                {% if sale.customer and sale.customer.loyalty_points %}
+                <div class="unified-card unified-card-sm loyalty-section">
+                    <h3 class="unified-h3">Loyalty Points</h3>
+                    <div class="loyalty-info">
+                        <div class="loyalty-points-earned">
+                            <i class="fas fa-star text-warning me-2"></i>
+                            <strong>Points Earned:</strong> {{ points_earned|default:0 }} points
+                        </div>
+                        <div class="loyalty-total-points">
+                            <i class="fas fa-trophy text-warning me-2"></i>
+                            <strong>Total Points:</strong> {{ sale.customer.loyalty_points }} points
+                        </div>
+                    </div>
+                    <div class="loyalty-note">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Earned {{ points_earned|default:0 }} points from this purchase
+                        </small>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="unified-card unified-card-sm">
+                    <h3 class="unified-h3">Items Sold</h3>
+                    <div class="unified-table-container">
+                        <table class="unified-table">
+                            <thead>
+                                <tr>
+                                    <th>Cookie</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ item.cookie.name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ item.cookie.get_flavor_display }}</small>
+                                    </td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>₱{{ item.price|floatformat:2 }}</td>
+                                    <td>₱{{ item.total_price|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="receipt-subtotal-row">
+                                    <td colspan="3" class="total-label">
+                                        <strong>Subtotal:</strong>
+                                    </td>
+                                    <td class="total-amount">
+                                        <strong>₱{{ sale.total_amount|floatformat:2 }}</strong>
+                                    </td>
+                                </tr>
+                                {% if sale.customer %}
+                                <tr class="receipt-points-row">
+                                    <td colspan="3" class="total-label">
+                                        <strong>Loyalty Points Earned:</strong>
+                                    </td>
+                                    <td class="total-amount">
+                                        <strong class="text-warning">{{ points_earned|default:0 }} points</strong>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                <tr class="receipt-total-row">
+                                    <td colspan="3" class="total-label">
+                                        <strong>Grand Total:</strong>
+                                    </td>
+                                    <td class="total-amount">
+                                        <strong>₱{{ sale.total_amount|floatformat:2 }}</strong>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Payment Details -->
+                <div class="unified-card unified-card-sm">
+                    <h3 class="unified-h3">Payment Summary</h3>
+                    <div class="payment-summary-grid">
+                        <div class="payment-summary-item">
+                            <span>Total Amount:</span>
+                            <span class="payment-value">₱{{ sale.total_amount|floatformat:2 }}</span>
+                        </div>
+                        {% if amount_paid %}
+                        <div class="payment-summary-item">
+                            <span>Amount Paid:</span>
+                            <span class="payment-value">₱{{ amount_paid|floatformat:2 }}</span>
+                        </div>
+                        <div class="payment-summary-item">
+                            <span>Change:</span>
+                            <span class="payment-value {% if change_amount < 0 %}text-danger{% else %}text-success{% endif %}">
+                                ₱{{ change_amount|default:0|floatformat:2 }}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="receipt-footer">
+                <div class="thank-you-message">
+                    <h4>Thank you for your purchase!</h4>
+                    <p>We appreciate your business and hope to see you again soon.</p>
+                </div>
+                
+                <div class="store-info">
+                    <p><strong>Cookie Craze</strong></p>
+                    <p>Freshly Baked Cookies Made With Love</p>
+                    <p class="text-muted">{{ sale.date_time|date:"F d, Y \a\t g:i A" }}</p>
+                </div>
+            </div>
+            
+            <div class="receipt-actions unified-page-header">
+                <button onclick="window.print()" class="unified-btn unified-btn-primary no-print">
+                    <i class="fas fa-print"></i> Print Receipt
+                </button>
+                <a href="{% url 'record_sale' %}" class="unified-btn unified-btn-secondary no-print">
+                    <i class="fas fa-plus"></i> New Sale
+                </a>
+                <a href="{% url 'dashboard' %}" class="unified-btn unified-btn-secondary no-print">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.receipt-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.receipt-header {
+    text-align: center;
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: var(--space-4);
+    margin-bottom: var(--space-4);
+}
+
+.receipt-number {
+    font-size: var(--text-base);
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-1);
+}
+
+.order-id {
+    font-size: var(--text-sm);
+    color: var(--primary);
+    font-weight: 600;
+    background: var(--bg-tertiary);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius);
+    display: inline-block;
+    border: 1px solid var(--primary);
+}
+
+.receipt-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+}
+
+.receipt-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+}
+
+.receipt-info-item {
+    padding: var(--space-2);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius);
+    border-left: 3px solid var(--primary);
+    font-size: var(--text-sm);
+}
+
+.receipt-info-item strong {
+    color: var(--primary);
+    display: block;
+    margin-bottom: var(--space-1);
+    font-size: var(--text-xs);
+}
+
+/* Loyalty Points Section */
+.loyalty-section {
+    border-left: 4px solid var(--warning);
+}
+
+.loyalty-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+    margin-bottom: var(--space-2);
+}
+
+.loyalty-points-earned,
+.loyalty-total-points {
+    padding: var(--space-2);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius);
+    text-align: center;
+    font-size: var(--text-sm);
+}
+
+.loyalty-note {
+    text-align: center;
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--border);
+}
+
+/* Table Styles */
+.receipt-subtotal-row {
+    background: var(--bg-tertiary) !important;
+}
+
+.receipt-points-row {
+    background: rgba(255, 193, 7, 0.1) !important;
+}
+
+.receipt-total-row {
+    background: var(--primary) !important;
+    color: white;
+}
+
+.receipt-total-row .total-label,
+.receipt-total-row .total-amount {
+    color: white !important;
+}
+
+.total-label {
+    text-align: right;
+    font-size: var(--text-base);
+    color: var(--text-primary);
+}
+
+.total-amount {
+    font-size: var(--text-base);
+    color: var(--primary);
+    font-weight: 700;
+}
+
+/* Payment Summary */
+.payment-summary-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.payment-summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.payment-value {
+    font-weight: 600;
+    font-size: var(--text-base);
+}
+
+/* Receipt Footer */
+.receipt-footer {
+    text-align: center;
+    border-top: 2px solid var(--border);
+    padding-top: var(--space-4);
+    margin-top: var(--space-4);
+}
+
+.thank-you-message {
+    margin-bottom: var(--space-4);
+}
+
+.thank-you-message h4 {
+    color: var(--primary);
+    margin-bottom: var(--space-2);
+}
+
+.store-info {
+    background: var(--bg-tertiary);
+    padding: var(--space-3);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.receipt-actions {
+    justify-content: center;
+    border-top: 1px solid var(--border);
+    padding-top: var(--space-4);
+    margin-top: var(--space-4);
+}
+
+/* Print Styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .receipt-container {
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+    
+    .unified-card {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+        margin-bottom: 10px !important;
+    }
+    
+    body {
+        background: white !important;
+        color: black !important;
+        font-size: 12px !important;
+    }
+    
+    .unified-h1,
+    .unified-h3 {
+        color: black !important;
+    }
+    
+    .receipt-info-item {
+        background: #f8f9fa !important;
+        border-left: 3px solid #000 !important;
+    }
+    
+    .loyalty-section {
+        border-left: 4px solid #ffc107 !important;
+    }
+    
+    .receipt-total-row {
+        background: #000 !important;
+        color: white !important;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .receipt-info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .loyalty-info {
+        grid-template-columns: 1fr;
+        gap: var(--space-2);
+    }
+    
+    .receipt-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .receipt-actions .unified-btn {
+        justify-content: center;
+        margin-bottom: var(--space-2);
+    }
+    
+    .payment-summary-item {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-1);
+    }
+}
+
+@media (max-width: 480px) {
+    .receipt-container {
+        padding: var(--space-3) !important;
+    }
+    
+    .unified-h1 {
+        font-size: var(--text-xl) !important;
+    }
+    
+    .unified-h3 {
+        font-size: var(--text-lg) !important;
+    }
+}
+</style>
+{% endblock %}

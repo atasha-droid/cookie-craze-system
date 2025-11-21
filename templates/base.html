@@ -1,0 +1,2618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Cookie Craze{% endblock %}</title>
+    
+    {% load static %}
+    
+    <!-- Bootstrap 5.3.2 CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+ 
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Your Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{% static 'images/cookie-craze-logo.png' %}" type="image/png">
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#8B4513"/>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Cookie Craze">
+    <link rel="apple-touch-icon" href="{% static 'images/cookie-craze-logo.png' %}">
+
+    <!-- Manifest -->
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+
+    <!-- Service Worker Registration -->
+    <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('{% static "js/sw.js" %}')
+                .then(registration => {
+                    console.log('ServiceWorker registration successful');
+                })
+                .catch(error => {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+        });
+    }
+    </script>
+
+    <style>
+:root {
+    /* Enhanced Color System */
+    --primary: #8B4513;
+    --primary-light: #A0522D;
+    --primary-dark: #654321;
+    --accent: #D2691E;
+    --accent-light: #F5DEB3;
+    
+    /* Header height */
+    --header-height: 72px;
+    
+    /* Modern Neutral Colors - Enhanced Contrast */
+    --bg-primary: #f8f9fa;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f8f9fa;
+    --text-primary: #1a1a1a;
+    --text-secondary: #4a5568;
+    --text-muted: #718096;
+    --border: #e2e8f0;
+    
+    /* Semantic Colors */
+    --success: #28a745;
+    --warning: #ecc94b;
+    --danger: #e53e3e;
+    --info: #3182ce;
+    --warning-soft: rgba(236, 201, 75, 0.18);
+
+    /* Status + notification palette */
+    --status-pending-bg: #fff3cd;
+    --status-pending-text: #7c4b00;
+    --status-pending-border: #ffeaa7;
+    --status-preparing-bg: #cff4fc;
+    --status-preparing-text: #055160;
+    --status-preparing-border: #9eeaf9;
+    --status-ready-bg: #dbeafe;
+    --status-ready-text: #1d4ed8;
+    --status-ready-border: #bfdbfe;
+    --status-completed-bg: #d1e7dd;
+    --status-completed-text: #0f5132;
+    --status-completed-border: #badbcc;
+    --status-cancelled-bg: #f8d7da;
+    --status-cancelled-text: #842029;
+    --status-cancelled-border: #f5c2c7;
+    --status-voided-bg: #e2e8f0;
+    --status-voided-text: #1f2937;
+    --status-voided-border: #cbd5e1;
+    --status-default-bg: rgba(148, 163, 184, 0.18);
+    --status-default-text: var(--text-primary);
+    --status-default-border: rgba(148, 163, 184, 0.35);
+
+    --notification-badge-bg: #dc3545;
+    --notification-badge-text: #ffffff;
+    --notification-badge-border: rgba(220, 53, 69, 0.3);
+    --notification-badge-shadow: rgba(220, 53, 69, 0.25);
+
+    --loyalty-highlight-bg: rgba(245, 158, 11, 0.12);
+    --loyalty-highlight-border: rgba(245, 158, 11, 0.35);
+    --loyalty-highlight-text: var(--text-primary);
+    --loyalty-highlight-heading: #b45309;
+
+    /* Enhanced Typography */
+    --font-family-primary: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-family-heading: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    
+    /* Professional Font Sizes */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 0.9rem;
+    --text-lg: 1rem;
+    --text-xl: 1.125rem;
+    --text-2xl: 1.25rem;
+    --text-3xl: 1.5rem;
+    
+    /* Compact Spacing */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    
+    /* Enhanced Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
+    
+    /* Border Radius */
+    --radius-sm: 0.25rem;
+    --radius: 0.375rem;
+    --radius-lg: 0.5rem;
+}
+
+[data-theme="dark"] {
+    --bg-primary: #0f1419;
+    --bg-secondary: #1a202c;
+    --bg-tertiary: #2d3748;
+    --text-primary: #f7fafc;
+    --text-secondary: #e2e8f0;
+    --text-muted: #a0aec0;
+    --border: #4a5568;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.5);
+    --warning-soft: rgba(236, 201, 75, 0.12);
+    --status-pending-bg: rgba(255, 193, 7, 0.22);
+    --status-pending-text: #ffe8a3;
+    --status-pending-border: rgba(255, 193, 7, 0.46);
+    --status-preparing-bg: rgba(13, 202, 240, 0.22);
+    --status-preparing-text: #9ee7ff;
+    --status-preparing-border: rgba(13, 202, 240, 0.45);
+    --status-ready-bg: rgba(59, 130, 246, 0.25);
+    --status-ready-text: #a5d8ff;
+    --status-ready-border: rgba(59, 130, 246, 0.45);
+    --status-completed-bg: rgba(25, 135, 84, 0.28);
+    --status-completed-text: #9af0c6;
+    --status-completed-border: rgba(25, 135, 84, 0.45);
+    --status-cancelled-bg: rgba(220, 53, 69, 0.28);
+    --status-cancelled-text: #ffbac8;
+    --status-cancelled-border: rgba(220, 53, 69, 0.5);
+    --status-voided-bg: rgba(148, 163, 184, 0.26);
+    --status-voided-text: #e2e8f0;
+    --status-voided-border: rgba(148, 163, 184, 0.45);
+    --status-default-bg: rgba(148, 163, 184, 0.24);
+    --status-default-text: #e2e8f0;
+    --status-default-border: rgba(148, 163, 184, 0.45);
+    --notification-badge-bg: #ff6b6b;
+    --notification-badge-text: #ffffff;
+    --notification-badge-border: rgba(255, 107, 107, 0.6);
+    --notification-badge-shadow: rgba(255, 107, 107, 0.35);
+    --loyalty-highlight-bg: rgba(245, 158, 11, 0.18);
+    --loyalty-highlight-border: rgba(245, 158, 11, 0.65);
+    --loyalty-highlight-text: #ffe7c2;
+    --loyalty-highlight-heading: #ffdf91;
+}
+
+/* Professional Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family-primary);
+    font-size: var(--text-base);
+    line-height: 1.5;
+    font-weight: 400;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Header Styles */
+.header {
+    background: var(--bg-secondary);
+    height: var(--header-height);
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    width: 100%;
+    border-bottom: 1px solid var(--border);
+}
+
+.header-title {
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    color: var(--primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Brand title styling (only for 'Cookie Craze System' text) */
+.brand-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-family-heading);
+    font-weight: 700;
+    letter-spacing: .2px;
+}
+.brand-title .brand-logo {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+/* Header right section */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.user-info span {
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.theme-toggle:hover {
+    background: var(--primary);
+    color: white;
+    transform: scale(1.05);
+}
+
+.theme-toggle i {
+    font-size: 1rem;
+    color: inherit;
+}
+
+/* Sidebar toggle button */
+.sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    padding: 0.6rem;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+}
+
+.sidebar-toggle:hover {
+    background: var(--primary-light);
+    transform: scale(1.05);
+}
+
+.sidebar-toggle i {
+    color: white;
+    font-size: 1rem;
+}
+
+/* Main Content */
+.main-content {
+    width: 100%;
+    min-height: 100vh;
+    transition: transform 0.3s ease;
+    position: relative;
+    left: 0;
+    padding-top: var(--header-height);
+}
+
+/* Content Area */
+.content {
+    padding: var(--space-5);
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Sidebar */
+#sidebar {
+    position: fixed;
+    right: -100%;
+    top: 0;
+    height: 100vh;
+    width: 280px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    transition: right 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    color: white;
+}
+
+#sidebar.active {
+    right: 0;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-header {
+    padding: 1.5rem 1.2rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+}
+
+.sidebar .logo-container {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+}
+
+.sidebar .logo-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar .logo-fallback {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: var(--accent);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-logo h1 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-align: center;
+    margin: 10px 0 0 0;
+    line-height: 1.2;
+    color: white;
+}
+
+/* Navigation */
+.nav-menu {
+    list-style: none;
+    padding: 1rem 0;
+    flex-grow: 1;
+    margin: 0;
+    overflow-y: auto;
+}
+
+.nav-item {
+    margin-bottom: 0.3rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.7rem 0.9rem;
+    color: rgba(255, 255, 255, 0.95);
+    text-decoration: none;
+    transition: all 0.3s;
+    border-right: 4px solid transparent;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-right-color: var(--accent-light);
+    color: white;
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-right-color: var(--accent-light);
+    color: white;
+    font-weight: 600;
+}
+
+.nav-link i {
+    margin-right: 10px;
+    width: 16px;
+    text-align: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.95);
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover i {
+    color: white;
+}
+
+.nav-link.active i {
+    color: var(--accent-light);
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin-top: auto;
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.7rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-user i {
+    margin-right: 10px;
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.95);
+    flex-shrink: 0;
+}
+
+.sidebar-user-info {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.sidebar-user-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-user-role {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.8rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    text-align: center;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.logout-btn i {
+    margin-right: 8px;
+    font-size: 1rem;
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.logout-btn:hover i {
+    color: white;
+}
+
+/* Login Container */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-5);
+    background: var(--bg-primary);
+}
+
+.login-logo i {
+    color: var(--primary);
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+[data-theme="dark"] .login-logo i {
+    color: var(--primary-light);
+}
+
+/* Alerts */
+.alert {
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: var(--text-sm);
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.alert-success {
+    background-color: var(--success);
+    border-color: var(--success);
+    color: white;
+}
+
+.alert-error {
+    background-color: var(--danger);
+    border-color: var(--danger);
+    color: white;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+    background-color: var(--primary);
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: var(--text-lg);
+}
+
+.close {
+    color: white;
+    font-size: var(--text-xl);
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close:hover {
+    opacity: 0.8;
+}
+
+.modal-body {
+    padding: 1.5rem;
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+}
+
+.modal-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    background-color: var(--bg-secondary);
+}
+
+/* Professional Typography */
+.unified-h1 {
+    font-family: var(--font-family-heading);
+    font-size: var(--text-3xl);
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--primary);
+    margin-bottom: var(--space-4);
+}
+
+.unified-h2 {
+    font-family: var(--font-family-heading);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text-primary);
+    margin-bottom: var(--space-3);
+}
+
+.unified-h3 {
+    font-family: var(--font-family-heading);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text-primary);
+    margin-bottom: var(--space-3);
+}
+
+.unified-h6 {
+    font-family: var(--font-family-heading);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: var(--space-4);
+}
+
+/* Professional Cards */
+.unified-card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    margin-bottom: var(--space-4);
+}
+
+.unified-card-sm {
+    padding: var(--space-4);
+}
+
+/* Professional Buttons */
+.unified-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--font-family-primary);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+.unified-btn-primary {
+    background: var(--primary);
+    color: white;
+    border: 1px solid var(--primary-dark);
+}
+
+.unified-btn-primary:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+}
+
+.unified-btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+.unified-btn-secondary:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+.unified-btn-danger {
+    background: var(--danger);
+    color: white;
+    border: 1px solid #c53030;
+}
+
+.unified-btn-danger:hover {
+    background: #c53030;
+    transform: translateY(-1px);
+}
+
+.unified-btn-sm {
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--text-xs);
+}
+
+/* Professional Form Controls */
+.unified-form-control {
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: var(--text-sm);
+    font-family: var(--font-family-primary);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.unified-form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
+    background: var(--bg-secondary);
+}
+
+.unified-form-label {
+    display: block;
+    margin-bottom: var(--space-2);
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: var(--text-sm);
+    font-family: var(--font-family-primary);
+}
+
+.unified-form-group {
+    margin-bottom: var(--space-4);
+}
+
+/* Professional Tables */
+.unified-table-container {
+    overflow-x: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+}
+
+.unified-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+    background: var(--bg-secondary);
+}
+
+.unified-table th,
+.unified-table td {
+    padding: var(--space-3);
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.unified-table th {
+    background: var(--bg-tertiary);
+    color: var(--primary);
+    font-weight: 600;
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.unified-table tr:hover {
+    background: var(--bg-tertiary);
+}
+
+/* Professional Stats */
+.unified-stat-number {
+    display: block;
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: var(--space-1);
+    line-height: 1;
+}
+
+.unified-stat-label {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Professional Alerts */
+.unified-alert {
+    padding: var(--space-3);
+    border-radius: var(--radius);
+    margin-bottom: var(--space-3);
+    border-left: 3px solid var(--primary);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: var(--text-sm);
+}
+
+.unified-alert-error {
+    border-left-color: var(--danger);
+    background: rgba(229, 62, 62, 0.1);
+}
+
+.unified-alert-success {
+    border-left-color: var(--success);
+    background: rgba(72, 187, 120, 0.1);
+}
+
+.unified-alert-warning {
+    border-left-color: var(--warning);
+    background: rgba(237, 137, 54, 0.1);
+}
+
+/* Page Header */
+.unified-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-4);
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+/* Text Colors for Dark Mode */
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-muted { color: var(--text-muted) !important; }
+.text-success { color: var(--success) !important; }
+.text-danger { color: var(--danger) !important; }
+.text-warning { color: var(--warning) !important; }
+
+/* Background Colors */
+.bg-light {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+.bg-primary { background: var(--primary) !important; }
+.bg-success { background: var(--success) !important; }
+.bg-danger { background: var(--danger) !important; }
+.bg-warning { background: var(--warning) !important; }
+
+/* Bootstrap Overrides for Dark Mode */
+.card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    color: var(--text-primary);
+}
+
+.card-body {
+    padding: var(--space-4);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.table {
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+}
+
+.table th {
+    background: var(--bg-tertiary);
+    color: var(--primary);
+    border-color: var(--border);
+}
+
+.table td {
+    border-color: var(--border);
+    color: var(--text-primary);
+}
+
+.table-hover tbody tr:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.table-light {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.badge {
+    font-size: var(--text-xs);
+    font-weight: 500;
+    padding: var(--space-1) var(--space-2);
+}
+
+.alert {
+    font-size: var(--text-sm);
+    padding: var(--space-3);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.alert-success {
+    background: rgba(72, 187, 120, 0.1);
+    border-color: rgba(72, 187, 120, 0.2);
+    color: var(--success);
+}
+
+.alert-danger {
+    background: rgba(229, 62, 62, 0.1);
+    border-color: rgba(229, 62, 62, 0.2);
+    color: var(--danger);
+}
+
+.alert-warning {
+    background: rgba(237, 137, 54, 0.1);
+    border-color: rgba(237, 137, 54, 0.2);
+    color: var(--warning);
+}
+
+.alert-info {
+    background: rgba(66, 153, 225, 0.1);
+    border-color: rgba(66, 153, 225, 0.2);
+    color: var(--info);
+}
+
+.form-control {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius);
+}
+
+.form-control:focus {
+    background: var(--bg-secondary);
+    border-color: var(--primary);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
+}
+
+.form-label {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: var(--text-sm);
+}
+
+.btn {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius);
+}
+
+.btn-sm {
+    font-size: var(--text-xs);
+    padding: var(--space-1) var(--space-3);
+}
+
+.btn-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-primary:hover {
+    background: var(--primary-light);
+    border-color: var(--primary-light);
+}
+
+.btn-secondary {
+    background: var(--bg-tertiary);
+    border-color: var(--border);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary);
+    color: var(--text-primary);
+}
+
+.btn-danger {
+    background: var(--danger);
+    border-color: var(--danger);
+}
+
+.btn-danger:hover {
+    background: #c53030;
+    border-color: #c53030;
+}
+
+.btn-outline-primary {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-outline-secondary {
+    color: var(--text-secondary);
+    border-color: var(--border);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--border);
+    color: var(--text-primary);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    #sidebar {
+        width: 220px;
+    }
+    
+    .sidebar .logo-container {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .sidebar-logo h1 {
+        font-size: 1.1rem;
+    }
+    
+    .nav-link {
+        padding: 0.7rem 0.9rem;
+        font-size: 0.85rem;
+    }
+    
+    .header {
+        padding: 0 1.2rem;
+    }
+    
+    .header-title {
+        font-size: var(--text-lg);
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        padding: 0 1rem;
+    }
+    
+    .header-right {
+        gap: 0.8rem;
+    }
+    
+    .sidebar-toggle {
+        padding: 0.5rem;
+        font-size: 1rem;
+        width: 36px;
+        height: 36px;
+    }
+    
+    .header-title {
+        font-size: var(--text-base);
+    }
+    
+    .user-info span {
+        display: none;
+    }
+    
+    .user-info {
+        gap: 0.8rem;
+    }
+    
+    .content {
+        padding: var(--space-3);
+    }
+    
+    .unified-card {
+        padding: var(--space-4);
+    }
+    
+    .unified-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-2);
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 0 0.8rem;
+    }
+    
+    .header-right {
+        gap: 0.6rem;
+    }
+    
+    .sidebar-toggle {
+        padding: 0.4rem;
+        font-size: 0.9rem;
+        width: 32px;
+        height: 32px;
+    }
+    
+    .header-title {
+        font-size: var(--text-sm);
+        max-width: 150px;
+    }
+    
+    .theme-toggle {
+        padding: 0.4rem;
+        width: 32px;
+        height: 32px;
+    }
+    
+    #sidebar {
+        width: 100%;
+    }
+    
+    .sidebar .logo-container {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .sidebar-logo h1 {
+        font-size: 1rem;
+    }
+    
+    .nav-link {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    
+    .content {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .header-title {
+        max-width: 120px;
+    }
+    
+    .user-info {
+        display: none;
+    }
+}
+
+/* Ensure no horizontal scroll */
+body {
+    overflow-x: hidden;
+    width: 100%;
+}
+
+.main-content {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Print Styles for Receipt */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .unified-card {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+    }
+    
+    body {
+        background: white !important;
+        color: black !important;
+    }
+}
+
+/* Void Sale Modal Styles */
+#voidSaleModal .modal-header {
+    background: linear-gradient(135deg, #ffc107, #ff8c00);
+    border-bottom: none;
+}
+
+#voidSaleModal .modal-header .btn-close {
+    filter: invert(1);
+}
+
+.void-sale-btn {
+    transition: all 0.3s ease;
+}
+
+.void-sale-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Loading spinner */
+.spinner-border.text-warning {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Alert animations */
+.alert-dismissible {
+    animation: slideInDown 0.5s ease;
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Status badges */
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.badge.bg-success {
+    background-color: #198754 !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+/* ===== VOID SALE STYLES ===== */
+
+/* Void Sale Button */
+.void-sale-btn {
+    background: var(--warning);
+    color: #000;
+    border: 1px solid #d97706;
+    border-radius: var(--radius);
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.void-sale-btn:hover {
+    background: #f59e0b;
+    color: #000;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+    border-color: #b45309;
+}
+
+.void-sale-btn:disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    border-color: var(--border);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.void-sale-btn:disabled:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    border-color: var(--border);
+    transform: none;
+    box-shadow: none;
+}
+
+/* Void Sale Modal */
+#voidSaleModal .modal-content {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+#voidSaleModal .modal-header {
+    background: linear-gradient(135deg, var(--warning), #f59e0b);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding: var(--space-4);
+    color: #000;
+}
+
+#voidSaleModal .modal-title {
+    font-family: var(--font-family-heading);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: #000;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+#voidSaleModal .modal-header .btn-close {
+    filter: invert(0);
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+#voidSaleModal .modal-header .btn-close:hover {
+    opacity: 1;
+}
+
+#voidSaleModal .modal-body {
+    padding: var(--space-4);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+#voidSaleModal .modal-footer {
+    padding: var(--space-4);
+    border-top: 1px solid var(--border);
+    background: var(--bg-secondary);
+    gap: var(--space-3);
+}
+
+/* Void Alert */
+.void-alert {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-left: 3px solid var(--warning);
+    border-radius: var(--radius);
+    padding: var(--space-3);
+    margin-bottom: var(--space-4);
+    color: var(--text-primary);
+}
+
+.void-alert i {
+    color: var(--warning);
+}
+
+/* Sale Details Card */
+.void-sale-details {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.void-sale-details .card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--border);
+    padding: var(--space-2) 0;
+    margin-bottom: var(--space-3);
+}
+
+.void-sale-details .card-header h6 {
+    font-family: var(--font-family-heading);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--primary);
+    margin: 0;
+}
+
+.void-sale-details .row {
+    margin: 0 -var(--space-2);
+}
+
+.void-sale-details .row > div {
+    padding: 0 var(--space-2);
+    margin-bottom: var(--space-2);
+}
+
+.void-sale-details strong {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: var(--text-sm);
+}
+
+.void-sale-details span {
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+}
+
+/* Admin Authentication Form */
+.admin-auth-form .row {
+    margin: 0 -var(--space-2);
+}
+
+.admin-auth-form .col-md-6 {
+    padding: 0 var(--space-2);
+}
+
+.admin-auth-form .form-label {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-2);
+}
+
+.admin-auth-form .form-control {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius);
+    transition: all 0.2s ease;
+}
+
+.admin-auth-form .form-control:focus {
+    background: var(--bg-secondary);
+    border-color: var(--primary);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
+}
+
+.admin-auth-form .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+/* Reason Selection */
+.reason-selection .form-label {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-2);
+}
+
+.reason-selection .form-select {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius);
+    transition: all 0.2s ease;
+}
+
+.reason-selection .form-select:focus {
+    background: var(--bg-secondary);
+    border-color: var(--primary);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
+}
+
+/* Other Reason Textarea */
+.other-reason-container {
+    margin-top: var(--space-3);
+}
+
+.other-reason-container .form-label {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-2);
+}
+
+.other-reason-container .form-control {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius);
+    resize: vertical;
+    min-height: 80px;
+    transition: all 0.2s ease;
+}
+
+.other-reason-container .form-control:focus {
+    background: var(--bg-secondary);
+    border-color: var(--primary);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
+}
+
+.other-reason-container .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+/* Void Info Note */
+.void-info-note {
+    background: rgba(49, 130, 206, 0.1);
+    border: 1px solid rgba(49, 130, 206, 0.2);
+    border-left: 3px solid var(--info);
+    border-radius: var(--radius);
+    padding: var(--space-3);
+    margin-top: var(--space-4);
+    color: var(--text-primary);
+}
+
+.void-info-note i {
+    color: var(--info);
+}
+
+/* Void Modal Buttons */
+#confirmVoidBtn {
+    background: var(--warning);
+    color: #000;
+    border: 1px solid #d97706;
+    border-radius: var(--radius);
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+#confirmVoidBtn:hover {
+    background: #f59e0b;
+    color: #000;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+    border-color: #b45309;
+}
+
+#confirmVoidBtn:disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    border-color: var(--border);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Loading Modal */
+#loadingModal .modal-content {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+#loadingModal .modal-body {
+    padding: var(--space-5);
+    text-align: center;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+#loadingModal .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3em;
+    color: var(--warning);
+}
+
+#loadingModal p {
+    margin: var(--space-3) 0 0 0;
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+}
+
+/* Status Badges for Void System */
+.badge-voided {
+    background: var(--danger) !important;
+    color: white;
+}
+
+.badge-completed {
+    background: var(--success) !important;
+    color: white;
+}
+
+.badge-pending {
+    background: var(--warning) !important;
+    color: #000;
+}
+
+/* Animation for void process */
+@keyframes voidProcessing {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.void-processing {
+    animation: voidProcessing 1s ease-in-out infinite;
+}
+
+/* Success/Failure States */
+.void-success {
+    border-color: var(--success) !important;
+    background: rgba(72, 187, 120, 0.1) !important;
+}
+
+.void-error {
+    border-color: var(--danger) !important;
+    background: rgba(229, 62, 62, 0.1) !important;
+}
+
+/* Responsive Design for Void Modal */
+@media (max-width: 768px) {
+    #voidSaleModal .modal-dialog {
+        margin: var(--space-3);
+        max-width: calc(100% - var(--space-6));
+    }
+    
+    #voidSaleModal .modal-body {
+        padding: var(--space-3);
+    }
+    
+    #voidSaleModal .modal-footer {
+        padding: var(--space-3);
+        flex-direction: column;
+    }
+    
+    #voidSaleModal .modal-footer .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .admin-auth-form .col-md-6 {
+        margin-bottom: var(--space-3);
+    }
+    
+    .void-sale-details .row > div {
+        margin-bottom: var(--space-3);
+    }
+}
+
+@media (max-width: 480px) {
+    #voidSaleModal .modal-header {
+        padding: var(--space-3);
+    }
+    
+    #voidSaleModal .modal-title {
+        font-size: var(--text-base);
+    }
+    
+    .void-sale-btn {
+        padding: var(--space-1) var(--space-2);
+        font-size: var(--text-xs);
+    }
+    
+    .void-sale-btn i {
+        margin-right: 0;
+    }
+    
+    .void-sale-btn span {
+        display: none;
+    }
+}
+
+/* Dark Mode Specific Adjustments */
+[data-theme="dark"] .void-sale-btn {
+    background: #d97706;
+    color: white;
+    border-color: #b45309;
+}
+
+[data-theme="dark"] .void-sale-btn:hover {
+    background: #f59e0b;
+    color: #000;
+}
+
+[data-theme="dark"] #voidSaleModal .modal-header {
+    background: linear-gradient(135deg, #d97706, #f59e0b);
+}
+
+[data-theme="dark"] #confirmVoidBtn {
+    background: #d97706;
+    color: white;
+    border-color: #b45309;
+}
+
+[data-theme="dark"] #confirmVoidBtn:hover {
+    background: #f59e0b;
+    color: #000;
+}
+
+/* Offline Indicator */
+#offlineIndicator {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #ffc107;
+    color: #000;
+    padding: 8px;
+    text-align: center;
+    z-index: 10000;
+    font-weight: bold;
+    font-size: var(--text-sm);
+}
+
+/* Install Prompt */
+#installPrompt {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--bg-secondary);
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    border: 2px solid var(--primary);
+    max-width: 280px;
+}
+
+#installPrompt h4 {
+    margin: 0 0 8px 0;
+    color: var(--primary);
+    font-size: var(--text-base);
+}
+
+#installPrompt p {
+    margin: 0 0 12px 0;
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+}
+
+#installPrompt .d-flex {
+    display: flex;
+    gap: 8px;
+}
+
+#installPrompt .unified-btn {
+    flex: 1;
+    font-size: var(--text-xs);
+    padding: var(--space-2);
+}
+
+/* Full Page Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.loading-overlay.active {
+    display: flex;
+}
+
+.centered-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loading-text {
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Loading Spinner Styles */
+.loading-spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+    </style>
+</head>
+
+<body data-theme="light" {% if user.is_authenticated %}class="authenticated"{% endif %}>
+   <!-- Full Page Loading Overlay for Logout -->
+<div class="loading-overlay" id="logoutLoadingOverlay">
+    <div class="centered-spinner"></div>
+    <div class="loading-text">Logging out...</div>
+</div>
+
+<!-- Global Page Loading Overlay -->
+<div class="loading-overlay" id="pageLoadingOverlay">
+    <div class="centered-spinner"></div>
+    <div class="loading-text" id="pageLoadingText">Loading...</div>
+</div>
+   
+    <!-- Offline Indicator -->
+    <div id="offlineIndicator">
+        <i class="fas fa-wifi-slash"></i> You are currently offline. Working in limited mode.
+    </div>
+
+    <!-- Install Prompt -->
+    <div id="installPrompt">
+        <h4>Install Cookie Craze</h4>
+        <p>Add to your home screen for better experience</p>
+        <div class="d-flex">
+            <button id="installButton" class="unified-btn unified-btn-primary">Install App</button>
+            <button id="dismissInstall" class="unified-btn unified-btn-secondary">Not Now</button>
+        </div>
+    </div>
+
+    {% if user.is_authenticated %}
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="logo-container">
+                    <img src="{% static 'images/cookie-craze-logo.png' %}" 
+                         alt="Cookie Craze Logo" 
+                         class="logo-image"
+                         onerror="this.onerror=null; this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';">
+                    
+                    <div id="logo-fallback" class="logo-fallback" style="display: none;">
+                        <img src="{% static 'images/cookie-craze-logo.png' %}" alt="Cookie Craze Logo" style="width: 50px; height: 50px; object-fit: contain;">
+                    </div>
+                </div>
+                <h1>Cookie Craze System</h1>
+            </div>
+        </div>
+        
+        <nav>
+           <ul class="nav-menu">
+        {% if user.is_superuser or user.staff.role == 'admin' %}
+        <!-- Admin full sidebar -->
+        <li class="nav-item">
+            <a href="{% url 'admin_dashboard' %}" class="nav-link {% if 'admin/dashboard' in request.path %}active{% endif %}">
+                <i class="fas fa-gauge"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'record_sale' %}" class="nav-link {% if 'record-sale' in request.path %}active{% endif %}">
+                <i class="fas fa-plus-circle"></i>
+                <span>New Order</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'order_management' %}" class="nav-link {% if 'order-management' in request.path %}active{% endif %}">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Orders</span>
+                {% if new_orders_count and new_orders_count > 0 %}
+                <span class="badge bg-danger ms-2">{{ new_orders_count }}</span>
+                {% endif %}
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'inventory' %}" class="nav-link {% if 'inventory' in request.path %}active{% endif %}">
+                <i class="fas fa-boxes"></i>
+                <span>Inventory</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'sales_report' %}" class="nav-link {% if 'sales' in request.path and 'daily-sales' not in request.path %}active{% endif %}">
+                <i class="fas fa-chart-line"></i>
+                <span>Sales Reports</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'staff_management' %}" class="nav-link {% if 'staff-management' in request.path %}active{% endif %}">
+                <i class="fas fa-user-gear"></i>
+                <span>Staff Management</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'admin_customer_list' %}" class="nav-link {% if 'admin/customers' in request.path %}active{% endif %}">
+                <i class="fas fa-users"></i>
+                <span>Customers</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'admin_gcash_verifications' %}" class="nav-link {% if 'admin/gcash-verifications' in request.path %}active{% endif %}">
+                <i class="fas fa-wallet"></i>
+                <span>GCash Verification</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'activity_logs' %}" class="nav-link {% if 'activity-logs' in request.path %}active{% endif %}">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Activity Logs</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'admin_store_settings' %}" class="nav-link {% if 'admin/settings' in request.path %}active{% endif %}">
+                <i class="fas fa-gear"></i>
+                <span>Settings</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'staff_notifications' %}" class="nav-link {% if 'staff/notifications' in request.path %}active{% endif %}">
+                <i class="fas fa-bell"></i>
+                <span>Notifications</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'staff_profile' %}" class="nav-link {% if 'staff/profile' in request.path %}active{% endif %}">
+                <i class="fas fa-id-badge"></i>
+                <span>Profile</span>
+            </a>
+        </li>
+        {% else %}
+        <!-- Staff sidebar -->
+        <li class="nav-item">
+            <a href="{% url 'staff_dashboard' %}" class="nav-link {% if request.path == '/app/staff-dashboard/' %}active{% endif %}">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'staff_record_sale' %}" class="nav-link {% if 'record-sale' in request.path %}active{% endif %}">
+                <i class="fas fa-plus-circle"></i>
+                <span>New Order</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'order_management' %}" class="nav-link {% if 'order-management' in request.path %}active{% endif %}">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Orders</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'daily_sales_report' %}" class="nav-link {% if 'daily-sales' in request.path %}active{% endif %}">
+                <i class="fas fa-chart-line"></i>
+                <span>Daily Sales Report</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'cash_reconciliation_report' %}" class="nav-link {% if 'cash-reconciliation' in request.path %}active{% endif %}">
+                <i class="fas fa-coins"></i>
+                <span>Cash Reconciliation</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'inventory' %}" class="nav-link {% if 'inventory' in request.path %}active{% endif %}">
+                <i class="fas fa-boxes"></i>
+                <span>Inventory (Read-only)</span>
+                <span class="badge bg-danger ms-2" id="low-stock-badge" style="display:none;">0</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'staff_notifications' %}" class="nav-link {% if 'staff/notifications' in request.path %}active{% endif %}">
+                <i class="fas fa-bell"></i>
+                <span>Notifications</span>
+                <span class="badge bg-danger ms-2" id="notif-badge" style="display:none;">New</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'staff_profile' %}" class="nav-link {% if 'staff/profile' in request.path %}active{% endif %}">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </a>
+        </li>
+        {% endif %}
+        
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <i class="fas fa-user-circle"></i>
+                <div class="sidebar-user-info">
+                    <a href="{% url 'staff_profile' %}" class="sidebar-user-name text-decoration-none" data-no-loading>{{ user.username }}</a>
+                    <div class="sidebar-user-role">
+                        {% if user.is_superuser %}
+                            Administrator
+                        {% elif user.staff.role == 'admin' %}
+                            Admin
+                        {% elif user.staff.role == 'staff' %}
+                            Staff Member
+                        {% else %}
+                            User
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <a href="{% url 'logout' %}" class="logout-btn" onclick="return showLogoutModal(event)" data-no-loading>
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content" id="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-title">
+                {% if request.path == '/app/admin-dashboard/' %}
+                    Admin Dashboard
+                {% elif request.path == '/app/staff-dashboard/' %}
+                    Staff Dashboard
+                {% elif 'inventory' in request.path %}
+                    <span class="brand-title">
+                        <img src="{% static 'images/cookie-craze-logo.png' %}" alt="Cookie Craze" class="brand-logo">
+                        <span>Cookie Craze System</span>
+                    </span>
+                {% elif 'sale' in request.path and 'daily-sales' not in request.path %}
+                    <span class="brand-title">
+                        <img src="{% static 'images/cookie-craze-logo.png' %}" alt="Cookie Craze" class="brand-logo">
+                        <span>Cookie Craze System</span>
+                    </span>
+                {% elif 'daily-sales' in request.path %}
+                    <span class="brand-title">
+                        <img src="{% static 'images/cookie-craze-logo.png' %}" alt="Cookie Craze" class="brand-logo">
+                        <span>Cookie Craze System</span>
+                    </span>
+                {% elif 'staff-management' in request.path %}
+                    Staff Management
+                {% elif 'admin-sales-monitoring' in request.path %}
+                    Sales Monitoring
+                {% elif 'staff-sales-history' in request.path %}
+                    My Sales History
+                {% elif 'report' in request.path %}
+                    Reports & Analytics
+                {% else %}
+                    <span class="brand-title">
+                        <img src="{% static 'images/cookie-craze-logo.png' %}" alt="Cookie Craze" class="brand-logo">
+                        <span>Cookie Craze System</span>
+                    </span>
+                {% endif %}
+            </div>
+            
+            <div class="header-right">
+                <div class="user-info">
+                    <span>
+                        {% if user.is_superuser or user.staff.role == 'admin' %}
+                            <i class="fas fa-crown text-warning me-1"></i>
+                        {% else %}
+                            <i class="fas fa-user me-1"></i>
+                        {% endif %}
+                        {{ user.username }}
+                    </span>
+                    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </header>
+
+  <!-- Logout Confirmation Modal -->
+<div id="logoutModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Confirm Logout</h3>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to logout from Cookie Craze System?</p>
+        </div>
+        <div class="modal-footer">
+            <button id="cancelLogout" class="unified-btn unified-btn-secondary">Cancel</button>
+            <button id="confirmLogout" class="unified-btn unified-btn-danger">
+                <i class="fas fa-sign-out-alt me-2"></i> Yes, Logout
+            </button>
+        </div>
+    </div>
+</div>
+
+        <!-- Content -->
+        <div class="content">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+    {% else %}
+    <!-- Login/Register Pages -->
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-logo">
+                <i class="fas fa-cookie-bite"></i>
+                <h1>Cookie Craze System</h1>
+            </div>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% block auth_content %}
+            {% endblock %}
+        </div>
+    </div>
+    {% endif %}
+
+   <!-- Local Bootstrap 5.3.2 JS Bundle -->
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== System Initializing ===');
+    
+    // Theme functionality
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+    
+    if (themeToggle) {
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            body.setAttribute('data-theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            body.setAttribute('data-theme', 'light');
+            themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+        
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            themeToggle.innerHTML = newTheme === 'dark' 
+                ? '<i class="fas fa-sun"></i>' 
+                : '<i class="fas fa-moon"></i>';
+        });
+    }
+
+    // Sidebar functionality
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+
+    if (sidebar && sidebarToggle) {
+        sidebarToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            sidebar.classList.toggle('active');
+            
+            if (sidebar.classList.contains('active')) {
+                sidebarToggle.innerHTML = '<i class="fas fa-times"></i>';
+            } else {
+                sidebarToggle.innerHTML = '<i class="fas fa-bars"></i>';
+            }
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (sidebar.classList.contains('active') && 
+                !sidebar.contains(e.target) && 
+                e.target !== sidebarToggle) {
+                sidebar.classList.remove('active');
+                sidebarToggle.innerHTML = '<i class="fas fa-bars"></i>';
+            }
+        });
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+                sidebarToggle.innerHTML = '<i class="fas fa-bars"></i>';
+            }
+        });
+    }
+
+    // Logout modal functionality (show "Logging out..." overlay before redirect)
+    function showLogoutModal(event) {
+        event.preventDefault();
+        const modal = document.getElementById('logoutModal');
+        const logoutLoadingOverlay = document.getElementById('logoutLoadingOverlay');
+        
+        if (modal) {
+            modal.style.display = 'flex';
+            
+            const closeBtn = modal.querySelector('.close');
+            const cancelBtn = modal.querySelector('#cancelLogout');
+            const confirmBtn = modal.querySelector('#confirmLogout');
+            
+            const closeModal = () => {
+                modal.style.display = 'none';
+            };
+            
+            if (closeBtn) closeBtn.onclick = closeModal;
+            if (cancelBtn) cancelBtn.onclick = closeModal;
+            
+            modal.onclick = (e) => {
+                if (e.target === modal) closeModal();
+            };
+            
+            if (confirmBtn) {
+                confirmBtn.onclick = function(e) {
+                    e.preventDefault();
+                    modal.style.display = 'none';
+                    if (logoutLoadingOverlay) {
+                        logoutLoadingOverlay.style.display = 'flex';
+                    }
+                    setTimeout(function(){
+                        window.location.href = "{% url 'logout' %}";
+                    }, 800);
+                };
+            }
+        }
+        return false;
+    }
+
+    // Attach logout modal to all logout buttons
+    const logoutButtons = document.querySelectorAll('[onclick*="showLogoutModal"]');
+    logoutButtons.forEach(button => {
+        button.addEventListener('click', showLogoutModal);
+    });
+
+    // Sidebar badges updater (pending orders + notifications)
+    const pendingBadge = document.getElementById('pending-orders-badge');
+    const notifBadge = document.getElementById('notif-badge');
+    let lastSidebarCheck = new Date().toISOString();
+
+    async function updatePendingBadge() {
+        try {
+            const res = await fetch('{% url "staff_dashboard_realtime_data" %}');
+            const data = await res.json();
+            if (data && data.success && data.data) {
+                const count = data.data.pending_orders_count || 0;
+                if (pendingBadge) {
+                    if (count > 0) {
+                        pendingBadge.textContent = count;
+                        pendingBadge.style.display = 'inline-block';
+                    } else {
+                        pendingBadge.style.display = 'none';
+                    }
+                }
+            }
+        } catch (e) {
+            // silent fail
+        }
+    }
+
+    async function updateNotifBadge() {
+        try {
+            const res = await fetch(`{% url "staff_new_orders_check" %}?last_check=${encodeURIComponent(lastSidebarCheck)}`);
+            const data = await res.json();
+            if (data && data.success) {
+                lastSidebarCheck = data.current_time || new Date().toISOString();
+                if (notifBadge) {
+                    const hasUpdates = !!data.has_updates;
+                    notifBadge.style.display = hasUpdates ? 'inline-block' : 'none';
+                }
+            }
+        } catch (e) {
+            // silent fail
+        }
+    }
+
+    function startSidebarPolling() {
+        updatePendingBadge();
+        updateNotifBadge();
+        setInterval(updatePendingBadge, 15000);
+        setInterval(updateNotifBadge, 10000);
+    }
+
+    startSidebarPolling();
+
+    console.log('=== System Initialized ===');
+});
+
+// Global page loading overlay
+(function() {
+  const overlay = document.getElementById('pageLoadingOverlay');
+  const overlayText = document.getElementById('pageLoadingText');
+
+  function showPageLoading(text) {
+    if (!overlay) return;
+    if (overlayText) {
+      overlayText.textContent = text || 'Loading...';
+    }
+    overlay.classList.add('active');
+  }
+
+  function hidePageLoading() {
+    if (!overlay) return;
+    overlay.classList.remove('active');
+  }
+
+  window.showPageLoading = showPageLoading;
+  window.hidePageLoading = hidePageLoading;
+
+  // Show overlay on internal link clicks
+  document.addEventListener('click', function(e) {
+    const a = e.target.closest('a');
+    if (!a) return;
+    if (a.hasAttribute('data-no-loading')) return;
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    const href = a.getAttribute('href') || '';
+    const target = a.getAttribute('target');
+    if (target === '_blank') return;
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+    const isExternal = /^(https?:)?\/\//i.test(href) && !href.startsWith(location.origin);
+    if (isExternal) return;
+    const linkLoadingText = a.getAttribute('data-loading-text') || 'Loading...';
+    showPageLoading(linkLoadingText);
+  }, true);
+
+  // Explicit triggers (buttons, links, etc.)
+  document.addEventListener('click', function(e) {
+    const trigger = e.target.closest('[data-trigger-loading]');
+    if (!trigger || trigger.hasAttribute('data-no-loading')) return;
+    const message = trigger.getAttribute('data-loading-text') || 'Processing...';
+    showPageLoading(message);
+  }, true);
+
+  // Show overlay on form submit
+  document.addEventListener('submit', function(e) {
+    const form = e.target;
+    if (!form || form.hasAttribute('data-no-loading')) return;
+    const formMessage = form.getAttribute('data-loading-text') || 'Processing...';
+    showPageLoading(formMessage);
+  }, true);
+
+  window.addEventListener('beforeunload', function() {
+    showPageLoading('Loading...');
+  });
+
+  const hideHandler = () => hidePageLoading();
+  window.addEventListener('pageshow', hideHandler);
+  window.addEventListener('load', hideHandler);
+  document.addEventListener('DOMContentLoaded', hideHandler);
+})();
+
+// PWA Manager
+class PWAManager {
+    constructor() {
+        this.deferredPrompt = null;
+        this.isOnline = navigator.onLine;
+        this.init();
+    }
+    
+    init() {
+        this.setupOfflineDetection();
+        this.setupInstallPrompt();
+        this.setupServiceWorker();
+    }
+    
+    setupOfflineDetection() {
+        window.addEventListener('online', () => {
+            this.isOnline = true;
+            this.hideOfflineIndicator();
+            this.showOnlineNotification();
+        });
+        
+        window.addEventListener('offline', () => {
+            this.isOnline = false;
+            this.showOfflineIndicator();
+        });
+        
+        if (!this.isOnline) {
+            this.showOfflineIndicator();
+        }
+    }
+    
+    showOfflineIndicator() {
+        const indicator = document.getElementById('offlineIndicator');
+        if (indicator) {
+            indicator.style.display = 'block';
+            setTimeout(() => {
+                this.hideOfflineIndicator();
+            }, 5000);
+        }
+    }
+    
+    hideOfflineIndicator() {
+        const indicator = document.getElementById('offlineIndicator');
+        if (indicator) {
+            indicator.style.display = 'none';
+        }
+    }
+    
+    showOnlineNotification() {
+        const notification = document.createElement('div');
+        notification.innerHTML = '<i class="fas fa-wifi"></i> Back online!';
+        notification.style.cssText = `
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 4px;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+    
+    setupInstallPrompt() {
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            this.deferredPrompt = e;
+            
+            setTimeout(() => {
+                this.showInstallPrompt();
+            }, 10000);
+        });
+        
+        const installButton = document.getElementById('installButton');
+        if (installButton) {
+            installButton.addEventListener('click', () => {
+                this.installApp();
+            });
+        }
+        
+        const dismissButton = document.getElementById('dismissInstall');
+        if (dismissButton) {
+            dismissButton.addEventListener('click', () => {
+                this.hideInstallPrompt();
+                localStorage.setItem('installDismissed', Date.now().toString());
+            });
+        }
+    }
+    
+    showInstallPrompt() {
+        const lastDismissed = localStorage.getItem('installDismissed');
+        const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+        
+        if (!lastDismissed || parseInt(lastDismissed) < oneWeekAgo) {
+            const prompt = document.getElementById('installPrompt');
+            if (prompt) {
+                prompt.style.display = 'block';
+            }
+        }
+    }
+    
+    hideInstallPrompt() {
+        const prompt = document.getElementById('installPrompt');
+        if (prompt) {
+            prompt.style.display = 'none';
+        }
+    }
+    
+    async installApp() {
+        if (!this.deferredPrompt) {
+            return;
+        }
+        
+        this.deferredPrompt.prompt();
+        const { outcome } = await this.deferredPrompt.userChoice;
+        
+        if (outcome === 'accepted') {
+            console.log('User accepted the install prompt');
+            this.hideInstallPrompt();
+        }
+        
+        this.deferredPrompt = null;
+    }
+    
+    setupServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+                console.log('Service Worker is ready:', registration);
+                
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    console.log('Service Worker update found!');
+                    
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            this.showUpdateNotification();
+                        }
+                    });
+                });
+            });
+        }
+    }
+    
+    showUpdateNotification() {
+        if (confirm('A new version of Cookie Craze is available. Reload to update?')) {
+            window.location.reload();
+        }
+    }
+}
+
+// Initialize PWA Manager
+document.addEventListener('DOMContentLoaded', function() {
+    window.pwaManager = new PWAManager();
+});
+
+// CSRF setup
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
+function csrfSafeMethod(method) {
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+if (typeof jQuery !== 'undefined') {
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+}
+
+const originalFetch = window.fetch;
+window.fetch = function(...args) {
+    let [resource, config] = args;
+    
+    if (config && config.method && !csrfSafeMethod(config.method)) {
+        config = {
+            ...config,
+            headers: {
+                ...config.headers,
+                'X-CSRFToken': csrftoken
+            }
+        };
+    }
+    
+    return originalFetch(resource, config);
+};
+</script>
+</body>
+</html>

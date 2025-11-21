@@ -1,0 +1,583 @@
+<!-- inventory.html -->
+{% extends 'base.html' %}
+
+{% block title %}Inventory - Cookie Craze{% endblock %}
+
+{% block content %}
+<div class="content staff-page">
+    <div id="pageLoadingOverlay" class="page-loading-overlay" style="display: none;">
+        <div class="page-loading-spinner">
+            <i class="fas fa-spinner fa-spin me-2"></i>
+            Loading...
+        </div>
+    </div>
+
+    <!-- Header - UPDATED -->
+    <div class="unified-page-header">
+        <div>
+            <h1 class="unified-h1">Inventory Management</h1>
+            <p class="text-muted" style="font-size: var(--text-sm);">
+                {{ total_cookies }} total items • Organized by category
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <!-- ADD CATEGORY MANAGEMENT BUTTONS -->
+            {% if user.is_superuser or user.groups.all.0.name == 'Administrator' %}
+            <a href="{% url 'category_list' %}" class="unified-btn unified-btn-secondary" data-no-loading>
+                <i class="fas fa-folder me-2"></i>
+                Manage Categories
+            </a>
+            <a href="{% url 'add_cookie' %}" class="unified-btn unified-btn-primary" data-no-loading>
+                <i class="fas fa-plus-circle me-2"></i>
+                Add Cookie
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filters and Search - UPDATED -->
+    <div class="unified-card">
+        <div class="row g-3 align-items-end">
+            <!-- Category Filter -->
+            <div class="col-md-4">
+                <label class="unified-form-label">Filter by Category</label>
+                <select class="unified-form-control" id="categoryFilter" onchange="updateCategoryFilter()">
+                    <option value="">All Categories</option>
+                    {% for category in active_categories %}
+                    <option value="{{ category.id }}" {% if category_filter == category.id|stringformat:"s" %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Search -->
+            <div class="col-md-5">
+                <label class="unified-form-label">Search Cookies</label>
+                <div class="d-flex gap-2">
+                    <input type="text" 
+                           class="unified-form-control" 
+                           id="searchInput" 
+                           placeholder="Search by name, flavor, or description..."
+                           value="{{ search_query }}"
+                           style="flex: 1;">
+                    <button class="unified-btn unified-btn-primary" onclick="performSearch()" style="min-width: 45px;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Clear Filters -->
+            <div class="col-md-3">
+                <button class="unified-btn unified-btn-secondary w-100" onclick="clearAllFilters()" style="margin-top: 0;">
+                    <i class="fas fa-times me-2"></i>
+                    Clear Filters
+                </button>
+            </div>
+        </div>
+        
+        <!-- Active Filters -->
+        {% if search_query or category_filter %}
+        <div class="mt-3 pt-3 border-top">
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <small class="text-muted">Active filters:</small>
+                {% if search_query %}
+                <span class="badge bg-primary">
+                    Search: "{{ search_query }}"
+                    <button class="btn-close btn-close-white ms-1" style="font-size: 0.7rem;" onclick="clearSearch()"></button>
+                </span>
+                {% endif %}
+                {% if category_filter %}
+                    {% for category in active_categories %}
+                        {% if category.id|stringformat:"s" == category_filter %}
+                        <span class="badge bg-secondary">
+                            Category: {{ category.name }}
+                            <button class="btn-close btn-close-white ms-1" style="font-size: 0.7rem;" onclick="clearCategory()"></button>
+                        </span>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+   <!-- Inventory by Category - UPDATED -->
+{% if cookies_by_category %}
+    {% for category, cookies in cookies_by_category.items %}
+    <div class="unified-card category-section" style="border-left-color: {{ category.color|default:'#6c757d' }};">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="unified-h3">
+                    <i class="{{ category.icon|default:'fas fa-folder' }} me-2" style="color: {{ category.color|default:'#6c757d' }};"></i>
+                    {% if category %}
+                        {{ category.name }} Cookies
+                    {% else %}
+                        Uncategorized Cookies
+                    {% endif %}
+                </h3>
+                <p class="text-muted mb-0" style="font-size: var(--text-sm);">
+                    {{ cookies|length }} item{{ cookies|length|pluralize }} in this category
+                    • Total Stock: {{ cookies|length }}
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge" style="background-color: {{ category.color|default:'#6c757d' }}; color: white;">
+                    {{ cookies|length }}
+                </span>
+                {% if user.is_superuser or user.groups.all.0.name == 'Administrator' %}
+                    {% if category and category.pk %}
+                    <a href="{% url 'update_category' category.pk %}" class="unified-btn unified-btn-sm unified-btn-secondary" title="Edit Category">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="unified-table-container">
+            <table class="unified-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Flavor</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Expiration</th>
+                        <th class="text-center">Status</th>
+                        {% if user.is_superuser or user.groups.all.0.name == 'Administrator' %}
+                        <th class="text-center">Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cookie in cookies %}
+                    <tr>
+                        <td>
+                            <div class="fw-semibold text-primary">{{ cookie.name }}</div>
+                            {% if cookie.description %}
+                            <small class="text-muted">{{ cookie.description|truncatewords:8 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                <i class="fas fa-palette me-1"></i>
+                                {{ cookie.get_flavor_display }}
+                            </span>
+                        </td>
+                        <td class="fw-semibold text-success">
+                            <i class="fas fa-peso-sign me-1"></i>
+                            {{ cookie.price }}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-semibold {% if cookie.stock_quantity < 10 %}text-danger{% elif cookie.stock_quantity < 20 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ cookie.stock_quantity }}
+                                </span>
+                                {% if cookie.stock_quantity < 10 %}
+                                <i class="fas fa-exclamation-triangle text-danger" title="Low Stock"></i>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if cookie.expiration_date %}
+                                {% if cookie.expiration_date < today %}
+                                <span class="text-danger fw-semibold">
+                                    <i class="fas fa-exclamation-circle me-1"></i>
+                                    Expired
+                                </span>
+                                {% elif cookie.expiration_date < next_week %}
+                                <span class="text-warning fw-semibold">
+                                    <i class="fas fa-clock me-1"></i>
+                                    {{ cookie.expiration_date|date:"M d" }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">
+                                    {{ cookie.expiration_date|date:"M d, Y" }}
+                                </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if cookie.stock_quantity == 0 %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-times-circle me-1"></i>
+                                Out of Stock
+                            </span>
+                            {% elif cookie.stock_quantity < 10 %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                Low Stock
+                            </span>
+                            {% else %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>
+                                In Stock
+                            </span>
+                            {% endif %}
+                        </td>
+                        {% if user.is_superuser or user.groups.all.0.name == 'Administrator' %}
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <a href="{% url 'update_cookie' cookie.pk %}" class="unified-btn unified-btn-sm unified-btn-secondary" title="Edit" data-no-loading>
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'delete_cookie' cookie.pk %}" class="unified-btn unified-btn-sm unified-btn-danger" title="Delete" data-no-loading>
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <!-- Empty State -->
+    <div class="unified-card text-center py-5">
+        <i class="fas fa-cookie-bite text-muted mb-3" style="font-size: 3rem;"></i>
+        <h3 class="text-muted mb-3">No Cookies Found</h3>
+        <p class="text-muted mb-4">No cookies match your current filters. Try adjusting your search or category filter.</p>
+        <div class="d-flex gap-2 justify-content-center">
+            <button class="unified-btn unified-btn-secondary" onclick="clearAllFilters()">
+                <i class="fas fa-times me-2"></i>
+                Clear Filters
+            </button>
+            {% if user.is_superuser or user.groups.all.0.name == 'Administrator' %}
+            <a href="{% url 'add_cookie' %}" class="unified-btn unified-btn-primary" data-no-loading>
+                <i class="fas fa-plus-circle me-2"></i>
+                Add New Cookie
+            </a>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+</div>
+
+<!-- JavaScript for filtering and sorting -->
+<script>
+    // Enhanced inventory-specific loading
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add loading states to filter buttons
+        const filterButtons = document.querySelectorAll('#categoryFilter, #searchInput + button');
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Show loading state on the table
+                const tableContainer = document.querySelector('.unified-table-container');
+                if (tableContainer) {
+                    tableContainer.style.opacity = '0.7';
+                    tableContainer.style.transition = 'opacity 0.3s ease';
+                }
+            });
+        });
+        
+        // Add loading to action buttons
+        const actionButtons = document.querySelectorAll('a[href*="update_cookie"], a[href*="delete_cookie"], a[href*="add_cookie"]');
+        actionButtons.forEach(button => {
+            if (!button.hasAttribute('data-no-loading')) {
+                button.addEventListener('click', function(e) {
+                    // For delete actions, use the existing confirmation
+                    if (this.href.includes('delete_cookie')) {
+                        return; // Let the default confirmation handle it
+                    }
+                    
+                    // For other actions, show loading
+                    this.classList.add('button-loading');
+                    const originalText = this.textContent.trim();
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + originalText;
+                });
+            }
+        });
+    });
+
+    // Enhanced search with loading
+    function performSearch() {
+        const button = document.querySelector('#searchInput + button');
+        const query = document.getElementById('searchInput').value;
+        
+        if (button) {
+            button.classList.add('button-loading');
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        }
+        
+        updateUrlParams({ q: query });
+    }
+
+    // Enhanced category filter with loading
+    function updateCategoryFilter() {
+        const select = document.getElementById('categoryFilter');
+        const categoryId = select.value;
+        
+        // Show loading on the select
+        select.style.opacity = '0.7';
+        
+        updateUrlParams({ category: categoryId });
+    }
+
+    // Store original function
+    const originalUpdateUrlParams = typeof updateUrlParams !== 'undefined' ? updateUrlParams : function(params) {
+        const url = new URL(window.location);
+        
+        // Update or remove parameters
+        Object.keys(params).forEach(key => {
+            if (params[key]) {
+                url.searchParams.set(key, params[key]);
+            } else {
+                url.searchParams.delete(key);
+            }
+        });
+        
+        // Remove page parameter when filtering
+        url.searchParams.delete('page');
+        
+        window.location.href = url.toString();
+    };
+
+    // Override the updateUrlParams to handle loading states
+    window.updateUrlParams = function(params) {
+        // Show loading state
+        const content = document.querySelector('.content');
+        if (content) {
+            content.style.opacity = '0.7';
+            content.style.transition = 'opacity 0.3s ease';
+        }
+        
+        // Call original function
+        originalUpdateUrlParams(params);
+    };
+
+    function clearSearch() {
+        updateUrlParams({ q: '' });
+    }
+
+    function clearCategory() {
+        updateUrlParams({ category: '' });
+    }
+
+    function clearAllFilters() {
+        updateUrlParams({ q: '', category: '' });
+    }
+
+    // Enter key support for search
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            performSearch();
+        }
+    });
+
+    // Auto-focus search input
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.focus();
+        }
+        
+        // Handle old URL parameters with category names
+        const urlParams = new URLSearchParams(window.location.search);
+        const categoryParam = urlParams.get('category');
+        
+        // If category parameter is a string (old category name), convert it to ID
+        if (categoryParam && isNaN(categoryParam)) {
+            // Find the category by name and update the URL
+            const categorySelect = document.getElementById('categoryFilter');
+            for (let option of categorySelect.options) {
+                if (option.text.toLowerCase() === categoryParam.toLowerCase()) {
+                    updateUrlParams({ category: option.value });
+                    break;
+                }
+            }
+        }
+    });
+
+    // Add some interactive animations
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add hover effects to table rows
+        const tableRows = document.querySelectorAll('.unified-table tbody tr');
+        tableRows.forEach(row => {
+            row.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateX(4px)';
+                this.style.transition = 'transform 0.2s ease';
+            });
+            row.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateX(0)';
+            });
+        });
+    });
+
+    // Lightweight navigation loading overlay for staff pages
+    (function() {
+        const overlay = document.getElementById('pageLoadingOverlay');
+        if (!overlay) return;
+        function showOverlay() { overlay.style.display = 'flex'; }
+        function shouldHandleLink(a) {
+            if (!a) return false;
+            if (a.hasAttribute('data-no-loading')) return false;
+            const href = a.getAttribute('href') || '';
+            if (!href || href.startsWith('#') || href.startsWith('javascript:')) return false;
+            return a.target !== '_blank';
+        }
+        document.addEventListener('click', function(e) {
+            const a = e.target.closest('a');
+            if (shouldHandleLink(a)) {
+                showOverlay();
+            }
+        });
+        // Show overlay on form submits
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            if (form && !form.hasAttribute('data-no-loading')) {
+                showOverlay();
+            }
+        });
+        // Hide overlay if navigation is aborted and page persists
+        window.addEventListener('pageshow', function() { overlay.style.display = 'none'; });
+    })();
+</script>
+
+<style>
+/* Staff page professional typography and spacing (scoped) */
+.staff-page {
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+.staff-page .unified-h1 { font-weight: 700; letter-spacing: .2px; }
+.staff-page .unified-h2 { font-weight: 650; letter-spacing: .15px; }
+.staff-page .unified-h3 { font-weight: 600; }
+.staff-page .unified-page-header { margin-bottom: 1rem; }
+.staff-page .unified-card { padding: 1rem 1.25rem; }
+.staff-page .unified-card-sm { padding: .875rem 1rem; }
+.staff-page .unified-btn { padding: .55rem .9rem; border-radius: 8px; font-weight: 600; }
+.staff-page .unified-btn.unified-btn-sm { padding: .4rem .65rem; border-radius: 7px; }
+.staff-page .unified-form-control { border-radius: 8px; }
+.staff-page .unified-table-container { border-radius: 8px; }
+.staff-page .unified-table { font-size: .92rem; }
+.staff-page .unified-table th, 
+.staff-page .unified-table td { padding: .7rem .8rem; }
+
+/* Loading overlay */
+.page-loading-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+    display: none; align-items: center; justify-content: center;
+    z-index: 9999;
+}
+.page-loading-spinner {
+    background: var(--bg-primary); color: var(--text-primary);
+    padding: 12px 16px; border-radius: 10px; box-shadow: var(--shadow-md);
+    font-weight: 600; letter-spacing: .2px;
+}
+
+.category-section {
+    border-left: 4px solid var(--primary);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.category-section:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.badge {
+    font-size: var(--text-xs);
+    font-weight: 500;
+    padding: 0.4rem 0.6rem;
+}
+
+.btn-close {
+    opacity: 0.8;
+}
+
+.btn-close:hover {
+    opacity: 1;
+}
+
+.unified-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.unified-table tbody tr:hover {
+    background-color: var(--bg-tertiary);
+}
+
+/* Search section specific styles */
+.d-flex.gap-2 {
+    gap: 0.5rem !important;
+}
+
+.unified-form-control {
+    border-radius: var(--radius) 0 0 var(--radius) !important;
+}
+
+.unified-btn[onclick="performSearch()"] {
+    border-radius: 0 var(--radius) var(--radius) 0 !important;
+    border-left: none;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+.unified-btn[onclick="performSearch()"]:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Form group spacing adjustments */
+.unified-form-group {
+    margin-bottom: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .unified-table-container {
+        font-size: var(--text-xs);
+    }
+    
+    .badge {
+        font-size: 0.6rem;
+        padding: 0.3rem 0.5rem;
+    }
+    
+    .d-flex.gap-2 {
+        gap: 0.25rem !important;
+    }
+    
+    .col-md-5 {
+        margin-bottom: 1rem;
+    }
+    
+    .unified-btn[onclick="performSearch()"] {
+        min-width: 40px;
+        padding: 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .row.g-3.align-items-end {
+        gap: 1rem !important;
+    }
+    
+    .col-md-4,
+    .col-md-5,
+    .col-md-3 {
+        margin-bottom: 0.5rem;
+    }
+    
+    .d-flex.gap-2 {
+        flex-direction: column;
+    }
+    
+    .unified-form-control {
+        border-radius: var(--radius) !important;
+        margin-bottom: 0.5rem;
+    }
+    
+    .unified-btn[onclick="performSearch()"] {
+        border-radius: var(--radius) !important;
+        border-left: 1px solid var(--border);
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

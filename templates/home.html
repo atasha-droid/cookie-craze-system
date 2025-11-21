@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Craze - Welcome</title>
+    {% load static %}
+    
+    <!-- Bootstrap 5.3.2 CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{% static 'images/cookie-craze-logo.png' %}" type="image/png">
+    <link rel="shortcut icon" href="{% static 'images/cookie-craze-logo.png' %}" type="image/png">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="{% static 'images/cookie-craze-logo.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/cookie-craze-logo.png' %}">
+
+    <style>
+        :root {
+            /* Enhanced Color System */
+            --primary: #8B4513;
+            --primary-light: #A0522D;
+            --primary-dark: #654321;
+            --accent: #D2691E;
+            --accent-light: #F5DEB3;
+            
+            /* Modern Neutral Colors - Enhanced Contrast */
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f8f9fa;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --border: #e2e8f0;
+            
+            /* Semantic Colors */
+            --success: #28a745;
+            --warning: #ecc94b;
+            --danger: #e53e3e;
+            --info: #3182ce;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f1419;
+            --bg-secondary: #1a202c;
+            --bg-tertiary: #2d3748;
+            --text-primary: #f7fafc;
+            --text-secondary: #e2e8f0;
+            --text-muted: #a0aec0;
+            --border: #4a5568;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            font-weight: 400;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Split Layout Container */
+        .split-container {
+            display: flex;
+            min-height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        /* Brand Section - CENTERED CONTENT */
+        .brand-section {
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.25rem;
+            position: relative;
+            overflow: hidden;
+            min-width: 280px;
+        }
+
+        .brand-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('{% static "images/cookie-pattern.png" %}') center/cover;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        .brand-content {
+            text-align: center;
+            max-width: 350px;
+            width: 100%;
+            z-index: 2;
+            position: relative;
+        }
+
+        .logo-large {
+            width: 70px;
+            height: 70px;
+            border-radius: 14px;
+            object-fit: cover;
+            margin-bottom: 0.75rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo-fallback-large {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            border-radius: 14px;
+            margin-bottom: 0.75rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .brand-title {
+            font-family: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            color: white;
+        }
+
+        .brand-subtitle {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 1.25rem;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .brand-features {
+            text-align: center;
+            margin-top: 1.25rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.8rem;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .feature-item i {
+            font-size: 1.1rem;
+            color: var(--accent-light);
+            min-width: 20px;
+        }
+
+        /* Form Section - SMALLER DESIGN */
+        .form-section {
+            flex: 1;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.25rem;
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-width: 320px;
+        }
+
+        .form-container {
+            max-width: 340px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .form-title {
+            font-family: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .form-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Professional Cards - SMALLER */
+        .unified-card {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            margin-bottom: 0.75rem;
+            max-width: 100%;
+            position: relative;
+        }
+
+        /* Professional Buttons - SMALLER */
+        .unified-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            padding: 0.6rem 0.8rem;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            line-height: 1;
+            width: 100%;
+            position: relative;
+        }
+
+        .unified-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .unified-btn-primary {
+            background: var(--primary);
+            color: white;
+            border: 1px solid var(--primary-dark);
+        }
+
+        .unified-btn-primary:hover:not(:disabled) {
+            background: var(--primary-light);
+        }
+
+        .unified-btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .unified-btn-secondary:hover:not(:disabled) {
+            background: var(--bg-secondary);
+            border-color: var(--primary);
+        }
+
+        .unified-btn-success {
+            background: var(--success);
+            color: white;
+            border: 1px solid #1e7e34;
+        }
+
+        .unified-btn-success:hover:not(:disabled) {
+            background: #218838;
+        }
+
+        .unified-btn-warning {
+            background: var(--warning);
+            color: #000;
+            border: 1px solid #d97706;
+        }
+
+        .unified-btn-warning:hover:not(:disabled) {
+            background: #f59e0b;
+        }
+
+        /* Professional Form Controls - SMALLER */
+        .unified-form-control {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .unified-form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
+        }
+
+        .unified-form-control:disabled {
+            background: var(--bg-tertiary);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .unified-form-label {
+            display: block;
+            margin-bottom: 0.4rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.8rem;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        .unified-form-group {
+            margin-bottom: 0.8rem;
+        }
+
+        /* Professional Alerts - SMALLER */
+        .unified-alert {
+            padding: 0.6rem;
+            border-radius: 6px;
+            margin-bottom: 0.8rem;
+            border-left: 3px solid var(--primary);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+
+        .unified-alert-error {
+            border-left-color: var(--danger);
+            background: rgba(229, 62, 62, 0.1);
+        }
+
+        .unified-alert-success {
+            border-left-color: var(--success);
+            background: rgba(72, 187, 120, 0.1);
+        }
+
+        .unified-alert-info {
+            border-left-color: var(--info);
+            background: rgba(49, 130, 206, 0.1);
+        }
+
+        .unified-alert-warning {
+            border-left-color: var(--warning);
+            background: rgba(236, 201, 75, 0.1);
+        }
+
+        /* Portal Selection Cards - SMALLER */
+        .portal-card {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 1.25rem;
+            border: 2px solid var(--border);
+            margin-bottom: 0.75rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+        }
+
+        .portal-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .portal-card.customer {
+            border-left: 4px solid var(--success);
+        }
+
+        .portal-card.staff {
+            border-left: 4px solid var(--primary);
+        }
+
+        .portal-icon {
+            font-size: 1.75rem;
+            margin-bottom: 0.75rem;
+            text-align: center;
+        }
+
+        .portal-card.customer .portal-icon {
+            color: var(--success);
+        }
+
+        .portal-card.staff .portal-icon {
+            color: var(--primary);
+        }
+
+        .portal-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            text-align: center;
+        }
+
+        .portal-description {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 0.75rem;
+            line-height: 1.3;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle-container {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            z-index: 1000;
+        }
+
+        /* Welcome Section for Logged-in Users */
+        .welcome-section {
+            text-align: center;
+            width: 100%;
+        }
+
+        .unified-action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.6rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .unified-action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.8rem;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--primary);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+            min-height: 80px;
+            text-align: center;
+        }
+
+        .unified-action-btn:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary);
+        }
+
+        .unified-action-btn i {
+            font-size: 1.25rem;
+            margin-bottom: 0.4rem;
+            color: var(--primary);
+        }
+
+        .unified-action-btn span {
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        /* Footer - STATIC POSITION */
+        .main-footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 0.6rem 0.8rem;
+            text-align: center;
+            position: static;
+            width: 100%;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 0.8rem;
+        }
+
+        .footer-left, .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .footer-center {
+            flex: 1;
+            text-align: center;
+        }
+
+        .footer-copyright {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* Modal Styles - SMALLER */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 1.25rem;
+            max-width: 360px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.2rem;
+            border-radius: 4px;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--primary);
+            background: var(--bg-tertiary);
+        }
+
+        /* Password Input with Eye Icon */
+        .password-input-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-input {
+            padding-right: 2.2rem !important;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 0.6rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.2rem;
+            border-radius: 3px;
+            transition: color 0.2s ease;
+            font-size: 0.8rem;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary);
+            background: var(--bg-tertiary);
+        }
+
+        .password-toggle:focus {
+            outline: none;
+            color: var(--primary);
+        }
+
+        /* Customer ID Display */
+        .customer-id-display {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.6rem;
+            margin-bottom: 0.8rem;
+            text-align: center;
+        }
+
+        .customer-id-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 0.2rem;
+        }
+
+        .customer-id-value {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+
+        /* Full Page Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .centered-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            color: white;
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* CSRF Token Styling - HIDDEN */
+        input[name="csrfmiddlewaretoken"] {
+            display: none !important;
+        }
+
+        /* Security Text */
+        .security-text {
+            color: var(--text-muted) !important;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            margin-top: 0.8rem;
+        }
+
+        /* Registration Links */
+        .registration-links {
+            margin-top: 0.8rem;
+        }
+
+        /* Social Login Styles */
+        .social-login-section {
+            margin: 1.5rem 0;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--border);
+            z-index: 1;
+        }
+
+        .divider span {
+            background: var(--bg-secondary);
+            padding: 0 1rem;
+            position: relative;
+            z-index: 2;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .social-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background: var(--bg-secondary);
+        }
+
+        .social-btn:hover {
+            border-color: var(--primary);
+            background: var(--bg-tertiary);
+            text-decoration: none;
+        }
+
+        .google-btn {
+            border-color: #db4437;
+            color: #db4437;
+        }
+
+        .google-btn:hover {
+            background: #db4437;
+            color: white;
+        }
+
+        /* Google Login Button Styles */
+        .google-login-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border: 2px solid #db4437;
+            border-radius: 6px;
+            background: white;
+            color: #db4437;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-size: 0.8rem;
+        }
+
+        .google-login-btn:hover {
+            background: #db4437;
+            color: white;
+            text-decoration: none;
+        }
+
+        .google-login-btn img {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .split-container {
+                flex-direction: row;
+            }
+            
+            .brand-section {
+                min-width: 220px;
+                padding: 1rem;
+            }
+            
+            .form-section {
+                min-width: 280px;
+                padding: 1rem;
+            }
+            
+            .logo-large {
+                width: 55px;
+                height: 55px;
+            }
+            
+            .logo-fallback-large {
+                width: 55px;
+                height: 55px;
+                font-size: 1.4rem;
+            }
+            
+            .brand-title {
+                font-size: 1.1rem;
+            }
+            
+            .brand-subtitle {
+                font-size: 0.8rem;
+            }
+            
+            .feature-item {
+                font-size: 0.75rem;
+            }
+            
+            .form-container {
+                max-width: 300px;
+            }
+
+            .modal-content {
+                max-width: 320px;
+                padding: 1rem;
+            }
+
+            .centered-spinner {
+                width: 45px;
+                height: 45px;
+                border-width: 2px;
+            }
+
+            .loading-text {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .split-container {
+                flex-direction: row;
+            }
+            
+            .brand-section {
+                min-width: 180px;
+            }
+            
+            .form-section {
+                min-width: 220px;
+            }
+            
+            .brand-content {
+                max-width: 260px;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                gap: 0.4rem;
+            }
+
+            .modal-content {
+                max-width: 280px;
+                padding: 0.8rem;
+            }
+        }
+
+        /* Ensure no horizontal scroll */
+        body {
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <!-- Full Page Loading Overlay -->
+    <div class="loading-overlay" id="globalLoading">
+        <div class="centered-spinner"></div>
+        <div class="loading-text" id="loadingMessage">Loading...</div>
+    </div>
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle-container">
+        <button class="unified-btn unified-btn-secondary" id="themeToggle" title="Toggle dark mode">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-content-wrapper">
+        <div class="content-area">
+            <!-- Split Layout Container -->
+            <div class="split-container">
+                <!-- Left Side - Brand Section - CENTERED CONTENT -->
+                <div class="brand-section">
+                    <div class="brand-content">
+                        <img src="{% static 'images/cookie-craze-logo.png' %}" 
+                             alt="Cookie Craze Logo" 
+                             class="logo-large"
+                             onerror="this.style.display='none'; document.getElementById('logo-fallback-large').style.display='flex';">
+                        <div id="logo-fallback-large" class="logo-fallback-large" style="display: none;">
+                            <img src="{% static 'images/cookie-craze-logo.png' %}" alt="Cookie Craze Logo" style="width: 70px; height: 70px; object-fit: contain;">
+                        </div>
+                        
+                        <h1 class="brand-title">Cookie Craze</h1>
+                        <p class="brand-subtitle">Delicious Cookies for Everyone!</p>
+                        
+                        <div class="brand-features">
+                            <div class="feature-item">
+                                <i class="fas fa-cookie-bite"></i>
+                                <span>Freshly Baked Daily</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-star"></i>
+                                <span>Loyalty Rewards</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-award"></i>
+                                <span>Premium Quality</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side - Form Section - SMALLER DESIGN -->
+                <div class="form-section">
+                    <div class="form-container">
+                        {% if user.is_authenticated %}
+                            <!-- Welcome Message for Logged-in Users -->
+                            <div class="welcome-section">
+                                <div class="unified-card text-center">
+                                    <div style="font-size: 1.1rem; font-weight: 600; color: var(--primary); margin-bottom: 0.6rem;">
+                                        Welcome, {{ user.username }}!
+                                    </div>
+                                    <div style="color: var(--text-secondary); margin-bottom: 0.8rem; font-size: 0.8rem;">
+                                        Role: <strong style="color: var(--accent);">
+                                            {% if user.is_superuser %}
+                                                Administrator
+                                            {% elif user.profile.user_type == 'staff' %}
+                                                Staff
+                                            {% else %}
+                                                Customer
+                                            {% endif %}
+                                        </strong>
+                                    </div>
+                                    
+                                    {% if user.profile.user_type == 'customer' %}
+                                        <!-- Customer Dashboard -->
+                                        <a href="{% url 'customer_dashboard' %}" class="unified-btn unified-btn-primary mb-2">
+                                            <i class="fas fa-tachometer-alt me-2"></i> Go to Customer Dashboard
+                                        </a>
+                                        <div class="customer-id-display">
+                                            <div class="customer-id-label">Your Customer ID</div>
+                                            <div class="customer-id-value">{{ user.profile.customer_id }}</div>
+                                        </div>
+                                    {% else %}
+                                        <!-- Staff Dashboard -->
+                                        <a href="{% url 'dashboard' %}" class="unified-btn unified-btn-primary">
+                                            <i class="fas fa-tachometer-alt me-2"></i> Go to Dashboard
+                                        </a>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Quick Access Section -->
+                                <div class="unified-card" style="margin-top: 0.8rem;">
+                                    <h2 style="color: var(--text-primary); font-size: 0.9rem; font-weight: 600; margin-bottom: 0.8rem; text-align: center;">Quick Access</h2>
+                                    <div class="unified-action-grid">
+                                        {% if user.profile.user_type == 'customer' %}
+                                            <!-- Customer Quick Actions -->
+                                            <a href="{% url 'place_order' %}" class="unified-action-btn">
+                                                <i class="fas fa-shopping-cart"></i>
+                                                <span>Order Now</span>
+                                            </a>
+                                            <a href="{% url 'order_history' %}" class="unified-action-btn">
+                                                <i class="fas fa-history"></i>
+                                                <span>My Orders</span>
+                                            </a>
+                                            <a href="{% url 'customer_dashboard' %}" class="unified-action-btn">
+                                                <i class="fas fa-user"></i>
+                                                <span>Profile</span>
+                                            </a>
+                                        {% else %}
+                                            <!-- Staff Quick Actions -->
+                                            <a href="{% url 'dashboard' %}" class="unified-action-btn">
+                                                <i class="fas fa-tachometer-alt"></i>
+                                                <span>Dashboard</span>
+                                            </a>
+                                            <a href="{% url 'inventory' %}" class="unified-action-btn">
+                                                <i class="fas fa-boxes"></i>
+                                                <span>Inventory</span>
+                                            </a>
+                                            <a href="{% url 'record_sale' %}" class="unified-action-btn">
+                                                <i class="fas fa-cash-register"></i>
+                                                <span>Sales</span>
+                                            </a>
+                                            <a href="{% url 'sales_report' %}" class="unified-action-btn">
+                                                <i class="fas fa-chart-bar"></i>
+                                                <span>Reports</span>
+                                            </a>
+                                            {% if user.is_superuser %}
+                                            <a href="/admin/" class="unified-action-btn">
+                                                <i class="fas fa-users-cog"></i>
+                                                <span>Admin</span>
+                                            </a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <!-- Portal Selection for Unauthenticated Users -->
+                            <div class="form-header">
+                                <h2 class="form-title">Welcome to Cookie Craze</h2>
+                                <p class="form-subtitle">Choose your portal to continue</p>
+                            </div>
+
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="unified-alert {% if message.tags == 'error' %}unified-alert-error{% elif message.tags == 'success' %}unified-alert-success{% else %}unified-alert-info{% endif %}">
+                                        <i class="fas fa-info-circle me-2"></i> {{ message }}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+
+                            
+
+                            <!-- Portal Selection Grid -->
+                            <div class="row g-2 mb-3">
+                                <!-- Customer Portal Card -->
+                                <div class="col-md-6">
+                                    <div class="portal-card customer h-100" onclick="showCustomerLoginModal()">
+                                        <div class="portal-icon">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div class="portal-title">Customer Portal</div>
+                                        <div class="portal-description">
+                                            Order delicious cookies, track your orders, and earn loyalty rewards
+                                        </div>
+                                        <div class="unified-btn unified-btn-success mt-auto">
+                                            <i class="fas fa-sign-in-alt me-2"></i> Login as Customer
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Staff Portal Card -->
+                                <div class="col-md-6">
+                                    <div class="portal-card staff h-100" onclick="showStaffLoginModal()">
+                                        <div class="portal-icon">
+                                            <i class="fas fa-user-tie"></i>
+                                        </div>
+                                        <div class="portal-title">Staff Portal</div>
+                                        <div class="portal-description">
+                                            Access staff dashboard for inventory management and sales processing
+                                        </div>
+                                        <div class="unified-btn unified-btn-primary mt-auto">
+                                            <i class="fas fa-sign-in-alt me-2"></i> Login as Staff
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Registration Links -->
+                            <div class="unified-card text-center registration-links">
+                                <p style="color: var(--text-secondary); margin-bottom: 0.8rem; font-size: 0.8rem;">
+                                    Don't have an account?
+                                </p>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <a href="#" class="unified-btn unified-btn-success w-100" onclick="showCustomerRegisterModal()">
+                                            <i class="fas fa-user-plus me-2"></i> Register as Customer
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="#" class="unified-btn unified-btn-secondary w-100" onclick="showStaffRegistration(event)">
+                                            <i class="fas fa-user-plus me-2"></i> Apply for Staff
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="security-text">
+                                <i class="fas fa-shield-alt"></i> Secure portal access
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer - STATIC POSITION -->
+        <footer class="main-footer">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <i class="fas fa-cookie-bite"></i>
+                    <span>Fresh Cookies Daily</span>
+                </div>
+                <div class="footer-center">
+                    <p class="footer-copyright">&copy; 2025 Cookie Craze - All Rights Reserved</p>
+                </div>
+                <div class="footer-right">
+                    <i class="fas fa-phone"></i>
+                    <span>Contact Support</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Customer Login Modal -->
+    <div class="modal-overlay" id="customerLoginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-user me-2"></i>Customer Login
+                </h3>
+                <button type="button" class="modal-close" onclick="closeCustomerLoginModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form method="post" action="{% url 'home' %}" id="customer-login-form">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="customer_login">
+                
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-user me-2"></i> Username or Customer ID
+                    </label>
+                    <input type="text" name="username" class="unified-form-control" placeholder="Enter your username or customer ID (e.g., CUST123456)" required>
+                    <small style="color: var(--text-muted); font-size: 0.7rem; margin-top: 0.25rem; display: block;">
+                        You can use your username or customer ID to login
+                    </small>
+                </div>
+
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-lock me-2"></i> Password
+                    </label>
+                    <div class="password-input-container">
+                        <input type="password" name="password" class="unified-form-control password-input" placeholder="Enter your password" required id="customerPassword">
+                        <button type="button" class="password-toggle" onclick="togglePassword('customerPassword', 'customerPasswordToggle')" id="customerPasswordToggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="unified-btn unified-btn-success">
+                        <i class="fas fa-sign-in-alt me-2"></i> Customer Login
+                    </button>
+                </div>
+
+                
+                
+                <div class="text-center mt-3">
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">
+                        Don't have an account? 
+                        <a href="#" onclick="closeCustomerLoginModal(); showCustomerRegisterModal();" style="color: var(--primary); text-decoration: none; font-weight: 500;">
+                            Register here
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer Register Modal -->
+    <div class="modal-overlay" id="customerRegisterModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-user-plus me-2"></i>Customer Registration
+                </h3>
+                <button type="button" class="modal-close" onclick="closeCustomerRegisterModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form method="post" action="{% url 'customer_register' %}" id="customer-register-form">
+                {% csrf_token %}
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-user me-2"></i> Full Name
+                    </label>
+                    <input type="text" name="name" class="unified-form-control" placeholder="Enter your full name" required>
+                </div>
+
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-envelope me-2"></i> Email Address
+                    </label>
+                    <input type="email" name="email" class="unified-form-control" placeholder="Enter your email" required>
+                </div>
+
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-phone me-2"></i> Phone Number
+                    </label>
+                    <input type="text" name="phone" class="unified-form-control" placeholder="Enter your phone number" required>
+                </div>
+
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-user me-2"></i> Username
+                    </label>
+                    <input type="text" name="username" class="unified-form-control" placeholder="Choose a username" required>
+                </div>
+
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-lock me-2"></i> Password
+                    </label>
+                    <div class="password-input-container">
+                        <input type="password" name="password1" class="unified-form-control password-input" placeholder="Create a password" required id="registerPassword1">
+                        <button type="button" class="password-toggle" onclick="togglePassword('registerPassword1', 'registerPassword1Toggle')" id="registerPassword1Toggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-lock me-2"></i> Confirm Password
+                    </label>
+                    <div class="password-input-container">
+                        <input type="password" name="password2" class="unified-form-control password-input" placeholder="Confirm your password" required id="registerPassword2">
+                        <button type="button" class="password-toggle" onclick="togglePassword('registerPassword2', 'registerPassword2Toggle')" id="registerPassword2Toggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="unified-btn unified-btn-success">
+                        <i class="fas fa-user-plus me-2"></i> Register as Customer
+                    </button>
+                </div>
+
+                
+                
+                <div class="text-center mt-3">
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">
+                        Already have an account? 
+                        <a href="#" onclick="closeCustomerRegisterModal(); showCustomerLoginModal();" style="color: var(--primary); text-decoration: none; font-weight: 500;">
+                            Login here
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Staff Login Modal -->
+    <div class="modal-overlay" id="staffLoginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-user-tie me-2"></i>Staff Login
+                </h3>
+                <button type="button" class="modal-close" onclick="closeStaffLoginModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="unified-alert unified-alert-warning mb-3">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Staff access requires administrator approval. Unauthorized access is prohibited.
+            </div>
+
+            <form method="post" action="{% url 'home' %}" id="staff-login-form">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="login">
+                
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-user me-2"></i> Username
+                    </label>
+                    <input type="text" name="username" class="unified-form-control" placeholder="Enter staff username" required>
+                </div>
+
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-lock me-2"></i> Password
+                    </label>
+                    <div class="password-input-container">
+                        <input type="password" name="password" class="unified-form-control password-input" placeholder="Enter password" required id="staffModalPassword">
+                        <button type="button" class="password-toggle" onclick="togglePassword('staffModalPassword', 'staffModalPasswordToggle')" id="staffModalPasswordToggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="unified-btn unified-btn-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i> Staff Login
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+            body.setAttribute('data-theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            body.setAttribute('data-theme', 'light');
+            themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+        
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            themeToggle.innerHTML = newTheme === 'dark' 
+                ? '<i class="fas fa-sun"></i>' 
+                : '<i class="fas fa-moon"></i>';
+        });
+
+        // Global Loading Overlay
+        const globalLoading = document.getElementById('globalLoading');
+        const loadingMessage = document.getElementById('loadingMessage');
+
+        // Form submission handlers
+        const customerLoginForm = document.getElementById('customer-login-form');
+        const customerRegisterForm = document.getElementById('customer-register-form');
+        const staffLoginForm = document.getElementById('staff-login-form');
+
+        if (customerLoginForm) {
+            customerLoginForm.addEventListener('submit', function(e) {
+                loadingMessage.textContent = 'Logging in as Customer...';
+                globalLoading.classList.add('active');
+            });
+        }
+
+        if (customerRegisterForm) {
+            customerRegisterForm.addEventListener('submit', function(e) {
+                loadingMessage.textContent = 'Creating your account...';
+                globalLoading.classList.add('active');
+            });
+        }
+
+        if (staffLoginForm) {
+            staffLoginForm.addEventListener('submit', function(e) {
+                loadingMessage.textContent = 'Verifying Staff Credentials...';
+                globalLoading.classList.add('active');
+            });
+        }
+
+        // Reset loading states
+        window.addEventListener('pageshow', function(event) {
+            globalLoading.classList.remove('active');
+        });
+
+        // Close modals when clicking outside
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                closeCustomerLoginModal();
+                closeCustomerRegisterModal();
+                closeStaffLoginModal();
+            }
+        });
+
+        // Auto-show modals based on messages
+        const messages = document.querySelectorAll('.unified-alert');
+        
+        messages.forEach(message => {
+            const messageText = message.textContent.toLowerCase();
+            
+            // If registration was successful, show login modal
+            if (messageText.includes('registration successful') || 
+                messageText.includes('please log in') ||
+                messageText.includes('welcome')) {
+                
+                // Small delay to ensure the message is visible
+                setTimeout(() => {
+                    showCustomerLoginModal();
+                }, 500);
+            }
+            
+            // Show login modal for login-related messages
+            if (messageText.includes('please log in') || 
+                messageText.includes('login to continue') ||
+                messageText.includes('invalid login') ||
+                messageText.includes('invalid username')) {
+                
+                setTimeout(() => {
+                    showCustomerLoginModal();
+                }, 500);
+            }
+            
+            // Show registration modal for registration errors
+            if (messageText.includes('registration failed') ||
+                messageText.includes('username already') ||
+                messageText.includes('email already') ||
+                messageText.includes('phone already') ||
+                messageText.includes('all fields are required')) {
+                
+                setTimeout(() => {
+                    showCustomerRegisterModal();
+                }, 500);
+            }
+        });
+    });
+
+    // Modal Functions
+    function showCustomerLoginModal() {
+        document.getElementById('customerLoginModal').classList.add('active');
+    }
+
+    function closeCustomerLoginModal() {
+        document.getElementById('customerLoginModal').classList.remove('active');
+    }
+
+    function showCustomerRegisterModal() {
+        document.getElementById('customerRegisterModal').classList.add('active');
+    }
+
+    function closeCustomerRegisterModal() {
+        document.getElementById('customerRegisterModal').classList.remove('active');
+    }
+
+    function showStaffLoginModal() {
+        document.getElementById('staffLoginModal').classList.add('active');
+    }
+
+    function closeStaffLoginModal() {
+        document.getElementById('staffLoginModal').classList.remove('active');
+    }
+
+    function showStaffRegistration(event) {
+        event.preventDefault();
+        alert('Staff registration requires administrator approval. Please contact your system administrator for staff account creation.');
+    }
+
+    // Password Toggle Function
+    function togglePassword(passwordFieldId, toggleButtonId) {
+        const passwordField = document.getElementById(passwordFieldId);
+        const toggleButton = document.getElementById(toggleButtonId);
+        const icon = toggleButton.querySelector('i');
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+        
+        passwordField.focus();
+    }
+</script>
+</body>
+</html>

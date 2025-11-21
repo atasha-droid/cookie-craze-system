@@ -1,0 +1,629 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Staff Dashboard - Cookie Craze{% endblock %}
+
+{% block content %}
+<div class="content staff-page">
+    <div class="unified-page-header">
+        <div>
+            <h1 class="unified-h1">Welcome, {{ staff.username }}</h1>
+            <div class="text-muted" style="font-size: 0.95rem;">
+                <i class="fas fa-calendar-alt me-1"></i>
+                <span id="staff-current-date">{{ today|date:"F j, Y" }}</span>
+                •
+                <i class="fas fa-clock ms-1 me-1"></i>
+                <span id="staff-current-time">--:--:--</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Today's Total Sales -->
+        <div class="col-md-3">
+            <div class="unified-card text-center h-100">
+                <div class="card-icon success">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h3 class="card-value" id="total-sales-today">₱{{ total_sales_today|floatformat:2 }}</h3>
+                <p class="card-label">Today's Total Sales</p>
+                <small class="text-muted">Completed orders</small>
+            </div>
+        </div>
+
+        <!-- Orders Completed -->
+        <div class="col-md-3">
+            <div class="unified-card text-center h-100">
+                <div class="card-icon info">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3 class="card-value" id="completed-count-today">{{ completed_count_today }}</h3>
+                <p class="card-label">Orders Completed</p>
+                <small class="text-muted">Today</small>
+            </div>
+        </div>
+
+        <!-- Pending Orders -->
+        <div class="col-md-3">
+            <div class="unified-card text-center h-100">
+                <div class="card-icon warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3 class="card-value" id="pending-orders-count">{{ pending_orders_count }}</h3>
+                <p class="card-label">Pending Orders</p>
+                <small class="text-muted">Awaiting completion</small>
+            </div>
+        </div>
+
+        <!-- Low Stock Alerts -->
+        <div class="col-md-3">
+            <div class="unified-card text-center h-100">
+                <div class="card-icon warning">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <h3 class="card-value" id="low-stock-count">{{ low_stock_count }}</h3>
+                <p class="card-label">Low Stock Alerts</p>
+                <small class="text-muted">Inventory status</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions - FIXED FOR DARK THEME -->
+    <div class="mb-4">
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'staff_record_sale' %}" class="unified-btn unified-btn-primary">
+                <i class="fas fa-plus me-1"></i> Create New Order
+            </a>
+            <a href="{% url 'daily_sales_report' %}" class="unified-btn unified-btn-outline">
+                <i class="fas fa-chart-line me-1"></i> Daily Sales Report
+            </a>
+            <a href="{% url 'cash_reconciliation_report' %}" class="unified-btn unified-btn-outline">
+                <i class="fas fa-coins me-1"></i> Cash Reconciliation
+            </a>
+            <a href="{% url 'staff_sales_history' %}" class="unified-btn unified-btn-outline">
+                <i class="fas fa-history me-1"></i> Order History
+            </a>
+        </div>
+    </div>
+
+    <!-- Performance Trends Section -->
+    <div class="row g-4 mb-4">
+        <!-- Top Selling Cookies -->
+        <div class="col-lg-12">
+            <div class="unified-card">
+                <h5 class="mb-3"><i class="fas fa-cookie-bite me-2"></i>Top Selling Cookies (Today)</h5>
+                <div class="list-group list-group-flush">
+                    {% for cookie in top_cookies %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center" style="background: var(--bg-secondary); border-color: var(--border);">
+                        <div>
+                            <div class="fw-semibold" style="color: var(--text-primary);">{{ cookie.cookie__name }}</div>
+                            <small class="text-muted">₱{{ cookie.cookie__price|floatformat:2 }} each</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge unified-badge-primary">{{ cookie.quantity_sold }}</span>
+                            <div class="text-muted" style="font-size: 0.8rem;">₱{{ cookie.total_revenue|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-3 text-muted">No sales data for today</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Latest Orders Table -->
+        <div class="col-lg-8">
+            <div class="unified-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Recent Orders</h5>
+                    <small class="text-muted">Latest 10 orders</small>
+                </div>
+                <div class="unified-table-container" style="font-size: var(--text-sm);">
+                    <table class="unified-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th class="text-end">Total</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for o in latest_orders %}
+                            <tr>
+                                <td class="fw-semibold">{{ o.order_id }}</td>
+                                <td style="max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ o.customer_name|default:'Walk-in' }}</td>
+                                <td class="text-end">₱{{ o.total_amount|floatformat:2 }}</td>
+                                <td>
+                                    <span class="unified-badge 
+                                        {% if o.status == 'completed' %}unified-badge-success
+                                        {% elif o.status == 'pending' %}unified-badge-warning
+                                        {% elif o.status == 'ready' %}unified-badge-info
+                                        {% else %}unified-badge-secondary{% endif %}">
+                                        {{ o.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <a class="unified-btn unified-btn-sm unified-btn-primary" href="{% url 'staff_order_receipt' o.id %}" title="View Receipt">
+                                        <i class="fas fa-receipt"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">No recent orders.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications & Quick Actions Panel -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="unified-card mb-3">
+                <h6 class="mb-3"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'staff_record_sale' %}" class="unified-btn unified-btn-primary unified-btn-sm">
+                        <i class="fas fa-plus me-2"></i>New Order
+                    </a>
+                    <a href="{% url 'daily_sales_report' %}" class="unified-btn unified-btn-outline unified-btn-sm">
+                        <i class="fas fa-chart-line me-2"></i>Daily Report
+                    </a>
+                    <a href="{% url 'cash_reconciliation_report' %}" class="unified-btn unified-btn-outline unified-btn-sm">
+                        <i class="fas fa-coins me-2"></i>Cash Reconciliation
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Notifications Panel -->
+            <div class="unified-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0"><i class="fas fa-bell me-2"></i>Notifications</h6>
+                    <a href="{% url 'staff_notifications' %}" class="text-decoration-none" style="font-size: 0.8rem; color: var(--primary);">View All</a>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for n in notifications %}
+                    <div class="list-group-item d-flex align-items-start px-0" style="background: var(--bg-secondary); border-color: var(--border);">
+                        <div class="me-2"><i class="{{ n.icon }}" style="width:16px; color: var(--primary);"></i></div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold" style="font-size: 0.9rem; color: var(--text-primary);">{{ n.title }}</div>
+                            <div class="text-muted" style="font-size: 0.8rem;">{{ n.message }}</div>
+                            {% if n.timestamp %}
+                            <small class="text-muted">{{ n.timestamp|timesince }} ago</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-3 text-muted" style="font-size: 0.9rem;">
+                        <i class="fas fa-check-circle mb-2" style="font-size: 1.5rem; color: var(--success);"></i><br>
+                        All caught up!
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order History Section -->
+    <div class="row g-4 mt-4">
+        <div class="col-12">
+            <div class="unified-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Order History</h5>
+                    <div class="d-flex gap-2">
+                        <select id="statusFilter" class="unified-form-control unified-form-control-sm" style="width: auto;">
+                            <option value="all">All Orders</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="voided">Voided</option>
+                        </select>
+                        <a href="{% url 'staff_sales_history' %}" class="unified-btn unified-btn-sm unified-btn-secondary">
+                            <i class="fas fa-external-link-alt me-1"></i>View All
+                        </a>
+                    </div>
+                </div>
+                <div class="unified-table-container">
+                    <table class="unified-table" id="orderHistoryTable">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th class="text-end">Total Amount</th>
+                                <th>Status</th>
+                                <th>Payment Method</th>
+                                <th>Date</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in order_history %}
+                            <tr data-status="{{ order.status }}">
+                                <td class="fw-semibold">{{ order.order_id }}</td>
+                                <td style="max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    {{ order.customer_name|default:'Walk-in' }}
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {% for item in order.items.all|slice:":2" %}
+                                            {{ item.cookie.name }} ({{ item.quantity }})
+                                            {% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                        {% if order.items.count > 2 %}
+                                            <span class="text-muted">+{{ order.items.count|add:"-2" }} more</span>
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td class="text-end fw-semibold">₱{{ order.total_amount|floatformat:2 }}</td>
+                                <td>
+                                    <span class="unified-badge 
+                                        {% if order.status == 'completed' %}unified-badge-success
+                                        {% elif order.status == 'cancelled' %}unified-badge-danger
+                                        {% elif order.status == 'voided' %}unified-badge-dark
+                                        {% else %}unified-badge-secondary{% endif %}">
+                                        {{ order.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="unified-badge unified-badge-light">
+                                        {% if order.payment_method == 'cash' %}
+                                            <i class="fas fa-money-bill me-1"></i>Cash
+                                        {% elif order.payment_method == 'gcash' %}
+                                            <i class="fab fa-google-pay me-1"></i>GCash
+                                        {% elif order.payment_method == 'card' %}
+                                            <i class="fas fa-credit-card me-1"></i>Card
+                                        {% else %}
+                                            {{ order.get_payment_method_display }}
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ order.created_at|date:"M d, Y" }}<br>
+                                        <span style="font-size: 0.75rem;">{{ order.created_at|time:"g:i A" }}</span>
+                                    </small>
+                                </td>
+                                <td class="text-center">
+                                    <button class="unified-btn unified-btn-sm unified-btn-outline-primary me-1" 
+                                            onclick="viewOrderDetails({{ order.id }})" 
+                                            title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    {% if order.status == 'completed' %}
+                                    <a class="unified-btn unified-btn-sm unified-btn-outline-secondary" 
+                                       href="{% url 'staff_order_receipt' order.id %}" 
+                                       title="Print Receipt">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">
+                                    <i class="fas fa-inbox mb-2" style="font-size: 2rem; opacity: 0.3;"></i><br>
+                                    No order history found.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Details Modal - FIXED FOR DARK THEME -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border);">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(1);"></button>
+            </div>
+            <div class="modal-body" id="orderDetailsContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border);">
+                <button type="button" class="unified-btn unified-btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Dark theme compatibility fixes */
+.staff-page {
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+}
+
+/* Unified badge styles for dark theme */
+.unified-badge {
+    display: inline-block;
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.375rem;
+    border: 1px solid transparent;
+}
+
+.unified-badge-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.unified-badge-success {
+    background: var(--success);
+    color: white;
+}
+
+.unified-badge-warning {
+    background: var(--warning);
+    color: var(--text-dark);
+}
+
+.unified-badge-info {
+    background: var(--info);
+    color: white;
+}
+
+.unified-badge-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.unified-badge-secondary {
+    background: var(--secondary);
+    color: white;
+}
+
+.unified-badge-dark {
+    background: var(--dark);
+    color: white;
+}
+
+.unified-badge-light {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+/* Form control dark theme fixes */
+.unified-form-control {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.unified-form-control:focus {
+    background: var(--bg-primary);
+    border-color: var(--primary);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.25);
+}
+
+.unified-form-control-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 0.375rem;
+}
+
+/* Button outline variants for dark theme */
+.unified-btn-outline {
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+}
+
+.unified-btn-outline:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.unified-btn-outline-primary {
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+}
+
+.unified-btn-outline-primary:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.unified-btn-outline-secondary {
+    background: transparent;
+    border: 1px solid var(--secondary);
+    color: var(--secondary);
+}
+
+.unified-btn-outline-secondary:hover {
+    background: var(--secondary);
+    color: white;
+}
+
+/* List group dark theme fixes */
+.list-group-flush .list-group-item {
+    background: var(--bg-secondary);
+    border-color: var(--border);
+    color: var(--text-primary);
+}
+
+/* Modal dark theme fixes */
+.modal-content {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border);
+}
+
+/* Table dark theme enhancements */
+.unified-table {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.unified-table th {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border);
+}
+
+.unified-table td {
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.unified-table tbody tr:hover {
+    background: var(--bg-secondary);
+}
+</style>
+
+<script>
+(function(){
+  // Update clock
+  function updateClock(){
+    var el = document.getElementById('staff-current-time');
+    if(!el) return;
+    var now = new Date();
+    el.textContent = now.toLocaleTimeString();
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+  
+  // Order History Status Filter
+  const statusFilter = document.getElementById('statusFilter');
+  const orderTable = document.getElementById('orderHistoryTable');
+  
+  if (statusFilter && orderTable) {
+    statusFilter.addEventListener('change', function() {
+      const selectedStatus = this.value;
+      const rows = orderTable.querySelectorAll('tbody tr[data-status]');
+      
+      rows.forEach(row => {
+        if (selectedStatus === 'all' || row.dataset.status === selectedStatus) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    });
+  }
+})();
+
+// Order Details Modal Function
+function viewOrderDetails(orderId) {
+  const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+  const content = document.getElementById('orderDetailsContent');
+  
+  // Show loading spinner
+  content.innerHTML = `
+    <div class="text-center py-4">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2 text-muted">Loading order details...</p>
+    </div>
+  `;
+  
+  modal.show();
+  
+  // Fetch order details via AJAX
+  fetch(`/app/orders/${orderId}/`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        content.innerHTML = `
+          <div class="row">
+            <div class="col-md-6">
+              <h6 class="text-primary mb-3"><i class="fas fa-info-circle me-2"></i>Order Information</h6>
+              <table class="table table-sm" style="background: var(--bg-primary); color: var(--text-primary);">
+                <tr><td class="fw-semibold">Order ID:</td><td>${data.order.order_id}</td></tr>
+                <tr><td class="fw-semibold">Customer:</td><td>${data.order.customer_name || 'Walk-in'}</td></tr>
+                <tr><td class="fw-semibold">Status:</td><td><span class="unified-badge unified-badge-${
+                  data.order.status === 'completed' ? 'success' : 
+                  data.order.status === 'cancelled' ? 'danger' : 
+                  data.order.status === 'voided' ? 'dark' : 'secondary'
+                }">${data.order.status_display}</span></td></tr>
+                <tr><td class="fw-semibold">Payment:</td><td>${data.order.payment_method_display}</td></tr>
+                <tr><td class="fw-semibold">Total:</td><td class="fw-bold text-success">₱${parseFloat(data.order.total_amount).toFixed(2)}</td></tr>
+                <tr><td class="fw-semibold">Date:</td><td>${new Date(data.order.created_at).toLocaleString()}</td></tr>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <h6 class="text-primary mb-3"><i class="fas fa-shopping-cart me-2"></i>Order Items</h6>
+              <div class="table-responsive">
+                <table class="table table-sm" style="background: var(--bg-primary); color: var(--text-primary);">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th class="text-center">Qty</th>
+                      <th class="text-end">Price</th>
+                      <th class="text-end">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${data.order.items.map(item => `
+                      <tr>
+                        <td>${item.cookie_name}</td>
+                        <td class="text-center">${item.quantity}</td>
+                        <td class="text-end">₱${parseFloat(item.price).toFixed(2)}</td>
+                        <td class="text-end">₱${(parseFloat(item.price) * item.quantity).toFixed(2)}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background: var(--bg-secondary);">
+                      <th colspan="3">Total Amount:</th>
+                      <th class="text-end">₱${parseFloat(data.order.total_amount).toFixed(2)}</th>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        content.innerHTML = `
+          <div class="text-center py-4">
+            <i class="fas fa-exclamation-triangle text-warning mb-3" style="font-size: 3rem;"></i>
+            <h5>Error Loading Order</h5>
+            <p class="text-muted">${data.error || 'Unable to load order details.'}</p>
+          </div>
+        `;
+      }
+    })
+    .catch(error => {
+      content.innerHTML = `
+        <div class="text-center py-4">
+          <i class="fas fa-exclamation-triangle text-danger mb-3" style="font-size: 3rem;"></i>
+          <h5>Connection Error</h5>
+          <p class="text-muted">Unable to fetch order details. Please try again.</p>
+        </div>
+      `;
+    });
+}
+</script>
+{% endblock %}

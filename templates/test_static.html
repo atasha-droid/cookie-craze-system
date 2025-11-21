@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <title>Static Files Test</title>
+</head>
+<body>
+    <h1>Static Files Test</h1>
+    
+    <h2>Testing image at: {% static 'images/cookie-craze-logo.png' %}</h2>
+    
+    <div>
+        <h3>Image test:</h3>
+        <img src="{% static 'images/cookie-craze-logo.png' %}" alt="Test logo" style="width: 100px; border: 2px solid red;">
+        <p>If you see a broken image icon, the file doesn't exist or the path is wrong.</p>
+    </div>
+    
+    <div>
+        <h3>Static URL: {{ STATIC_URL }}</h3>
+        <h3>Static path: {% static '' %}</h3>
+    </div>
+    
+    <div>
+        <h3>Alternative logo test (Font Awesome):</h3>
+        <i class="fas fa-cookie-bite" style="font-size: 48px; color: #8B4513;"></i>
+        <p>If you see a cookie icon, Font Awesome is working.</p>
+    </div>
+</body>
+</html>

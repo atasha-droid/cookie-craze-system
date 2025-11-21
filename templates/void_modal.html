@@ -1,0 +1,593 @@
+<!-- Void Modal (Hidden by default) -->
+<div id="voidModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); overflow: hidden; max-width: 320px; width: 90%; animation: modalSlideIn 0.2s ease-out; border-left: 4px solid var(--primary);">
+        <!-- void_modal.html - Partial Template -->
+        <div class="void-modal">
+            <div class="void-modal-header">
+                <h2 class="void-modal-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Void Order
+                </h2>
+            </div>
+            
+            <div class="void-modal-body">
+                <!-- Warning Alert - Will be updated with order details -->
+                <div class="void-warning-alert" id="voidWarningAlert">
+                    <i class="fas fa-shield-alt"></i>
+                    <p class="void-warning-text">
+                        Loading order details...
+                    </p>
+                </div>
+                
+                <!-- Admin Authentication Form -->
+                <div class="void-form-group" id="adminUsernameGroup">
+                    <label class="void-form-label">
+                        <i class="fas fa-user-shield"></i>
+                        Admin Username
+                    </label>
+                    <input type="text" 
+                           class="void-form-control" 
+                           id="admin_username"
+                           placeholder="Enter admin username"
+                           autocomplete="username">
+                </div>
+                
+                <div class="void-form-group" id="adminPasswordGroup">
+                    <label class="void-form-label">
+                        <i class="fas fa-key"></i>
+                        Admin Password
+                    </label>
+                    <input type="password" 
+                           class="void-form-control" 
+                           id="admin_password"
+                           placeholder="Enter admin password"
+                           autocomplete="current-password">
+                </div>
+                
+                <!-- Void Reason -->
+                <div class="void-form-group">
+                    <label class="void-form-label">
+                        <i class="fas fa-clipboard-list"></i>
+                        Void Reason
+                    </label>
+                    <select class="void-form-control void-reason-select" id="void_reason" required>
+                        <option value="">Select a reason</option>
+                        <option value="Customer changed mind">Customer changed mind</option>
+                        <option value="Wrong items sold">Wrong items sold</option>
+                        <option value="Payment issue">Payment issue</option>
+                        <option value="System error">System error</option>
+                        <option value="other">Other reason</option>
+                    </select>
+                </div>
+                
+                <div class="void-form-group" id="otherReasonContainer" style="display: none;">
+                    <label class="void-form-label">
+                        <i class="fas fa-comment"></i>
+                        Please specify
+                    </label>
+                    <textarea class="void-form-control" id="other_reason" rows="2" placeholder="Enter specific reason..."></textarea>
+                </div>
+                
+                <!-- Information Note -->
+                <div class="void-info-note">
+                    <i class="fas fa-info-circle"></i>
+                    <p class="void-info-text">
+                        Inventory will be automatically restored when voiding this order.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="void-modal-footer">
+                <button class="unified-btn unified-btn-secondary void-btn-cancel" id="cancelVoid">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button class="unified-btn unified-btn-warning void-btn-confirm" id="confirmVoid" disabled>
+                    <i class="fas fa-ban"></i>
+                    Void Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================== VOID ORDER FUNCTIONALITY ====================
+let currentOrderId = null;
+
+function initializeVoidFunctionality() {
+    const voidButtons = document.querySelectorAll('.void-order-btn');
+    
+    voidButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            showVoidConfirmationModal(orderId);
+        });
+    });
+}
+
+function showVoidConfirmationModal(orderId) {
+    currentOrderId = orderId;
+    const voidModal = document.getElementById('voidModal');
+    const modalContent = voidModal.querySelector('.modal-content');
+
+    // Smaller loading state
+    voidModal.style.display = 'flex';
+
+    // Load order details directly since we have the modal content
+    loadOrderDetailsIntoModal(orderId);
+    setupVoidModalEvents();
+}
+
+function loadOrderDetailsIntoModal(orderId) {
+    const warningAlert = document.getElementById('voidWarningAlert');
+    if (!warningAlert) return;
+
+    warningAlert.innerHTML = `
+        <div class="text-center" style="width: 100%;">
+            <div class="spinner-border text-primary" role="status" style="width: 0.8rem; height: 0.8rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-1 mb-0" style="font-size: 0.65rem;">Loading order details...</p>
+        </div>
+    `;
+
+    fetch(`/app/orders/${orderId}/void/`)
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'voided') {
+                warningAlert.innerHTML = `
+                    <i class="fas fa-exclamation-circle" style="font-size: 0.75rem;"></i>
+                    <p class="void-warning-text" style="font-size: 0.7rem; line-height: 1.2;">
+                        This order has already been voided.
+                    </p>
+                `;
+                const confirmBtn = document.querySelector('.void-btn-confirm');
+                if (confirmBtn) confirmBtn.disabled = true;
+                return;
+            }
+            
+            warningAlert.innerHTML = `
+                <i class="fas fa-exclamation-triangle" style="font-size: 0.75rem;"></i>
+                <p class="void-warning-text" style="font-size: 0.7rem; line-height: 1.3;">
+                    Void order <strong>#${data.order_display_id}</strong><br>
+                    Amount: <strong>₱${data.total_amount}</strong><br>
+                    Customer: <strong>${data.customer}</strong>
+                    ${data.can_void_directly ? '<br><small class="text-success" style="font-size: 0.6rem;">✓ Direct void available</small>' : '<br><small class="text-danger" style="font-size: 0.6rem;">⚠ Admin required</small>'}
+                </p>
+            `;
+
+            const confirmBtn = document.querySelector('.void-btn-confirm');
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                if (data.can_void_directly) {
+                    confirmBtn.innerHTML = '<i class="fas fa-ban"></i> Void';
+                } else {
+                    confirmBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Request Void';
+                }
+            }
+
+            const adminUsernameGroup = document.getElementById('adminUsernameGroup');
+            const adminPasswordGroup = document.getElementById('adminPasswordGroup');
+            
+            if (adminUsernameGroup && adminPasswordGroup) {
+                if (data.can_void_directly) {
+                    adminUsernameGroup.style.display = 'none';
+                    adminPasswordGroup.style.display = 'none';
+                } else {
+                    adminUsernameGroup.style.display = 'block';
+                    adminPasswordGroup.style.display = 'block';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading order details:', error);
+            warningAlert.innerHTML = `
+                <i class="fas fa-exclamation-circle" style="font-size: 0.75rem;"></i>
+                <p class="void-warning-text" style="font-size: 0.7rem;">
+                    Error loading order details
+                </p>
+            `;
+            const confirmBtn = document.querySelector('.void-btn-confirm');
+            if (confirmBtn) confirmBtn.disabled = true;
+        });
+}
+
+function setupVoidModalEvents() {
+    const confirmBtn = document.querySelector('.void-btn-confirm');
+    const cancelBtn = document.querySelector('.void-btn-cancel');
+    const voidModal = document.getElementById('voidModal');
+    const reasonSelect = document.getElementById('void_reason');
+    const otherReasonContainer = document.getElementById('otherReasonContainer');
+
+    if (reasonSelect && otherReasonContainer) {
+        reasonSelect.addEventListener('change', function() {
+            otherReasonContainer.style.display = this.value === 'other' ? 'block' : 'none';
+        });
+    }
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function() {
+            confirmVoidAction();
+        });
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            closeVoidModal();
+        });
+    }
+
+    voidModal.addEventListener('click', function(event) {
+        if (event.target === voidModal) closeVoidModal();
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') closeVoidModal();
+    });
+}
+
+function closeVoidModal() {
+    const voidModal = document.getElementById('voidModal');
+    voidModal.style.display = 'none';
+}
+
+function confirmVoidAction() {
+    const usernameInput = document.getElementById('admin_username');
+    const passwordInput = document.getElementById('admin_password');
+    const reasonSelect = document.getElementById('void_reason');
+    const otherReason = document.getElementById('other_reason');
+
+    let reason = reasonSelect ? reasonSelect.value : '';
+    if (!reason) {
+        alert('Please select a reason for voiding this order.');
+        return;
+    }
+
+    if (reason === 'other') {
+        const otherReasonText = otherReason ? otherReason.value : '';
+        if (!otherReasonText.trim()) {
+            alert('Please specify the reason for voiding.');
+            return;
+        }
+        reason = `Other: ${otherReasonText}`;
+    }
+
+    const formData = new FormData();
+    formData.append('void_reason', reason);
+    formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+    
+    const adminUsernameGroup = document.getElementById('adminUsernameGroup');
+    const adminRequired = adminUsernameGroup && adminUsernameGroup.style.display !== 'none';
+    
+    if (adminRequired) {
+        const username = usernameInput ? usernameInput.value : '';
+        const password = passwordInput ? passwordInput.value : '';
+        
+        if (!username || !password) {
+            alert('Please enter admin credentials for this order.');
+            return;
+        }
+        formData.append('admin_username', username);
+        formData.append('admin_password', password);
+    }
+
+    const confirmBtn = document.querySelector('.void-btn-confirm');
+    const originalText = confirmBtn.innerHTML;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    confirmBtn.disabled = true;
+
+    fetch(`/app/orders/${currentOrderId}/void/`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showToast('success', data.message);
+            closeVoidModal();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast('error', 'Error: ' + data.error);
+            confirmBtn.innerHTML = originalText;
+            confirmBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error voiding order:', error);
+        showToast('error', 'Error voiding order: ' + error.message);
+        confirmBtn.innerHTML = originalText;
+        confirmBtn.disabled = false;
+    });
+}
+
+// Add to DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeVoidFunctionality();
+});
+
+// CSRF Token function
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Toast notification function
+function showToast(type, message) {
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '9999';
+        document.body.appendChild(toastContainer);
+    }
+    
+    const toastId = 'toast-' + Date.now();
+    const toast = document.createElement('div');
+    toast.id = toastId;
+    toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    const bsToast = new bootstrap.Toast(toast, { delay: 5000 });
+    bsToast.show();
+    
+    toast.addEventListener('hidden.bs.toast', function () {
+        toast.remove();
+    });
+}
+</script>
+
+<style>
+/* Modal animations */
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-15px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Void Modal Styles - Smaller and matching order_list */
+.void-modal {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.void-modal-header {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.void-modal-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.void-modal-title i {
+    color: var(--warning);
+    font-size: 0.8rem;
+}
+
+.void-modal-body {
+    padding: 16px;
+    background: var(--bg-light);
+}
+
+.void-warning-alert {
+    background: #fff3cd;
+    border: 1px solid var(--warning);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.void-warning-alert i {
+    color: var(--warning-dark);
+    font-size: 0.7rem;
+    margin-top: 1px;
+}
+
+.void-warning-text {
+    color: #856404;
+    margin: 0;
+    line-height: 1.3;
+    font-size: 0.7rem;
+}
+
+.void-form-group {
+    margin-bottom: 12px;
+}
+
+.void-form-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    font-size: 0.7rem;
+}
+
+.void-form-label i {
+    color: var(--primary);
+    width: 12px;
+    font-size: 0.6rem;
+}
+
+.void-form-control {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 0.7rem;
+    transition: all 0.2s ease;
+    background: white;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.void-form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
+    outline: none;
+}
+
+.void-form-control::placeholder {
+    color: var(--text-muted);
+    font-size: 0.65rem;
+}
+
+.void-reason-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 8px center;
+    background-repeat: no-repeat;
+    background-size: 12px;
+    appearance: none;
+    padding-right: 24px;
+}
+
+.void-info-note {
+    background: #d1ecf1;
+    border: 1px solid #b8daff;
+    border-radius: 6px;
+    padding: 8px;
+    margin-top: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.void-info-note i {
+    color: #0c5460;
+    font-size: 0.7rem;
+    margin-top: 1px;
+}
+
+.void-info-text {
+    color: #0c5460;
+    margin: 0;
+    line-height: 1.3;
+    font-size: 0.65rem;
+}
+
+.void-modal-footer {
+    padding: 12px 16px;
+    background: white;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+/* Unified button styles matching order_list */
+.unified-btn {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 500;
+}
+
+.unified-btn-primary {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.unified-btn-secondary {
+    background: var(--secondary);
+    color: white;
+    border-color: var(--secondary);
+}
+
+.unified-btn-warning {
+    background: #ffc107;
+    color: #000;
+    border: 1px solid #ffb300;
+}
+
+.unified-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.unified-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.unified-btn-sm {
+    padding: 3px 6px;
+    font-size: 0.65rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .void-modal-body {
+        padding: 12px;
+    }
+    
+    .void-modal-footer {
+        padding: 10px 12px;
+        flex-direction: column;
+    }
+    
+    .unified-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>

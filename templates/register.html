@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Craze - Register</title>
+    
+    <!-- Bootstrap 5.3.2 CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            /* Enhanced Color System */
+            --primary: #8B4513;
+            --primary-light: #A0522D;
+            --primary-dark: #654321;
+            --accent: #D2691E;
+            --accent-light: #F5DEB3;
+            
+            /* Modern Neutral Colors - Enhanced Contrast */
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f8f9fa;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --border: #e2e8f0;
+            
+            /* Semantic Colors */
+            --success: #28a745;
+            --warning: #ecc94b;
+            --danger: #e53e3e;
+            --info: #3182ce;
+            
+            /* Enhanced Typography */
+            --font-family-primary: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-family-heading: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            
+            /* Professional Font Sizes */
+            --text-xs: 0.75rem;
+            --text-sm: 0.875rem;
+            --text-base: 0.9rem;
+            --text-lg: 1rem;
+            --text-xl: 1.125rem;
+            --text-2xl: 1.25rem;
+            --text-3xl: 1.5rem;
+            
+            /* Compact Spacing */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.25rem;
+            --space-6: 1.5rem;
+            
+            /* Enhanced Shadows */
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
+            
+            /* Border Radius */
+            --radius-sm: 0.25rem;
+            --radius: 0.375rem;
+            --radius-lg: 0.5rem;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f1419;
+            --bg-secondary: #1a202c;
+            --bg-tertiary: #2d3748;
+            --text-primary: #f7fafc;
+            --text-secondary: #e2e8f0;
+            --text-muted: #a0aec0;
+            --border: #4a5568;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family-primary);
+            font-size: var(--text-base);
+            line-height: 1.5;
+            font-weight: 400;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-4);
+        }
+
+        /* Auth Container */
+        .auth-container {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        /* Professional Cards */
+        .unified-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: var(--space-4);
+        }
+
+        /* Header Styles */
+        .auth-header {
+            text-align: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .logo-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto var(--space-4);
+            position: relative;
+        }
+
+        .logo-image {
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+            object-fit: cover;
+            border: 2px solid rgba(139, 69, 19, 0.2);
+            box-shadow: var(--shadow);
+        }
+
+        .logo-fallback {
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+            background: var(--primary);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            border: 2px solid rgba(139, 69, 19, 0.2);
+            box-shadow: var(--shadow);
+        }
+
+        .unified-h1 {
+            font-family: var(--font-family-heading);
+            font-size: var(--text-3xl);
+            font-weight: 600;
+            line-height: 1.2;
+            color: var(--primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .unified-h2 {
+            font-family: var(--font-family-heading);
+            font-size: var(--text-xl);
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--text-primary);
+            margin-bottom: var(--space-3);
+            text-align: center;
+        }
+
+        /* Professional Form Controls */
+        .unified-form-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .unified-form-label {
+            display: block;
+            margin-bottom: var(--space-2);
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: var(--text-sm);
+            font-family: var(--font-family-primary);
+        }
+
+        .unified-form-control {
+            width: 100%;
+            padding: var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: var(--text-sm);
+            font-family: var(--font-family-primary);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .unified-form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.1);
+            background: var(--bg-secondary);
+        }
+
+        .unified-form-control.error {
+            border-color: var(--danger);
+        }
+
+        /* Professional Buttons */
+        .unified-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-3) var(--space-5);
+            border: none;
+            border-radius: var(--radius);
+            font-family: var(--font-family-primary);
+            font-size: var(--text-sm);
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            line-height: 1;
+        }
+
+        .unified-btn-primary {
+            background: var(--primary);
+            color: white;
+            border: 1px solid var(--primary-dark);
+        }
+
+        .unified-btn-primary:hover {
+            background: var(--primary-light);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .unified-btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .unified-btn-secondary:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        /* Professional Alerts */
+        .unified-alert {
+            padding: var(--space-3);
+            border-radius: var(--radius);
+            margin-bottom: var(--space-4);
+            border-left: 3px solid var(--primary);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: var(--text-sm);
+        }
+
+        .unified-alert-error {
+            border-left-color: var(--danger);
+            background: rgba(229, 62, 62, 0.1);
+        }
+
+        .unified-alert-success {
+            border-left-color: var(--success);
+            background: rgba(72, 187, 120, 0.1);
+        }
+
+        /* Error Text */
+        .error-text {
+            color: var(--danger);
+            font-size: var(--text-xs);
+            margin-top: var(--space-1);
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+
+        .help-text {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            margin-top: var(--space-1);
+            font-style: italic;
+        }
+
+        /* Auth Links */
+        .auth-links {
+            margin-top: var(--space-5);
+            padding-top: var(--space-4);
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: var(--text-sm);
+        }
+
+        .auth-links a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+
+        .auth-links p {
+            margin-bottom: var(--space-2);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle-container {
+            position: fixed;
+            top: var(--space-4);
+            right: var(--space-4);
+            z-index: 1000;
+        }
+
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: var(--space-2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .theme-toggle i {
+            font-size: 1rem;
+            color: inherit;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .auth-container {
+                max-width: 100%;
+            }
+            
+            .unified-card {
+                padding: var(--space-5);
+            }
+            
+            .logo-container {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .logo-fallback {
+                font-size: 1.75rem;
+            }
+            
+            .unified-h1 {
+                font-size: var(--text-2xl);
+            }
+            
+            .unified-h2 {
+                font-size: var(--text-lg);
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: var(--space-3);
+            }
+            
+            .unified-card {
+                padding: var(--space-4);
+            }
+            
+            .logo-container {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .logo-fallback {
+                font-size: 1.5rem;
+            }
+            
+            .unified-h1 {
+                font-size: var(--text-xl);
+            }
+            
+            .theme-toggle-container {
+                top: var(--space-3);
+                right: var(--space-3);
+            }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <!-- Theme Toggle -->
+    <div class="theme-toggle-container">
+        <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <div class="auth-container">
+        <div class="unified-card">
+            <!-- Header -->
+            <div class="auth-header">
+                <div class="logo-container">
+                    <img src="{% static 'images/cookie-craze-logo.png' %}" 
+                         alt="Cookie Craze Logo" 
+                         class="logo-image"
+                         onerror="this.onerror=null; this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';">
+                    
+                    <div id="logo-fallback" class="logo-fallback" style="display: none;">
+                        <img src="{% static 'images/cookie-craze-logo.png' %}" alt="Cookie Craze Logo" style="width: 60px; height: 60px; object-fit: contain;">
+                    </div>
+                </div>
+                <h1 class="unified-h1">Cookie Craze</h1>
+                <p style="color: var(--text-secondary); font-size: var(--text-sm);">Staff Management System</p>
+            </div>
+            
+            <!-- Form Section -->
+            <h2 class="unified-h2">Create Your Account</h2>
+            
+            {% if user_form.errors or customer_form.errors %}
+                <div class="unified-alert unified-alert-error">
+                    <i class="fas fa-exclamation-circle me-2"></i> 
+                    Please correct the errors below.
+                </div>
+            {% endif %}
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <!-- User Form Fields -->
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-user me-2"></i> Username
+                    </label>
+                    <input type="text" name="username" id="id_username" 
+                           class="unified-form-control {% if user_form.username.errors %}error{% endif %}"
+                           placeholder="Choose a username" required 
+                           value="{{ user_form.username.value|default:'' }}">
+                    {% if user_form.username.errors %}
+                    <div class="error-text">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ user_form.username.errors.0 }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-envelope me-2"></i> Email
+                    </label>
+                    <input type="email" name="email" id="id_email" 
+                           class="unified-form-control {% if user_form.email.errors %}error{% endif %}"
+                           placeholder="Enter your email" required 
+                           value="{{ user_form.email.value|default:'' }}">
+                    {% if user_form.email.errors %}
+                    <div class="error-text">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ user_form.email.errors.0 }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-lock me-2"></i> Password
+                    </label>
+                    <input type="password" name="password1" id="id_password1" 
+                           class="unified-form-control {% if user_form.password1.errors %}error{% endif %}"
+                           placeholder="Create a password" required>
+                    {% if user_form.password1.errors %}
+                    <div class="error-text">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ user_form.password1.errors.0 }}
+                    </div>
+                    {% endif %}
+                    <div class="help-text">
+                        Your password must contain at least 8 characters, including letters and numbers.
+                    </div>
+                </div>
+                
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-lock me-2"></i> Confirm Password
+                    </label>
+                    <input type="password" name="password2" id="id_password2" 
+                           class="unified-form-control {% if user_form.password2.errors %}error{% endif %}"
+                           placeholder="Confirm your password" required>
+                    {% if user_form.password2.errors %}
+                    <div class="error-text">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ user_form.password2.errors.0 }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Customer Form Fields -->
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-id-card me-2"></i> Full Name
+                    </label>
+                    <input type="text" name="name" id="id_name" 
+                           class="unified-form-control {% if customer_form.name.errors %}error{% endif %}"
+                           placeholder="Enter your full name" required 
+                           value="{{ customer_form.name.value|default:'' }}">
+                    {% if customer_form.name.errors %}
+                    <div class="error-text">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ customer_form.name.errors.0 }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="unified-form-group">
+                    <label class="unified-form-label">
+                        <i class="fas fa-phone me-2"></i> Phone Number (Optional)
+                    </label>
+                    <input type="text" name="phone" id="id_phone" 
+                           class="unified-form-control {% if customer_form.phone.errors %}error{% endif %}"
+                           placeholder="Enter your phone number" 
+                           value="{{ customer_form.phone.value|default:'' }}">
+                    {% if customer_form.phone.errors %}
+                    <div class="error-text">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ customer_form.phone.errors.0 }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="unified-btn unified-btn-primary w-100">
+                    <i class="fas fa-user-plus me-2"></i> Create Account
+                </button>
+            </form>
+            
+            <div class="auth-links">
+                <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+                <p><a href="{% url 'home' %}"><i class="fas fa-arrow-left me-1"></i> Back to Home</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dark Mode Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+            
+            // Load saved theme or detect system preference
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+                body.setAttribute('data-theme', 'dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                body.setAttribute('data-theme', 'light');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+            
+            // Toggle theme
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = body.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                body.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                
+                // Update icon
+                themeToggle.innerHTML = newTheme === 'dark' 
+                    ? '<i class="fas fa-sun"></i>' 
+                    : '<i class="fas fa-moon"></i>';
+            });
+        });
+    </script>
+</body>
+</html>

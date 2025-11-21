@@ -1,0 +1,608 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content staff-page">
+    <div id="pageLoadingOverlay" class="page-loading-overlay" style="display: none;">
+        <div class="page-loading-spinner">
+            <i class="fas fa-spinner fa-spin me-2"></i>
+            Loading...
+        </div>
+    </div>
+
+    <div class="unified-page-header">
+        <h1 class="unified-h1">Sales Report</h1>
+        <p class="unified-subtitle">Comprehensive sales analysis and cash payment tracking</p>
+        
+        <!-- Quick Action Buttons -->
+        <div class="d-flex gap-2 mt-3">
+            <a href="{% url 'cash_reconciliation_report' %}" class="unified-btn unified-btn-success unified-btn-sm">
+                <i class="fas fa-money-bill-wave me-2"></i>Cash Reconciliation
+            </a>
+            <button class="unified-btn unified-btn-info unified-btn-sm" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>Print Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Date Filter Form -->
+    <div class="unified-card mb-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="unified-form-label">Start Date</label>
+                <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" 
+                       class="unified-form-control" required>
+            </div>
+            <div class="col-md-3">
+                <label class="unified-form-label">End Date</label>
+                <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" 
+                       class="unified-form-control" required>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="unified-btn unified-btn-primary w-100">
+                    <i class="fas fa-filter me-2"></i>Filter
+                </button>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="text-muted" style="font-size: var(--text-sm);">
+                    <i class="fas fa-calendar me-1"></i>
+                    {{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Cash Payment Statistics -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="unified-card text-center h-100">
+                <div class="card-icon success">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h3 class="card-value">{{ cash_stats.count }}</h3>
+                <p class="card-label">Cash Transactions</p>
+                <div class="cash-details mt-2">
+                    <div class="text-success fw-bold">₱{{ cash_stats.amount|floatformat:2 }}</div>
+                    <small class="text-muted">{{ cash_stats.percentage|floatformat:1 }}% of total sales</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="unified-card text-center h-100">
+                <div class="card-icon primary">
+                    <i class="fas fa-cash-register"></i>
+                </div>
+                <h3 class="card-value">₱{{ cash_stats.cash_received|floatformat:2 }}</h3>
+                <p class="card-label">Total Cash Received</p>
+                <div class="cash-details mt-2">
+                    <small class="text-muted">Avg: ₱{{ cash_stats.avg_cash_received|floatformat:2 }} per transaction</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="unified-card text-center h-100">
+                <div class="card-icon info">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <h3 class="card-value">₱{{ cash_stats.change_given|floatformat:2 }}</h3>
+                <p class="card-label">Total Change Given</p>
+                <div class="cash-details mt-2">
+                    <small class="text-muted">Avg: ₱{{ cash_stats.avg_change|floatformat:2 }} per transaction</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cash Reconciliation Summary -->
+    <div class="unified-card mb-4">
+        <h2 class="unified-h2">
+            <i class="fas fa-calculator me-2"></i> Cash Reconciliation Summary
+        </h2>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="text-center p-3 rounded" style="background: rgba(40, 167, 69, 0.1);">
+                    <div class="fw-bold text-success fs-5">₱{{ cash_reconciliation.total_cash_sales|floatformat:2 }}</div>
+                    <small class="text-muted">Total Cash Sales</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center p-3 rounded" style="background: rgba(13, 110, 253, 0.1);">
+                    <div class="fw-bold text-primary fs-5">₱{{ cash_reconciliation.total_cash_received|floatformat:2 }}</div>
+                    <small class="text-muted">Cash Received</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center p-3 rounded" style="background: rgba(255, 193, 7, 0.1);">
+                    <div class="fw-bold text-warning fs-5">₱{{ cash_reconciliation.total_change_given|floatformat:2 }}</div>
+                    <small class="text-muted">Change Given</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center p-3 rounded" style="background: rgba(111, 66, 193, 0.1);">
+                    <div class="fw-bold" style="color: #6f42c1;">₱{{ cash_reconciliation.expected_cash_drawer|floatformat:2 }}</div>
+                    <small class="text-muted">Expected in Drawer</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="unified-card text-center h-100">
+                <div class="card-icon success">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="card-value">₱{{ total_sales.total_amount|default:0|floatformat:2 }}</h3>
+                <p class="card-label">Total Sales</p>
+                <small class="text-muted">{{ total_sales.total_orders|default:0 }} completed orders</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="unified-card text-center h-100">
+                <div class="card-icon primary">
+                    <i class="fas fa-cookie"></i>
+                </div>
+                <h3 class="card-value">{{ total_sales.total_orders|default:0 }}</h3>
+                <p class="card-label">Completed Orders</p>
+                <small class="text-muted">Successful transactions</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="unified-card text-center h-100">
+                <div class="card-icon info">
+                    <i class="fas fa-walking"></i>
+                </div>
+                <h3 class="card-value">{{ order_type_stats.walkin.count }}</h3>
+                <p class="card-label">Walk-in Orders</p>
+                <small class="text-muted">₱{{ order_type_stats.walkin.revenue|floatformat:2 }}</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="unified-card text-center h-100">
+                <div class="card-icon purple">
+                    <i class="fas fa-tablet-alt"></i>
+                </div>
+                <h3 class="card-value">{{ order_type_stats.kiosk.count }}</h3>
+                <p class="card-label">Kiosk Orders</p>
+                <small class="text-muted">₱{{ order_type_stats.kiosk.revenue|floatformat:2 }}</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Methods & Order Type Breakdown -->
+    <div class="row g-4 mb-4">
+        <!-- Payment Methods -->
+        <div class="col-md-6">
+            <div class="unified-card h-100">
+                <h2 class="unified-h2">
+                    <i class="fas fa-credit-card me-2"></i> Payment Methods Breakdown
+                </h2>
+                {% if payment_breakdown %}
+                <div class="unified-table-container">
+                    <table class="unified-table">
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Count</th>
+                                <th>Amount</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payment_breakdown %}
+                            <tr>
+                                <td class="fw-semibold text-capitalize">
+                                    {% if payment.method_code == 'cash' %}
+                                    <i class="fas fa-money-bill-wave me-2 text-success"></i>
+                                    {% else %}
+                                    <i class="fas fa-mobile-alt me-2 text-info"></i>
+                                    {% endif %}
+                                    {{ payment.payment_method|lower }}
+                                </td>
+                                <td>{{ payment.count }}</td>
+                                <td class="text-success fw-bold">₱{{ payment.amount|default:0|floatformat:2 }}</td>
+                                <td class="text-info fw-bold">{{ payment.percentage|default:0|floatformat:1 }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-money-bill-wave fa-2x mb-2"></i>
+                    <p class="mb-0">No payment data</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Order Type Breakdown -->
+        <div class="col-md-6">
+            <div class="unified-card h-100">
+                <h2 class="unified-h2">
+                    <i class="fas fa-chart-pie me-2"></i>Order Type Breakdown
+                </h2>
+                <div class="row g-3 text-center">
+                    <div class="col-6">
+                        <div class="p-3 rounded" style="background: rgba(13, 110, 253, 0.1);">
+                            <h4 class="text-info">Walk-in</h4>
+                            <div class="fw-bold fs-4">{{ order_type_stats.walkin.count }}</div>
+                            <div class="text-success fw-bold">₱{{ order_type_stats.walkin.revenue|floatformat:2 }}</div>
+                            <small class="text-muted">Avg: ₱{{ order_type_stats.walkin.avg_order|floatformat:2 }}</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 rounded" style="background: rgba(111, 66, 193, 0.1);">
+                            <h4 style="color: #6f42c1;">Kiosk</h4>
+                            <div class="fw-bold fs-4">{{ order_type_stats.kiosk.count }}</div>
+                            <div class="text-success fw-bold">₱{{ order_type_stats.kiosk.revenue|floatformat:2 }}</div>
+                            <small class="text-muted">Avg: ₱{{ order_type_stats.kiosk.avg_order|floatformat:2 }}</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Order Distribution Chart -->
+                <div class="text-center py-4">
+                    {% if total_sales.total_orders > 0 %}
+                    {% with total_orders=total_sales.total_orders %}
+                    {% with walkin_percent=order_type_stats.walkin.count|floatformat:0 kiosk_percent=order_type_stats.kiosk.count|floatformat:0 %}
+                    <div class="d-flex justify-content-center align-items-center mb-3">
+                        <div class="position-relative">
+                            <div class="pie-chart" 
+                                 style="background: conic-gradient(
+                                    var(--info) 0% {{ walkin_percent }}%,
+                                    #6f42c1 {{ walkin_percent }}% 100%
+                                 );">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="color-dot me-2" style="background: var(--info);"></div>
+                                <span>Walk-in: {{ order_type_stats.walkin.count }} ({{ walkin_percent }}%)</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="color-dot me-2" style="background: #6f42c1;"></div>
+                                <span>Kiosk: {{ order_type_stats.kiosk.count }} ({{ kiosk_percent }}%)</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                    {% endwith %}
+                    {% else %}
+                    <div class="text-muted py-4">
+                        <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                        <p>No order data available</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Two Grid Layout: Daily Sales & Top Cookies -->
+    <div class="row g-4">
+        <!-- Daily Sales Breakdown -->
+        <div class="col-lg-8">
+            <div class="unified-card h-100">
+                <h2 class="unified-h2">
+                    <i class="fas fa-calendar-alt me-2"></i>Daily Sales Breakdown
+                </h2>
+                <div class="unified-table-container">
+                    <table class="unified-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Total Sales</th>
+                                <th>Transactions</th>
+                                <th>Walk-in</th>
+                                <th>Kiosk</th>
+                                <th>Average Sale</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in daily_sales %}
+                            <tr>
+                                <td class="fw-semibold">{{ day.completed_at__date|date:"M d, Y" }}</td>
+                                <td class="text-success fw-bold">₱{{ day.daily_total|default:0|floatformat:2 }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ day.order_count }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        {{ day.walkin_count|default:0 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge" style="background: #6f42c1;">
+                                        {{ day.kiosk_count|default:0 }}
+                                    </span>
+                                </td>
+                                <td class="text-info">₱{{ day.average_sale|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="fas fa-calendar-times fa-2x mb-2"></i><br>
+                                    No completed sales data available for the selected period
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Selling Cookies & Completion Stats -->
+        <div class="col-lg-4">
+            <!-- Top Selling Cookies -->
+            <div class="unified-card mb-4">
+                <h2 class="unified-h2">
+                    <i class="fas fa-trophy me-2"></i>Top Selling Cookies
+                </h2>
+                {% if top_cookies %}
+                <div class="unified-table-container">
+                    <table class="unified-table">
+                        <thead>
+                            <tr>
+                                <th>Cookie</th>
+                                <th>Sold</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cookie in top_cookies %}
+                            <tr>
+                                <td class="fw-semibold">{{ cookie.cookie__name }}</td>
+                                <td>{{ cookie.total_sold }}</td>
+                                <td class="text-success fw-bold">₱{{ cookie.total_revenue|default:0|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-cookie fa-2x mb-2"></i>
+                    <p class="mb-0">No cookie sales data</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Completion Statistics -->
+            <div class="unified-card">
+                <h2 class="unified-h2">
+                    <i class="fas fa-chart-line me-2"></i>Completion Statistics
+                </h2>
+                <div class="text-center py-3">
+                    <div class="completion-rate mb-3">
+                        <div class="fw-bold fs-2 text-primary">{{ completion_stats.completion_rate|floatformat:1 }}%</div>
+                        <div class="text-muted">Completion Rate</div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="p-2 rounded" style="background: rgba(40, 167, 69, 0.1);">
+                                <div class="fw-bold text-success">{{ completion_stats.completed_orders }}</div>
+                                <small class="text-muted">Completed</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 rounded" style="background: rgba(108, 117, 125, 0.1);">
+                                <div class="fw-bold text-secondary">{{ completion_stats.total_orders }}</div>
+                                <small class="text-muted">Total Orders</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Staff page professional typography and spacing (scoped) */
+.staff-page {
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+.staff-page .unified-h1 { font-weight: 700; letter-spacing: .2px; }
+.staff-page .unified-h2 { font-weight: 650; letter-spacing: .15px; }
+.staff-page .unified-page-header { margin-bottom: 1rem; }
+.staff-page .unified-card { padding: 1rem 1.25rem; }
+.staff-page .unified-btn { padding: .55rem .9rem; border-radius: 8px; font-weight: 600; }
+.staff-page .unified-form-control { border-radius: 8px; }
+.staff-page .unified-table th, .staff-page .unified-table td { padding: .7rem .8rem; }
+
+/* Loading overlay */
+.page-loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: none; align-items: center; justify-content: center; z-index: 9999; }
+.page-loading-spinner { background: var(--bg-primary); color: var(--text-primary); padding: 12px 16px; border-radius: 10px; box-shadow: var(--shadow-md); font-weight: 600; letter-spacing: .2px; }
+
+.card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.5rem;
+}
+
+.card-icon.success { background: rgba(40, 167, 69, 0.1); color: var(--success); }
+.card-icon.primary { background: rgba(139, 69, 19, 0.1); color: var(--primary); }
+.card-icon.info { background: rgba(13, 110, 253, 0.1); color: var(--info); }
+.card-icon.purple { background: rgba(111, 66, 193, 0.1); color: #6f42c1; }
+
+.card-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.card-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.unified-table th {
+    background: var(--bg-tertiary);
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border);
+}
+
+.unified-table td {
+    padding: 0.75rem;
+    vertical-align: middle;
+}
+
+/* Pie Chart Styles */
+.pie-chart {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    position: relative;
+}
+
+.pie-chart::before {
+    content: '';
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: var(--bg-secondary);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.cash-details {
+    border-top: 1px solid var(--border);
+    padding-top: 0.5rem;
+}
+
+/* Print Styles */
+@media print {
+    .unified-btn, .no-print {
+        display: none !important;
+    }
+    
+    .unified-card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .col-lg-8, .col-lg-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .card-value {
+        font-size: 1.5rem;
+    }
+    
+    .unified-table-container {
+        font-size: 0.8rem;
+    }
+    
+    .unified-table th,
+    .unified-table td {
+        padding: 0.5rem;
+    }
+    
+    .pie-chart {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+@media (max-width: 576px) {
+    .unified-table {
+        font-size: 0.75rem;
+    }
+    
+    .badge {
+        font-size: 0.65rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Add date validation
+    const startDate = document.querySelector('input[name="start_date"]');
+    const endDate = document.querySelector('input[name="end_date"]');
+    
+    startDate.addEventListener('change', function() {
+        if (endDate.value && this.value > endDate.value) {
+            endDate.value = this.value;
+        }
+    });
+    
+    endDate.addEventListener('change', function() {
+        if (startDate.value && this.value < startDate.value) {
+            startDate.value = this.value;
+        }
+    });
+
+    // Auto-refresh data every 5 minutes
+    setInterval(() => {
+        if (!document.hidden) {
+            window.location.reload();
+        }
+    }, 300000); // 5 minutes
+});
+
+// Lightweight navigation loading overlay for staff pages
+(function() {
+    const overlay = document.getElementById('pageLoadingOverlay');
+    if (!overlay) return;
+    function showOverlay() { overlay.style.display = 'flex'; }
+    function shouldHandleLink(a) {
+        if (!a) return false;
+        if (a.hasAttribute('data-no-loading')) return false;
+        const href = a.getAttribute('href') || '';
+        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return false;
+        return a.target !== '_blank';
+    }
+    document.addEventListener('click', function(e) {
+        const a = e.target.closest('a');
+        if (shouldHandleLink(a)) {
+            showOverlay();
+        }
+    });
+    // Show overlay on form submits
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        if (form && !form.hasAttribute('data-no-loading')) {
+            showOverlay();
+        }
+    });
+    // Hide overlay if navigation is aborted and page persists
+    window.addEventListener('pageshow', function() { overlay.style.display = 'none'; });
+})();
+</script>
+{% endblock %}

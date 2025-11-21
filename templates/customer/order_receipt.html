@@ -1,0 +1,247 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Receipt - Cookie Craze</title>
+    
+      <!-- Favicon -->
+    <link rel="icon" href="{% static 'images/cookie-craze-logo.png' %}" type="image/png">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .receipt-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 2px solid #8B4513;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .receipt-container {
+                padding: 20px;
+                border-radius: 8px;
+            }
+
+            .receipt-header {
+                padding-bottom: 12px;
+                margin-bottom: 15px;
+            }
+
+            .receipt-header h2 {
+                font-size: 1.5rem;
+                margin: 0;
+            }
+
+            .receipt-header p {
+                font-size: 0.95rem;
+                margin: 0.35rem 0 0 0;
+            }
+
+            .receipt-item {
+                margin: 8px 0;
+                padding: 4px 0;
+                font-size: 0.95rem;
+            }
+
+            .receipt-total {
+                padding-top: 12px;
+                margin-top: 12px;
+                font-size: 1.1em;
+            }
+
+            .payment-note {
+                padding: 12px;
+                margin: 15px 0;
+                font-size: 0.85rem;
+            }
+
+            .success-message {
+                padding: 12px;
+                margin: 12px 0;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .receipt-container {
+                padding: 15px;
+                border-radius: 6px;
+                border-width: 1px;
+            }
+
+            .receipt-header {
+                padding-bottom: 10px;
+                margin-bottom: 12px;
+            }
+
+            .receipt-header h2 {
+                font-size: 1.25rem;
+                margin: 0;
+            }
+
+            .receipt-header p {
+                font-size: 0.9rem;
+                margin: 0.25rem 0 0 0;
+            }
+
+            .receipt-item {
+                margin: 6px 0;
+                padding: 3px 0;
+                font-size: 0.9rem;
+            }
+
+            .receipt-total {
+                padding-top: 10px;
+                margin-top: 10px;
+                font-size: 1rem;
+            }
+
+            .payment-note {
+                padding: 10px;
+                margin: 12px 0;
+                font-size: 0.8rem;
+                border-radius: 4px;
+            }
+
+            .success-message {
+                padding: 10px;
+                margin: 10px 0;
+                font-size: 0.85rem;
+                border-radius: 4px;
+            }
+
+            .receipt-info p {
+                margin: 6px 0;
+                font-size: 0.9rem;
+            }
+        }
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px dashed #8B4513;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .receipt-total {
+            border-top: 2px solid #8B4513;
+            padding-top: 15px;
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .payment-note {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-size: 0.9em;
+            border-left: 4px solid #ffc107;
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <div class="receipt-header">
+            <h2>🍪 Cookie Craze</h2>
+            <p>Order Receipt</p>
+        </div>
+        
+        <div class="success-message">
+            <strong>✅ Order Placed Successfully!</strong>
+        </div>
+        
+        <div class="receipt-info">
+            <p><strong>Order ID:</strong> {{ order.hex_id }}</p>
+            <p><strong>Customer:</strong> {{ order.customer_name }}</p>
+            <p><strong>Date:</strong> {{ order.created_at|date:"M d, Y H:i" }}</p>
+            <p><strong>Status:</strong> <span style="color: #8B4513; font-weight: bold;">{{ order.get_status_display }}</span></p>
+        </div>
+        
+        <div class="receipt-items">
+            <h4 style="color: #8B4513; border-bottom: 1px solid #8B4513; padding-bottom: 5px;">Order Items:</h4>
+            {% for item in order.items.all %}
+            <div class="receipt-item">
+                <span>{{ item.cookie.name }} x{{ item.quantity }}</span>
+                <span>₱{{ item.total_price|floatformat:2 }}</span>
+            </div>
+            {% empty %}
+            <div class="receipt-item">
+                <span>No items found</span>
+                <span>₱0.00</span>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="receipt-total">
+            <div class="receipt-item">
+                <span>Total Amount:</span>
+                <span>₱{{ order.total_amount|floatformat:2 }}</span>
+            </div>
+        </div>
+        
+        {% if not order.is_paid %}
+        <div class="payment-note">
+            <strong>💳 Payment Instructions:</strong><br>
+            {% if order.payment_method == 'cash' %}
+                Please pay at the counter when picking up your order.<br>
+                <strong>Accepted method:</strong> Cash
+            {% else %}
+                Please pay via GCash using the details provided by staff.<br>
+                <strong>Accepted method:</strong> GCash
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <div class="receipt-footer">
+            <p style="text-align: center; margin-top: 20px; font-size: 0.9em; color: #666;">
+                Thank you for your order!<br>
+                Your order will be ready in 15-20 minutes.<br>
+                <strong>Order ID: {{ order.hex_id }}</strong>
+            </p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <a href="{% url 'customer_dashboard' %}" style="background: #8B4513; color: white; padding: 10px 16px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                ← Back to Dashboard
+            </a>
+            <a href="{% url 'order_confirmation' order.id %}" style="background: #6c757d; color: white; padding: 10px 16px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                View Order
+            </a>
+            <button onclick="window.print()" style="background: #198754; color: white; padding: 10px 16px; border: none; border-radius: 5px; cursor: pointer;">
+                Print Receipt
+            </button>
+        </div>
+    </div>
+</body>
+</html>

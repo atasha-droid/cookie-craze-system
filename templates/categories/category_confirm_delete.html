@@ -1,0 +1,124 @@
+﻿{% extends 'base.html' %}
+
+{% block content %}
+<div class="content">
+    <!-- Header -->
+    <div class="unified-page-header">
+        <div>
+            <h1 class="unified-h1">Delete Category</h1>
+            <p class="text-muted" style="font-size: var(--text-sm);">
+                Confirm deletion of category from system
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'category_list' %}" class="unified-btn unified-btn-secondary" data-no-loading>
+                <i class="fas fa-arrow-left me-2"></i>
+                Back to Categories
+            </a>
+        </div>
+    </div>
+
+    <!-- Confirmation Card -->
+    <div class="unified-card">
+        <div class="text-center">
+            <div class="mb-4">
+                <i class="fas fa-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
+            </div>
+            
+            <h3 class="unified-h3 mb-3">Are you sure you want to delete this category?</h3>
+            
+            <div class="category-details mb-4">
+                <div class="unified-card bg-light border">
+                    <div class="p-3">
+                        <div class="d-flex align-items-center justify-content-center mb-3">
+                            <div class="category-icon me-3" style="color: {{ category.color }}; font-size: 2rem;">
+                                <i class="{{ category.icon }}"></i>
+                            </div>
+                            <h4 class="text-primary mb-0">{{ category.name }}</h4>
+                        </div>
+                        <div class="row text-muted text-center">
+                            <div class="col-6">
+                                <small><strong>Color:</strong> 
+                                    <span class="badge" style="background-color: {{ category.color }}; color: white;">
+                                        {{ category.color }}
+                                    </span>
+                                </small>
+                            </div>
+                            <div class="col-6">
+                                <small><strong>Status:</strong> 
+                                    <span class="badge {% if category.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {% if category.is_active %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                </small>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <small><strong>Cookies in Category:</strong> 
+                                    <span class="badge {% if category.cookies.count > 0 %}bg-danger{% else %}bg-success{% endif %}">
+                                        {{ category.cookies.count }}
+                                    </span>
+                                </small>
+                            </div>
+                        </div>
+                        {% if category.description %}
+                        <div class="mt-2">
+                            <small><strong>Description:</strong> {{ category.description }}</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% if category.cookies.count > 0 %}
+            <div class="alert alert-danger">
+                <i class="fas fa-times-circle me-2"></i>
+                <strong>Cannot Delete:</strong> This category has {{ category.cookies.count }} cookie(s) assigned to it. 
+                You must reassign or delete these cookies before you can delete this category.
+                
+                <div class="mt-2">
+                    <a href="{% url 'inventory' %}?category={{ category.id }}" class="unified-btn unified-btn-sm unified-btn-primary">
+                        <i class="fas fa-eye me-1"></i>
+                        View Cookies in this Category
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Warning:</strong> This action cannot be undone. The category will be permanently removed from the system.
+            </div>
+            {% endif %}
+
+            <!-- Delete Form -->
+            <form method="post" class="d-flex gap-3 justify-content-center">
+                {% csrf_token %}
+                <a href="{% url 'category_list' %}" class="unified-btn unified-btn-secondary">
+                    <i class="fas fa-times me-2"></i>
+                    Cancel
+                </a>
+                
+                {% if category.cookies.count == 0 %}
+                <button type="submit" class="unified-btn unified-btn-danger">
+                    <i class="fas fa-trash me-2"></i>
+                    Delete Category
+                </button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.category-details .unified-card {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.category-icon {
+    transition: transform 0.2s ease;
+}
+
+.category-details .unified-card:hover .category-icon {
+    transform: scale(1.1);
+}
+</style>
+{% endblock %}
