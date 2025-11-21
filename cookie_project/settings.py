@@ -59,7 +59,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'cookie_app.middleware.SessionCleanupMiddleware',
-    'allauth.account.middleware.AccountMiddleware',  # Allauth middleware
 ]
 
 ROOT_URLCONF = 'cookie_project.urls'
