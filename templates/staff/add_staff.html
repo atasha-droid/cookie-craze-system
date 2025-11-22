@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content">
+    <div class="unified-page-header d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="unified-h1 mb-1">Add Staff Member</h1>
+            <div class="text-muted" style="font-size: var(--text-sm);">
+                <i class="fas fa-user-plus me-1"></i> Create a new staff account
+            </div>
+        </div>
+        <a href="{% url 'staff_management' %}" class="unified-btn unified-btn-light">
+            <i class="fas fa-arrow-left me-1"></i>Back to Staff Management
+        </a>
+    </div>
+
+    <div class="unified-card">
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Username</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                    <div class="text-danger small">{{ form.username.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <div class="text-danger small">{{ form.email.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Password</label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                    <div class="text-danger small">{{ form.password1.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Confirm Password</label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                    <div class="text-danger small">{{ form.password2.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Phone Number</label>
+                    {{ form.phone_number }}
+                    {% if form.phone_number.errors %}
+                    <div class="text-danger small">{{ form.phone_number.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-4 gap-2">
+                <a href="{% url 'staff_management' %}" class="unified-btn unified-btn-light">Cancel</a>
+                <button type="submit" class="unified-btn unified-btn-primary">
+                    <i class="fas fa-save me-1"></i>Save Staff
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

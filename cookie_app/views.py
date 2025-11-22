@@ -1734,7 +1734,23 @@ def staff_dashboard(request):
             'order_history': [],
         }
     
-    return render(request, 'staff_dashboard.html', context)
+    return render(request, 'debug/staff_dashboard_debug.html', context)
+
+@login_required
+@admin_required
+def staff_create(request):
+    """Admin view to create a new staff account"""
+    if request.method == 'POST':
+        form = StaffRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, f"Staff account created for {user.username}. It will appear in Pending Approvals for activation.")
+            return redirect('staff_management')
+    else:
+        form = StaffRegistrationForm()
+    return render(request, 'staff/add_staff.html', {
+        'form': form,
+    })
 
 @login_required
 @staff_required

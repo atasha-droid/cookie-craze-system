@@ -94,6 +94,7 @@ urlpatterns = [
 
     # Staff management routes
     path('staff-management/', views.staff_management, name='staff_management'),
+    path('staff/add/', views.staff_create, name='staff_create'),
     path('staff/approve/<int:staff_id>/', views.approve_staff, name='approve_staff'),
     path('staff/reject/<int:staff_id>/', views.reject_staff, name='reject_staff'),
     path('staff/record-sale/', views.staff_record_sale, name='staff_record_sale'),

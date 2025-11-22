@@ -73,8 +73,16 @@
 
     .cookie-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 1rem;
+    }
+
+    @media (max-width: 992px) {
+        /* Two columns on tablets/smaller screens */
+        .cookie-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
     }
 
     @media (max-width: 768px) {
@@ -93,11 +101,6 @@
         
         .category-filters {
             width: 100%;
-        }
-        
-        .cookie-grid {
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 0.75rem;
         }
         
         .cookie-card {
@@ -132,8 +135,9 @@
             font-size: 0.7rem;
         }
         
+        /* Keep two columns but slightly tighter gap on very narrow phones */
         .cookie-grid {
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 0.5rem;
         }
         
@@ -156,12 +160,32 @@
         }
     }
 
+    /* Extra-small phones: let quantity row wrap and put Add to Cart under controls */
+    @media (max-width: 420px) {
+        .quantity-controls {
+            flex-wrap: wrap;
+        }
+
+        .quantity-group {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .add-to-cart-btn {
+            flex: 1 1 100% !important;
+            width: 100%;
+            max-width: none;
+            margin-top: 0.35rem;
+        }
+    }
+
     .cookie-card {
         position: relative;
         background: var(--bg-secondary);
         border: 1px solid var(--border);
         border-radius: 0.5rem;
         padding: 1rem;
+        overflow: hidden;
         transition: all 0.3s;
     }
 
@@ -246,8 +270,30 @@
     .quantity-controls {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 0.5rem;
         margin-top: 0.75rem;
+    }
+
+    .quantity-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .add-to-cart-btn {
+        flex: 0 0 auto !important;  /* override any inline flex:1 */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0.2rem 0.35rem;
+        min-width: 46px;
+        max-width: 56px;
+        box-sizing: border-box;
+        margin: 0 !important;       /* override any inline margin-left:auto */
+        font-size: 0.6rem;
+        text-align: center;
     }
 
     .quantity-btn {
@@ -401,21 +447,23 @@
                 </div>
                 
                 <div class="quantity-controls">
-                    <button class="quantity-btn" onclick="updateQuantity({{ cookie.id }}, -1)" {% if cookie.stock_quantity == 0 %}disabled{% endif %}>
-                        <i class="fas fa-minus"></i>
-                    </button>
-                    <input type="number" 
-                           id="quantity-{{ cookie.id }}" 
-                           class="quantity-input" 
-                           value="0" 
-                           min="0" 
-                           max="{{ cookie.stock_quantity }}"
-                           onchange="validateQuantity({{ cookie.id }}, {{ cookie.stock_quantity }})"
-                           {% if cookie.stock_quantity == 0 %}disabled{% endif %}>
-                    <button class="quantity-btn" onclick="updateQuantity({{ cookie.id }}, 1)" {% if cookie.stock_quantity == 0 %}disabled{% endif %}>
-                        <i class="fas fa-plus"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addToCart({{ cookie.id }})" style="flex: 1; margin-left: 0.5rem;" {% if cookie.stock_quantity == 0 %}disabled{% endif %}>
+                    <div class="quantity-group">
+                        <button class="quantity-btn" onclick="updateQuantity({{ cookie.id }}, -1)" {% if cookie.stock_quantity == 0 %}disabled{% endif %}>
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <input type="number" 
+                               id="quantity-{{ cookie.id }}" 
+                               class="quantity-input" 
+                               value="0" 
+                               min="0" 
+                               max="{{ cookie.stock_quantity }}"
+                               onchange="validateQuantity({{ cookie.id }}, {{ cookie.stock_quantity }})"
+                               {% if cookie.stock_quantity == 0 %}disabled{% endif %}>
+                        <button class="quantity-btn" onclick="updateQuantity({{ cookie.id }}, 1)" {% if cookie.stock_quantity == 0 %}disabled{% endif %}>
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary add-to-cart-btn" onclick="addToCart({{ cookie.id }})" {% if cookie.stock_quantity == 0 %}disabled{% endif %}>
                         <i class="fas fa-shopping-cart me-1"></i>Add to Cart
                     </button>
                 </div>

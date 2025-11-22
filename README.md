@@ -20,11 +20,61 @@ Developer tips
 - Use existing debug routes in [cookie_project/cookie_app/urls.py](cookie_project/cookie_app/urls.py) while developing (e.g. `debug-form-data`).
 - To import signals automatically, review [`CookieAppConfig.ready()`](cookie_project/cookie_app/apps.py).
 
-Running locally
-- See top-level README instructions. Use the project subfolder as the Django project root when running manage.py commands.
+## Running locally
+
+From the `cookie_project` folder (this folder):
+
+1. (Optional) Create and activate a virtual environment.
+2. Install Python dependencies:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3. Create a `.env` file next to `manage.py` with at least:
+
+    ```env
+    SECRET_KEY=your-local-secret-key
+    DEBUG=True
+    ALLOWED_HOSTS=localhost,127.0.0.1
+    ```
+
+    If these are not set locally, sensible defaults from `settings.py` are used (SQLite database, debug on).
+
+4. Apply migrations and run the development server:
+
+    ```bash
+    python manage.py migrate
+    python manage.py runserver
+    ```
+
+## Environment variables
+
+The project reads several settings from environment variables:
+
+- `SECRET_KEY` – required for production, auto-generated on Render via `render.yaml`.
+- `DEBUG` – `True` for local development, `False` on Render.
+- `ALLOWED_HOSTS` – comma-separated list of hosts, e.g. `cookie-craze-system.onrender.com,localhost,127.0.0.1`.
+- `DATABASE_URL` – optional locally; on Render this is provided automatically by the attached PostgreSQL database. If not set, SQLite is used.
+
+## Deploying to Render
+
+Deployment is handled from the **repository root** via:
+
+- `render.yaml` – defines the Render web service.
+- `build.sh` – installs requirements and runs database migrations.
+- `Procfile` / `gunicorn cookie_project.wsgi:application` – production WSGI entrypoint.
+- `runtime.txt` – pins the Python version used by Render.
+
+High-level steps:
+
+1. Commit and push changes to GitHub.
+2. In Render, create or update a Python Web Service that points to this repo.
+3. Configure environment variables in the Render dashboard (`SECRET_KEY`, `ALLOWED_HOSTS`, link a PostgreSQL database so `DATABASE_URL` is set).
+4. Trigger a deploy (or push new commits) and Render will run `build.sh` and start Gunicorn using the config above.
 
 Logs & troubleshooting
 - Views include simple print/JsonResponse helpers (e.g. [`debug_form_data`](cookie_project/cookie_app/views.py)) that help inspect POST payloads and CSRF behavior.
-- If static assets or templates don't reflect changes, clear browser cache and ensure runserver is running in DEBUG mode.
+- If static assets or templates don't reflect changes, clear browser cache and ensure `DEBUG=True` for local development.
 
-This file supplements the repository root README with paths focused on the Django project internals.
+This file supplements the repository root README with paths and workflows focused on the Django project internals.

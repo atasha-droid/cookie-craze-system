@@ -51,7 +51,6 @@ class CustomerRegistrationForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data['email']
-        user.is_active = False  # Deactivate until email is verified
         if commit:
             user.save()
             # Create UserProfile first
