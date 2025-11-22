@@ -9,4 +9,3 @@ virtualenv==20.34.0
 Django==5.2.5
 django-allauth==0.54.0
 django-filters==23.3
-Pillow==10.0.1
