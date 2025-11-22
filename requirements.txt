@@ -6,6 +6,7 @@ platformdirs==4.4.0
 sqlparse==0.5.3
 tzdata==2025.2
 virtualenv==20.34.0
-Django==5.2.5
+
+Django==4.2.26
 django-allauth==0.54.0
 django-filters==23.3
