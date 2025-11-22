@@ -9,4 +9,5 @@ virtualenv==20.34.0
 
 Django==4.2.26
 django-allauth==0.54.0
+dj-database-url>=2.0,<3.0
 django-filter>=23.0,<24.0
